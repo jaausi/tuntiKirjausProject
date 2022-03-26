@@ -48,7 +48,7 @@ public class MainViewController implements Initializable {
     private TextField aiheField;
 
     @FXML
-    private ListView<?> daysListView;
+    private ListView<Paiva> daysListView = new ListView<>();
 
     @FXML
     private TextField kellonAikaField;
@@ -76,6 +76,8 @@ public class MainViewController implements Initializable {
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
+
+
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("topic"));
         tunnitColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("duration"));
@@ -83,6 +85,10 @@ public class MainViewController implements Initializable {
         tunnitColumn.setEditable(true);
         tuntiTaulukko.setEditable(true);
         tuntiTaulukko.setItems(tuntiData);
+
+        daysListView.getItems().add(new Paiva(LocalDate.now()));
+        daysListView.getItems().add(new Paiva(LocalDate.now().minusDays(1)));
+        daysListView.getItems().add(new Paiva(LocalDate.now().minusDays(2)));
     }
 
     @FXML
@@ -111,9 +117,25 @@ public class MainViewController implements Initializable {
             kellonaika = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
         }
 
+        if(tuntiData.get(tuntiData.size()-1).compareTime(kellonaika) > 0){
+            kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            showNotCorrectTimeAlert();
+            return;
+        }
+
         setStuffToTable(kellonaika, aihe);
         kellonAikaField.clear();
         aiheField.clear();
+    }
+
+    @FXML
+    protected void onValitsePaivaButtonClick() {
+        System.out.println("Valitse päivä painettu!");
+    }
+
+    @FXML
+    protected void onUusiPaivaButtonClick() {
+        System.out.println("Uusi päivä painettu!");
     }
 
     @FXML
@@ -134,6 +156,14 @@ public class MainViewController implements Initializable {
         alert.setHeaderText("Pakollisia kenttiä täyttämättä");
         alert.setContentText("Punaisella korostettuihin kenttiin tulee syöttää" +
                 " arvo ennen taulukkoon lisäämistä.");
+        alert.showAndWait();
+    }
+
+    private void showNotCorrectTimeAlert(){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Varoitus!");
+        alert.setHeaderText("Syötetty aika on pienempi kuin viimeisin aika");
+        alert.setContentText("Syötä aika, joka on listan viimeisimmän ajan jälkeen.");
         alert.showAndWait();
     }
 
@@ -168,8 +198,8 @@ public class MainViewController implements Initializable {
             minuutit+=60;
         }
 
-        String tunnitString = minuutit < 10 ? "0"+minuutit : ""+minuutit;
-        return tunnit + ":" + tunnitString;
+        String minuutitString = minuutit < 10 ? "0"+minuutit : ""+minuutit;
+        return tunnit + ":" + minuutitString;
     }
 
     private String generateYhteenveto(ObservableList<TableTuntiKirjaus> tuntiList){

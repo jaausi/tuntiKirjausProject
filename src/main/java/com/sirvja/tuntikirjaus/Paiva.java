@@ -37,4 +37,8 @@ public class Paiva {
     public void setKirjaukset(List<TuntiKirjaus> kirjaukset) {
         this.kirjaukset = kirjaukset;
     }
+
+    public String toString(){
+        return paivamaara.toString();
+    }
 }

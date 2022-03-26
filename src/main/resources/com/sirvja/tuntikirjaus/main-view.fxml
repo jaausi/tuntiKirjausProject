@@ -98,8 +98,8 @@
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
                   <ListView fx:id="daysListView" prefHeight="389.0" prefWidth="222.0" VBox.vgrow="ALWAYS" />
-                  <Button fx:id="valitsePaivaButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="220.0" text="Valitse päivä" />
-                  <Button fx:id="uusiPaivaButton" layoutX="10.0" layoutY="484.0" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="220.0" text="Uusi päivä" />
+                  <Button fx:id="valitsePaivaButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onValitsePaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Valitse päivä" />
+                  <Button fx:id="uusiPaivaButton" layoutX="10.0" layoutY="484.0" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onUusiPaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Uusi päivä" />
                </children>
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0">

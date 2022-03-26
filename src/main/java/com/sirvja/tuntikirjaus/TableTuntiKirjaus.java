@@ -49,11 +49,25 @@ public class TableTuntiKirjaus {
     public static String durationOfMinutes(int minutes){
         int hours = minutes/60;
         int minutesLeft = minutes - (hours*60);
+        String minuutitString = minutesLeft < 10 ? "0"+minutesLeft : ""+minutesLeft;
 
-        return hours+":"+minutesLeft;
+        return hours+":"+minuutitString;
     }
 
     public boolean isDurationEmpty(){
         return duration.get().isEmpty();
+    }
+
+    public int compareTime(String timeB){
+        int hoursA = Integer.parseInt(time.get().split(":")[0]);
+        int minutesA = Integer.parseInt(time.get().split(":")[1]);
+        int hoursB = Integer.parseInt(timeB.split(":")[0]);
+        int minutesB = Integer.parseInt(timeB.split(":")[1]);
+
+        if(hoursA > hoursB) return 1;
+        else if(hoursB > hoursA) return -1;
+        else if(minutesA > minutesB) return 1;
+        else if (minutesB > minutesA) return -1;
+        else return 0;
     }
 }
