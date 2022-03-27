@@ -3,10 +3,27 @@
     -fx-text-fill: #FF4D00;
 }
 
-.list-view, .list-cell, .table-view, .table-cell, .menu-bar, .right-box {
+.list-view, .list-cell, .table-view, .menu-bar, .right-box {
     -fx-background-color: #2B2B2B;
     -fx-border-color: #272121;
     -fx-text-fill: #B5B5B5;
+}
+
+.table-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: #272121;
+    -fx-text-fill: #B5B5B5;
+}
+
+.table-row-cell, list-cell{
+    -fx-background-color: transparent;
+    -fx-border-color: #272121;
+}
+
+
+.table-row-cell:selected, .list-cell:selected {
+    -fx-background-color: #FF4D00;
+    -fx-text-fill: #272121;
 }
 
 .list-view {
