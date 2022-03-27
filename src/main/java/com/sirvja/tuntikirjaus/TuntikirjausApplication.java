@@ -13,11 +13,14 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class TuntikirjausApplication extends Application {
+    public static Stage stage;
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage primaryStage) throws IOException {
+        stage = primaryStage;
         FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 900, 600);
+        scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
         stage.setScene(scene);
         stage.show();
     }

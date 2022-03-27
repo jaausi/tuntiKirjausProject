@@ -10,6 +10,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
 import java.net.URL;
 import java.time.Duration;
@@ -49,6 +50,10 @@ public class MainViewController implements Initializable {
 
     @FXML
     private ListView<Paiva> daysListView = new ListView<>();
+
+
+    @FXML
+    private MenuItem changeThemeMenuItem;
 
     @FXML
     private TextField kellonAikaField;
@@ -99,6 +104,21 @@ public class MainViewController implements Initializable {
                 onTallennaTaulukkoonButtonClick();
             }
         });
+    }
+
+    @FXML
+    protected void onChangeThemeMenuItemAction(){
+        System.out.println("Change theme clicked!");
+
+        ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
+        String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
+        if(styleSheets.contains(darkThemeFile)){
+            styleSheets.remove(darkThemeFile);
+        } else {
+            styleSheets.add(darkThemeFile);
+        }
+
+
     }
 
     @FXML
