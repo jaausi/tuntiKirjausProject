@@ -1,36 +1,40 @@
 package com.sirvja.tuntikirjaus;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.InputMismatchException;
 
-public class TuntiKirjaus {
-    private LocalTime time;
+public class TuntiKirjaus implements Comparable<TuntiKirjaus> {
+    private LocalDateTime time;
     private String topic;
     private Duration duration;
 
-    public TuntiKirjaus(LocalTime time, String topic) {
-        this.time = time;
-        this.topic = topic;
-    }
-
-    public TuntiKirjaus(String time, String topic) {
-        int[] timeArray = getDurationFromString(time);
-        this.time = LocalTime.of(timeArray[0], timeArray[1]);
-        this.topic = topic;
-    }
-
-    public TuntiKirjaus(LocalTime time, String topic, Duration duration){
+    public TuntiKirjaus(LocalDateTime time, String topic, Duration duration) {
         this.time = time;
         this.topic = topic;
         this.duration = duration;
     }
 
-    public String getTime() {
-        return time.toString();
+    public TuntiKirjaus(LocalDateTime time, String topic) {
+        this.time = time;
+        this.topic = topic;
     }
 
-    public void setTime(LocalTime time) {
+    @Override
+    public int compareTo(TuntiKirjaus tuntiKirjaus){
+        return this.time.compareTo(tuntiKirjaus.time);
+    }
+
+    public boolean isDurationNull(){
+        return this.duration == null;
+    }
+
+    public LocalTime getTime() {
+        return LocalTime.of(time.getHour(), time.getMinute());
+    }
+
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 
@@ -42,8 +46,8 @@ public class TuntiKirjaus {
         this.topic = topic;
     }
 
-    public String getDuration() {
-        return duration.toString();
+    public Duration getDuration() {
+        return duration;
     }
 
     public void setDuration(Duration duration) {

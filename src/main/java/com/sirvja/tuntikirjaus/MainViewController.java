@@ -15,8 +15,10 @@ import javafx.stage.Stage;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -25,25 +27,25 @@ import java.util.stream.Collectors;
 
 public class MainViewController implements Initializable {
     @FXML
-    private TableView<TableTuntiKirjaus> tuntiTaulukko = new TableView<>();
+    private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
 
-    ObservableList<TableTuntiKirjaus> tuntiData =
+    ObservableList<TuntiKirjaus> tuntiData =
             FXCollections.observableArrayList(
-                    new TableTuntiKirjaus("12:05", "IBD-1234 Migraatiot", "1:01"),
-                    new TableTuntiKirjaus("13:05", "IBD-1334 Lomakemuutokset", "1:02"),
-                    new TableTuntiKirjaus("14:05", "IBD-1234 Migraatiot", "1:03"),
-                    new TableTuntiKirjaus("15:05", "IBD-1234 Migraatiot", "1:04"),
-                    new TableTuntiKirjaus("16:05", "IBD-1234 Migraatiot", "")
+                    new TuntiKirjaus(LocalDateTime.now().minusHours(3), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
+                    new TuntiKirjaus(LocalDateTime.now().minusHours(4), "IBD-1334 Lomakemuutokset", Duration.ofHours(1).plusMinutes(5)),
+                    new TuntiKirjaus(LocalDateTime.now().minusHours(5), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
+                    new TuntiKirjaus(LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
+                    new TuntiKirjaus(LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5))
             );
 
     @FXML
-    private TableColumn<TableTuntiKirjaus, String> kellonaikaColumn;
+    private TableColumn<TuntiKirjaus, LocalTime> kellonaikaColumn;
 
     @FXML
-    private TableColumn<TableTuntiKirjaus, String> aiheColumn;
+    private TableColumn<TuntiKirjaus, String> aiheColumn;
 
     @FXML
-    private TableColumn<TableTuntiKirjaus, String> tunnitColumn;
+    private TableColumn<TuntiKirjaus, Duration> tunnitColumn;
 
     @FXML
     private TextField aiheField;
@@ -83,9 +85,9 @@ public class MainViewController implements Initializable {
     public void initialize (URL url, ResourceBundle rb){
 
 
-        kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("time"));
-        aiheColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("topic"));
-        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TableTuntiKirjaus, String>("duration"));
+        kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
+        aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
+        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, Duration>("duration"));
 
         tunnitColumn.setEditable(true);
         tuntiTaulukko.setEditable(true);
@@ -137,13 +139,16 @@ public class MainViewController implements Initializable {
             kellonaika = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
         }
 
-        if(tuntiData.get(tuntiData.size()-1).compareTime(kellonaika) > 0){
+        LocalDateTime ajankohta = LocalDateTime.of(LocalDate.now(), LocalTime.parse(kellonaika));
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(ajankohta, aihe);
+
+        if(tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showNotCorrectTimeAlert();
             return;
         }
 
-        setStuffToTable(kellonaika, aihe);
+        setStuffToTable(tuntiKirjaus);
         kellonAikaField.clear();
         aiheField.clear();
     }
@@ -187,20 +192,19 @@ public class MainViewController implements Initializable {
         alert.showAndWait();
     }
 
-    private void setStuffToTable(String kellonaika, String aihe){
+    private void setStuffToTable(TuntiKirjaus tuntiKirjaus){
         System.out.println("Setting stuff to the table!");
-        TableTuntiKirjaus kirjaus = new TableTuntiKirjaus(kellonaika, aihe, "");
-        TableTuntiKirjaus lastKirjaus = tuntiData.get(tuntiData.size()-1);
+        TuntiKirjaus lastKirjaus = tuntiData.get(tuntiData.size()-1);
         System.out.println("Kirjaus: "+lastKirjaus.getDuration());
 
-        if(lastKirjaus.getDuration().isEmpty()){
+        if(lastKirjaus.getDuration() == null){
             System.out.println("No last kirjaus set");
-            String duration = calculateDuration(kellonaika, lastKirjaus.getTime());
+            Duration duration = Duration.between(tuntiKirjaus.getTime(), lastKirjaus.getTime());
             lastKirjaus.setDuration(duration);
             tuntiData.set(tuntiData.size()-1, lastKirjaus);
         }
 
-        tuntiData.add(kirjaus);
+        tuntiData.add(tuntiKirjaus);
         yhteenvetoTextArea.setText(generateYhteenveto(tuntiData));
     }
 
@@ -222,17 +226,17 @@ public class MainViewController implements Initializable {
         return tunnit + ":" + minuutitString;
     }
 
-    private String generateYhteenveto(ObservableList<TableTuntiKirjaus> tuntiList){
-        Predicate<TableTuntiKirjaus> predicate = Predicate.not(TableTuntiKirjaus::isDurationEmpty);
+    private String generateYhteenveto(ObservableList<TuntiKirjaus> tuntiList){
+        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isDurationNull);
 
         Map<String, String> topicToDuration = tuntiList.stream()
                 .filter(predicate)
                 .collect(
                         Collectors.groupingBy(
-                                TableTuntiKirjaus::getTopic,
+                                TuntiKirjaus::getTopic,
                                 Collectors.collectingAndThen(
-                                        Collectors.summingInt(TableTuntiKirjaus::getIntDuration),
-                                        TableTuntiKirjaus::durationOfMinutes
+                                        Collectors.summingLong(t -> t.getDuration().toMinutes()),
+                                        minutes -> minutes/60 +":"+(minutes%60 < 10 ? "0"+minutes%60 : minutes%60)
                                 )
                         )
                 );
