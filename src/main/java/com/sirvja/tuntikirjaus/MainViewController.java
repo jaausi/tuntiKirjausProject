@@ -29,14 +29,7 @@ public class MainViewController implements Initializable {
     @FXML
     private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
 
-    ObservableList<TuntiKirjaus> tuntiData =
-            FXCollections.observableArrayList(
-                    new TuntiKirjaus(LocalDateTime.now().minusHours(3), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
-                    new TuntiKirjaus(LocalDateTime.now().minusHours(4), "IBD-1334 Lomakemuutokset", Duration.ofHours(1).plusMinutes(5)),
-                    new TuntiKirjaus(LocalDateTime.now().minusHours(5), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
-                    new TuntiKirjaus(LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)),
-                    new TuntiKirjaus(LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5))
-            );
+    ObservableList<TuntiKirjaus> tuntiData = FXCollections.observableArrayList();
 
     @FXML
     private TableColumn<TuntiKirjaus, LocalTime> kellonaikaColumn;
@@ -84,6 +77,7 @@ public class MainViewController implements Initializable {
     @Override
     public void initialize (URL url, ResourceBundle rb){
 
+        //populateDataToTable();
 
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
@@ -92,6 +86,14 @@ public class MainViewController implements Initializable {
         tunnitColumn.setEditable(true);
         tuntiTaulukko.setEditable(true);
         tuntiTaulukko.setItems(tuntiData);
+    }
+
+    private void populateData(){
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(3), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(4), "IBD-1334 Lomakemuutokset", Duration.ofHours(1).plusMinutes(5)));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(5), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
 
         daysListView.getItems().add(new Paiva(LocalDate.now()));
         daysListView.getItems().add(new Paiva(LocalDate.now().minusDays(1)));
@@ -142,7 +144,7 @@ public class MainViewController implements Initializable {
         LocalDateTime ajankohta = LocalDateTime.of(LocalDate.now(), LocalTime.parse(kellonaika));
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(ajankohta, aihe);
 
-        if(tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
+        if(!tuntiData.isEmpty() && tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showNotCorrectTimeAlert();
             return;
@@ -194,10 +196,12 @@ public class MainViewController implements Initializable {
 
     private void setStuffToTable(TuntiKirjaus tuntiKirjaus){
         System.out.println("Setting stuff to the table!");
-        TuntiKirjaus lastKirjaus = tuntiData.get(tuntiData.size()-1);
-        System.out.println("Kirjaus: "+lastKirjaus.getDuration());
+        TuntiKirjaus lastKirjaus = null;
+        if(!tuntiData.isEmpty()){
+            lastKirjaus = tuntiData.get(tuntiData.size()-1);
+        }
 
-        if(lastKirjaus.getDuration() == null){
+        if(lastKirjaus != null && lastKirjaus.getDuration() == null){
             System.out.println("No last kirjaus set");
             Duration duration = Duration.between(tuntiKirjaus.getTime(), lastKirjaus.getTime());
             lastKirjaus.setDuration(duration);
