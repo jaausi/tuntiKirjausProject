@@ -76,24 +76,30 @@ public class MainViewController implements Initializable {
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
-
-        //populateDataToTable();
-
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
         tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, Duration>("duration"));
 
         tunnitColumn.setEditable(true);
         tuntiTaulukko.setEditable(true);
+
+        populateDataToTable();
+
         tuntiTaulukko.setItems(tuntiData);
     }
 
-    private void populateData(){
-        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(3), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
-        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(4), "IBD-1334 Lomakemuutokset", Duration.ofHours(1).plusMinutes(5)));
-        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(5), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
-        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
-        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5)));
+    private void populateDataToTable(){
+        tuntiData = DBUtil.getAllTuntikirjaus();
+        updateDurations();
+        generateYhteenveto();
+    }
+
+    private void populateTestData(){
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(3), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5), true));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(4), "IBD-1334 Lomakemuutokset", Duration.ofHours(1).plusMinutes(5), true));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(5), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5), true));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5), true));
+        tuntiData.add(new TuntiKirjaus(LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", Duration.ofHours(1).plusMinutes(5), true));
 
         daysListView.getItems().add(new Paiva(LocalDate.now()));
         daysListView.getItems().add(new Paiva(LocalDate.now().minusDays(1)));
@@ -142,7 +148,7 @@ public class MainViewController implements Initializable {
         }
 
         LocalDateTime ajankohta = LocalDateTime.of(LocalDate.now(), LocalTime.parse(kellonaika));
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(ajankohta, aihe);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(ajankohta, aihe, true);
 
         if(!tuntiData.isEmpty() && tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -151,6 +157,12 @@ public class MainViewController implements Initializable {
         }
 
         setStuffToTable(tuntiKirjaus);
+        generateYhteenveto();
+        try{
+            DBUtil.insertTuntikirjaus(tuntiKirjaus);
+        } catch (Exception e){
+            System.out.println("Ongelmia kirjauksen tallentamisessa: " + e);
+        }
         kellonAikaField.clear();
         aiheField.clear();
     }
@@ -203,13 +215,29 @@ public class MainViewController implements Initializable {
 
         if(lastKirjaus != null && lastKirjaus.getDuration() == null){
             System.out.println("No last kirjaus set");
-            Duration duration = Duration.between(tuntiKirjaus.getTime(), lastKirjaus.getTime());
+            Duration duration = Duration.between(lastKirjaus.getTime(), tuntiKirjaus.getTime());
             lastKirjaus.setDuration(duration);
             tuntiData.set(tuntiData.size()-1, lastKirjaus);
         }
 
         tuntiData.add(tuntiKirjaus);
-        yhteenvetoTextArea.setText(generateYhteenveto(tuntiData));
+    }
+
+    private void updateDurations(){
+        tuntiData.sort(TuntiKirjaus::compareTo);
+
+        TuntiKirjaus previousKirjaus = null;
+        int index = 0;
+        for(TuntiKirjaus tuntiKirjaus: tuntiData){
+            if(previousKirjaus != null && previousKirjaus.getDurationEnabled()){
+                Duration duration = Duration.between(previousKirjaus.getTime(), tuntiKirjaus.getTime());
+                previousKirjaus.setDuration(duration);
+                tuntiData.set(index, previousKirjaus);
+            }
+            // FIXME: mutating original array
+            previousKirjaus = tuntiKirjaus.clone();
+            index++;
+        }
     }
 
     private String calculateDuration(String uusiKirjaus, String vanhaKirjaus){
@@ -230,17 +258,17 @@ public class MainViewController implements Initializable {
         return tunnit + ":" + minuutitString;
     }
 
-    private String generateYhteenveto(ObservableList<TuntiKirjaus> tuntiList){
+    private void generateYhteenveto(){
         Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isDurationNull);
 
-        Map<String, String> topicToDuration = tuntiList.stream()
+        Map<String, String> topicToDuration = tuntiData.stream()
                 .filter(predicate)
                 .collect(
                         Collectors.groupingBy(
                                 TuntiKirjaus::getTopic,
                                 Collectors.collectingAndThen(
                                         Collectors.summingLong(t -> t.getDuration().toMinutes()),
-                                        minutes -> minutes/60 +":"+(minutes%60 < 10 ? "0"+minutes%60 : minutes%60)
+                                        minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))
                                 )
                         )
                 );
@@ -250,7 +278,7 @@ public class MainViewController implements Initializable {
             returnValue.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
 
-        return returnValue.toString();
+        yhteenvetoTextArea.setText(returnValue.toString());
     }
 
 

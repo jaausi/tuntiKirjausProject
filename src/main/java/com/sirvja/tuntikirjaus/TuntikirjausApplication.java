@@ -13,9 +13,17 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TuntikirjausApplication extends Application {
     public static Stage stage;
+
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -29,6 +37,13 @@ public class TuntikirjausApplication extends Application {
     }
 
     public static void main(String[] args) {
+        System.setProperty("prism.lcdtext", "false");
+        DBUtil.checkDrivers();
+        //DBUtil.dropTable();
+        DBUtil.initializeTable();
+
+        ObservableList<TuntiKirjaus> kirjaukset = DBUtil.getAllTuntikirjaus();
+        System.out.println("KIRJAUKSET: "+kirjaukset);
         launch();
     }
 }

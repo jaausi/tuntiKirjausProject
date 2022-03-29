@@ -1,2 +1,5 @@
 .idea/
 target/
+out/
+
+database.sqlite
