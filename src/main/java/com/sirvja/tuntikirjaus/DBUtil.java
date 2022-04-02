@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DBUtil {
-    private static final String location = Objects.requireNonNull(TuntikirjausApplication.class.getResource("database/database.sqlite")).toExternalForm();
+    private static final String location = Objects.requireNonNull(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db")).toExternalForm();
 
     public static void initializeTable(){
         Connection connection = null;
