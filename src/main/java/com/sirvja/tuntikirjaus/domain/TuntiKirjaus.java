@@ -4,23 +4,20 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.InputMismatchException;
+import java.util.Optional;
 
+// TODO: Add id for database to make update queries easier
 public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String topic;
     private Boolean durationEnabled;
 
-    public Boolean getDurationEnabled() {
-        return durationEnabled;
-    }
-
-    public void setDurationEnabled(Boolean durationEnabled) {
-        this.durationEnabled = durationEnabled;
-    }
-
     public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+        assert startTime != null;
+        assert topic != null;
+        assert durationEnabled != null;
+
         this.startTime = startTime;
         this.endTime = endTime;
         this.topic = topic;
@@ -30,6 +27,14 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     @Override
     public int compareTo(TuntiKirjaus tuntiKirjaus){
         return this.startTime.compareTo(tuntiKirjaus.startTime);
+    }
+
+    public Boolean getDurationEnabled() {
+        return durationEnabled;
+    }
+
+    public void setDurationEnabled(Boolean durationEnabled) {
+        this.durationEnabled = durationEnabled;
     }
 
     public boolean isEndTimeNull(){
@@ -57,7 +62,10 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
 
     public Duration getDuration() {
-        return Duration.between(startTime, endTime);
+        if(endTime != null){
+            return Duration.between(startTime, endTime);
+        }
+        return null;
     }
 
     public LocalDateTime getStartTime() {
@@ -68,8 +76,8 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
+    public Optional<LocalDateTime> getEndTime() {
+        return Optional.ofNullable(endTime);
     }
 
     public void setEndTime(LocalDateTime endTime) {

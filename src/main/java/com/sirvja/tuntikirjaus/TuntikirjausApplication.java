@@ -8,11 +8,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class TuntikirjausApplication extends Application {
     public static Stage stage;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TuntikirjausApplication.class);
 
 
     @Override
@@ -30,10 +33,10 @@ public class TuntikirjausApplication extends Application {
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
         //TuntiKirjausDao.dropTable();
+        LOGGER.debug("Initializing Tuntikirjaus table...");
         TuntiKirjausDao.initializeTable();
+        LOGGER.debug("Tuntikirjaus table initialized.");
 
-        ObservableList<TuntiKirjaus> kirjaukset = DBUtil.getAllTuntikirjaus();
-        System.out.println("KIRJAUKSET: "+kirjaukset);
         launch();
     }
 }

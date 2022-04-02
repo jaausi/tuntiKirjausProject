@@ -1,18 +1,10 @@
 package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Objects;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +17,7 @@ public class DBUtil {
         String dbPrefix = "jdbc:sqlite:";
         Connection connection;
         try {
+            LOGGER.debug("Connecting to database with address: {}", dbPrefix+location);
             connection = DriverManager.getConnection(dbPrefix + location);
         } catch (SQLException exception) {
             LOGGER.error("Could not connect to SQLite DB at: {}", location);
@@ -54,7 +47,7 @@ public class DBUtil {
         try {
             //Connect to DB (Establish Oracle Connection)
             connection = connect();
-            System.out.println("Select statement: " + queryStmt + "\n");
+            LOGGER.debug("Select statement: {}", queryStmt);
             //Create statement
             assert connection != null;
             statement = connection.createStatement();
@@ -62,7 +55,7 @@ public class DBUtil {
             resultSet = statement.executeQuery(queryStmt);
             crs.populate(resultSet);
         } catch (Exception e) {
-            System.out.println("Problem occurred at executeUpdate operation : " + e);
+            LOGGER.error("Problem occurred at executeUpdate operation : {}", e.getMessage());
             throw e;
         } finally {
             closeQuietly(connection);
@@ -83,7 +76,7 @@ public class DBUtil {
             statement = connection.createStatement();
             statement.executeUpdate(updateStmt);
         } catch (Exception e) {
-            System.out.println("Problem occurred at executeUpdate operation : " + e);
+            LOGGER.error("Problem occurred at executeUpdate operation : {}" + e.getMessage());
             throw e;
         } finally {
             closeQuietly(connection);
