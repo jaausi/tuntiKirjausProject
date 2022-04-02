@@ -1,8 +1,11 @@
-package com.sirvja.tuntikirjaus;
+package com.sirvja.tuntikirjaus.controller;
 
+import com.sirvja.tuntikirjaus.TuntikirjausApplication;
+import com.sirvja.tuntikirjaus.domain.Paiva;
+import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -10,7 +13,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
 
 import java.net.URL;
 import java.time.Duration;
@@ -18,8 +20,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
@@ -259,7 +259,7 @@ public class MainViewController implements Initializable {
     }
 
     private void generateYhteenveto(){
-        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isDurationNull);
+        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull);
 
         Map<String, String> topicToDuration = tuntiData.stream()
                 .filter(predicate)

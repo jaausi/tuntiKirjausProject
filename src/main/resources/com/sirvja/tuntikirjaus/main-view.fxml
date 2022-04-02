@@ -52,7 +52,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="600.0" prefWidth="900.0" styleClass="main-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.MainViewController">
+<VBox prefHeight="600.0" prefWidth="900.0" styleClass="main-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.MainViewController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>

@@ -1,25 +1,15 @@
 package com.sirvja.tuntikirjaus;
 
+import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
+import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.LocalDateTime;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class TuntikirjausApplication extends Application {
     public static Stage stage;
@@ -38,9 +28,9 @@ public class TuntikirjausApplication extends Application {
 
     public static void main(String[] args) {
         System.setProperty("prism.lcdtext", "false");
-        DBUtil.checkDrivers();
-        //DBUtil.dropTable();
-        DBUtil.initializeTable();
+        assert DBUtil.checkDrivers();
+        //TuntiKirjausDao.dropTable();
+        TuntiKirjausDao.initializeTable();
 
         ObservableList<TuntiKirjaus> kirjaukset = DBUtil.getAllTuntikirjaus();
         System.out.println("KIRJAUKSET: "+kirjaukset);

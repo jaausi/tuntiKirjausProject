@@ -1,4 +1,6 @@
-package com.sirvja.tuntikirjaus;
+package com.sirvja.tuntikirjaus.domain;
+
+import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
