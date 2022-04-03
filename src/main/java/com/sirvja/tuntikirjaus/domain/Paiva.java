@@ -1,46 +1,32 @@
 package com.sirvja.tuntikirjaus.domain;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
-public class Paiva {
-    private LocalDate paivamaara;
-    private List<TuntiKirjaus> kirjaukset;
+public class Paiva implements Comparable<Paiva> {
+    private LocalDate localDate;
 
     public Paiva() {
-        this.paivamaara = LocalDate.now();
-        this.kirjaukset = new ArrayList<>();
+        this.localDate = LocalDate.now();
     }
 
-    public Paiva(LocalDate date) {
-        this.paivamaara = date;
-        this.kirjaukset = new ArrayList<>();
+    public Paiva(LocalDate localDate) {
+        this.localDate = localDate;
     }
 
-    public void lisaaKirjaus(TuntiKirjaus kirjaus){
-        kirjaukset.add(kirjaus);
+    public LocalDate getLocalDate() {
+        return localDate;
     }
 
-    public LocalDate getPaivamaara() {
-        return paivamaara;
-    }
-
-    public List<TuntiKirjaus> getKirjaukset() {
-        return kirjaukset;
-    }
-
-    public void setPaivamaara(LocalDate paivamaara) {
-        this.paivamaara = paivamaara;
-    }
-
-    public void setKirjaukset(List<TuntiKirjaus> kirjaukset) {
-        this.kirjaukset = kirjaukset;
+    public void setLocalDate(LocalDate localDate) {
+        this.localDate = localDate;
     }
 
     public String toString(){
-        return paivamaara.toString();
+        return this.localDate.toString();
+    }
+
+    @Override
+    public int compareTo(Paiva paiva) {
+        return this.localDate.compareTo(paiva.localDate);
     }
 }

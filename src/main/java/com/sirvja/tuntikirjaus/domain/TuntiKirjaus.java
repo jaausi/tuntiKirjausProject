@@ -6,18 +6,31 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 
-// TODO: Add id for database to make update queries easier
 public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
+    private int id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String topic;
     private Boolean durationEnabled;
+    private Duration duration;
 
     public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
 
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.topic = topic;
+        this.durationEnabled = durationEnabled;
+    }
+
+    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+        assert startTime != null;
+        assert topic != null;
+        assert durationEnabled != null;
+
+        this.id = id;
         this.startTime = startTime;
         this.endTime = endTime;
         this.topic = topic;
@@ -62,10 +75,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
 
     public Duration getDuration() {
-        if(endTime != null){
-            return Duration.between(startTime, endTime);
-        }
-        return null;
+        return this.duration;
     }
 
     public LocalDateTime getStartTime() {
@@ -82,5 +92,14 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+        this.duration = Duration.between(this.startTime, this.endTime);
+    }
+
+    public LocalDate getLocalDateOfStartTime(){
+        return this.startTime.toLocalDate();
+    }
+
+    public int getId() {
+        return id;
     }
 }

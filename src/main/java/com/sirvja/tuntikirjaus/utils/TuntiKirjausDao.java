@@ -25,12 +25,13 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
 
             while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %b",resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
+                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
                 String endTimeString = resultSet.getString("END_TIME");
                 Optional<String> endTime = Optional.ofNullable(endTimeString.isEmpty() || endTimeString.equals("null") ? null : endTimeString);
                 LocalDateTime localEndDateTime = endTime.map(s -> LocalDateTime.parse(s, dateTimeFormatter)).orElse(null);
                 returnObject.add(
                         new TuntiKirjaus(
+                                resultSet.getInt("ROWID"),
                                 LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                                 localEndDateTime,
                                 resultSet.getString("TOPIC"),
@@ -58,12 +59,11 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         }
     }
 
-    // TODO: Fixme
     @Override
-    public void update(TuntiKirjaus tuntiKirjaus, String[] params) {
+    public void update(TuntiKirjaus tuntiKirjaus) {
         String query = String.format("UPDATE Tuntikirjaus" +
                 "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', DURATION_ENABLED=%b'" +
-                "WHERE START_TIME='%s' LIMIT 1", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), params[0]);
+                "WHERE ROWID='%s' LIMIT 1", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.getId());
         LOGGER.debug("Updating Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -73,11 +73,10 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         }
     }
 
-    // TODO: Fixme
     @Override
     public void delete(TuntiKirjaus tuntiKirjaus) {
         String query = String.format("DELETE FROM Tuntikirjaus " +
-                "WHERE START_TIME='%s' LIMIT 1", tuntiKirjaus.getStartTime().format(dateTimeFormatter));
+                "WHERE ROWID='%s' LIMIT 1", tuntiKirjaus.getId());
         LOGGER.debug("Deleting Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -87,10 +86,9 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         }
     }
 
-    // TODO: Fixme
     @Override
-    public Optional<TuntiKirjaus> get(String[] params) {
-        String query = String.format("SELECT * FROM Tuntikirjaus WHERE START_TIME=%s LIMIT 1", params[0]);
+    public Optional<TuntiKirjaus> get(int id) {
+        String query = String.format("SELECT * FROM Tuntikirjaus WHERE ROWID=%s LIMIT 1", id);
         LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
 
         TuntiKirjaus tuntiKirjaus = null;
@@ -98,8 +96,9 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
 
             while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %b",resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
+                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
                 tuntiKirjaus = new TuntiKirjaus(
+                        resultSet.getInt("ROWID"),
                         LocalDateTime.parse(resultSet.getString("START_TIME"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                         LocalDateTime.parse(resultSet.getString("END_TIME"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                         resultSet.getString("TOPIC"),
@@ -115,6 +114,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
 
     public static void initializeTable() {
         String sqlQuery = "CREATE TABLE IF NOT EXISTS Tuntikirjaus(" +
+                "ROWID              INTEGER                     PRIMARY KEY," +
                 "START_TIME         TEXT                        NOT NULL," +
                 "END_TIME           TEXT                                ," +
                 "TOPIC              TEXT                        NOT NULL," +

@@ -21,8 +21,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -30,6 +30,8 @@ import java.util.stream.IntStream;
 public class MainViewController implements Initializable {
 
     private final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
+    private Map<LocalDate, ObservableList<TuntiKirjaus>> dateToTuntidata = new HashMap<>();
+    private ObservableList<Paiva> paivaData = FXCollections.observableArrayList();
     private ObservableList<TuntiKirjaus> tuntiData = FXCollections.observableArrayList();
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
@@ -87,15 +89,39 @@ public class MainViewController implements Initializable {
         tunnitColumn.setEditable(true);
         tuntiTaulukko.setEditable(true);
 
-        populateDataToTable();
+        getTuntiDataFromDb();
 
-        tuntiTaulukko.setItems(tuntiData);
-    }
-
-    private void populateDataToTable(){
-        tuntiData = tuntiKirjausDao.getAll();
         updateEndTimes();
         generateYhteenveto();
+
+        tuntiTaulukko.setItems(tuntiData);
+        daysListView.setItems(paivaData);
+    }
+
+    private void getTuntiDataFromDb(){
+        LOGGER.debug("Gettin kirjaus' from database...");
+        ObservableList<TuntiKirjaus> allKirjaus = tuntiKirjausDao.getAll();
+        LOGGER.debug("Found {} kirjaus' from database.", allKirjaus.size());
+
+        dateToTuntidata = allKirjaus.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                TuntiKirjaus::getLocalDateOfStartTime,
+                                Collectors.toCollection(FXCollections::observableArrayList)
+                        )
+                );
+
+        LOGGER.debug("Kirjaus' map: {}", dateToTuntidata);
+
+        paivaData = dateToTuntidata.keySet().stream()
+                .map(Paiva::new)
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+
+        Optional<Paiva> latestDay = paivaData.stream()
+                        .max(Paiva::compareTo);
+
+        tuntiData = latestDay.map(paiva -> dateToTuntidata.get(paiva.getLocalDate())).orElse(FXCollections.observableArrayList());
+
     }
 
     private void populateTestData(){
@@ -145,15 +171,12 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        LocalDateTime localDateTime;
-
-        if(!time.isEmpty()){
-            localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
-        } else {
-            localDateTime = LocalDateTime.now();
+        Optional<LocalDateTime> optionalTime = parseTimeFromString(time);
+        if(optionalTime.isEmpty()){
+            return;
         }
 
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(optionalTime.get(), null, topic, true);
 
         if(!tuntiData.isEmpty() && tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -166,6 +189,37 @@ public class MainViewController implements Initializable {
         tuntiKirjausDao.save(tuntiKirjaus);
         kellonAikaField.clear();
         aiheField.clear();
+    }
+
+    private Optional<LocalDateTime> parseTimeFromString(String time){
+        LocalDateTime localDateTime;
+
+        LOGGER.debug("Received {} from time field. Trying to parse...", time);
+        try{
+            if(!time.isEmpty()){
+                if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
+                    localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
+                } else {
+                    if (time.length() <= 2){ // Parse only hours '9' or '12'
+                        localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
+                    } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
+                        localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
+                    } else {
+                        LOGGER.error("Couldn't parse time from String: {}", time);
+                        return Optional.empty();
+                    }
+                }
+            } else {
+                localDateTime = LocalDateTime.now();
+            }
+        } catch (DateTimeParseException e){
+            LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
+            kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            showTimeInWrongFormatAlert(e.getMessage());
+            return Optional.empty();
+        }
+
+        return Optional.of(localDateTime);
     }
 
     @FXML
@@ -207,10 +261,22 @@ public class MainViewController implements Initializable {
         alert.showAndWait();
     }
 
+    private void showTimeInWrongFormatAlert(String problem){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Varoitus!");
+        alert.setHeaderText("Syötetty aika on väärässä formaatissa");
+        alert.setContentText("Virhe: "+problem);
+        alert.showAndWait();
+    }
+
     private void setStuffToTable(TuntiKirjaus tuntiKirjaus){
         LOGGER.debug("Setting stuff to the table!");
 
+        updateEndTimes();
+
         tuntiData.add(tuntiKirjaus);
+
+        tuntiTaulukko.setItems(tuntiData);
     }
 
     private void updateEndTimes(){
