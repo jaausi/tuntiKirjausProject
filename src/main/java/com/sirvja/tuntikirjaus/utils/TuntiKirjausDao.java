@@ -17,7 +17,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Override
-    public ObservableList<TuntiKirjaus> getAll() {
+    public Optional<ObservableList<TuntiKirjaus>> getAll() {
         String query = "SELECT * FROM Tuntikirjaus";
 
         ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
@@ -41,9 +41,10 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             }
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
+            return Optional.empty();
         }
 
-        return returnObject;
+        return Optional.of(returnObject);
     }
 
     @Override
