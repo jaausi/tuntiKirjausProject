@@ -14,6 +14,7 @@ import java.util.Optional;
 
 
 public class DBUtil {
+
     private static String location;
     private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
 

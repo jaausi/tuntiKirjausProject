@@ -5,6 +5,8 @@ import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -24,14 +26,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
 
-    private final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
-    private Map<LocalDate, ObservableList<TuntiKirjaus>> dateToTuntidata = new HashMap<>();
-    private ObservableList<Paiva> paivaData = FXCollections.observableArrayList();
-    private ObservableList<TuntiKirjaus> tuntiData = FXCollections.observableArrayList();
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
     @FXML
@@ -72,11 +71,29 @@ public class MainViewController implements Initializable {
         tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, Duration>("duration"));
 
         updateView();
+        daysListView.getSelectionModel().selectFirst();
+        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+
+        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
+        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            MainViewService.setCurrentDate(newValue);
+            updateView();
+        });
     }
 
     @FXML
     protected void onKeyPressedToAiheField(){
         aiheField.setOnKeyPressed(event -> {
+            if(event.getCode() == KeyCode.ENTER){
+                LOGGER.debug("Enter was pressed");
+                onTallennaTaulukkoonButtonClick();
+            }
+        });
+    }
+
+    @FXML
+    protected void onKeyPressedToKellonaikaField(){
+        kellonAikaField.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER){
                 LOGGER.debug("Enter was pressed");
                 onTallennaTaulukkoonButtonClick();
@@ -121,7 +138,9 @@ public class MainViewController implements Initializable {
 
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
 
-        if(!tuntiData.isEmpty() && tuntiData.get(tuntiData.size()-1).compareTo(tuntiKirjaus) > 0){
+        ObservableList<TuntiKirjaus> tuntidata = MainViewService.getTuntiDataForTable();
+
+        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showNotCorrectTimeAlert();
             return;
@@ -144,11 +163,17 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onValitsePaivaButtonClick() {
         LOGGER.debug("Valitse päivä painettu!");
+        Paiva selectedPaiva = daysListView.getSelectionModel().getSelectedItem();
+        LOGGER.debug("Following date selected: {}", selectedPaiva);
+        MainViewService.setCurrentDate(selectedPaiva);
+        updateView();
     }
 
     @FXML
     protected void onUusiPaivaButtonClick() {
         LOGGER.debug("Uusi päivä painettu!");
+        MainViewService.setCurrentDate(new Paiva(LocalDate.now()));
+        updateView();
     }
 
     @FXML

@@ -75,7 +75,10 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
 
     public Duration getDuration() {
-        return this.duration;
+        if(this.endTime != null){
+            return Duration.between(this.endTime, this.startTime);
+        }
+        return Duration.ZERO;
     }
 
     public void setDuration(Duration duration) {
@@ -96,7 +99,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
-        this.duration = Duration.between(this.startTime, this.endTime);
+        this.duration = Duration.between(this.endTime, this.startTime);
     }
 
     public LocalDate getLocalDateOfStartTime(){

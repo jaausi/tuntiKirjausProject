@@ -114,7 +114,7 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                                  <children>
-                                    <TextField fx:id="kellonAikaField" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" onMouseClicked="#onKellonaikaFieldClick" prefHeight="26.0" prefWidth="90.0" promptText="Kellonaika">
+                                    <TextField fx:id="kellonAikaField" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" onKeyPressed="#onKeyPressedToKellonaikaField" onMouseClicked="#onKellonaikaFieldClick" prefHeight="26.0" prefWidth="90.0" promptText="Kellonaika">
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>

@@ -24,36 +24,87 @@ public class MainViewService {
 
     private static final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewService.class);
-    private static ObservableList<TuntiKirjaus> tuntiKirjausList = getAllKirjausFromDb().orElse(FXCollections.observableArrayList());
+
     private static LocalDate currentDate = LocalDate.now();
+    private static ObservableList<TuntiKirjaus> tuntiKirjausList = getInitialTuntiData();
+    private static ObservableList<Paiva> paivaList = getInitialPaivaData();
+    private static String yhteenvetoText = getYhteenvetoText();
 
-    public static ObservableList<TuntiKirjaus> getTuntiDataForTable(){
-        return getTuntiDataForTable(currentDate);
+    private static ObservableList<TuntiKirjaus> getInitialTuntiData(){
+        return getAllKirjausFromDb();
     }
-
-    public static ObservableList<TuntiKirjaus> getTuntiDataForTable(LocalDate localDate){
-
-        return getAllKirjausForPaiva(getDateToTuntikirjausMap(tuntiKirjausList), localDate);
-    }
-
-    public static ObservableList<Paiva> getPaivaDataForTable(){
+    private static ObservableList<Paiva> getInitialPaivaData(){
         return getAllPaivas(tuntiKirjausList);
     }
-
-
-    public static String getYhteenvetoText(){
+    private static String getInitialYhteenvetoText(){
         return getYhteenvetoText(currentDate);
     }
 
-    public static String getYhteenvetoText(LocalDate localDate){
-        ObservableList<TuntiKirjaus> tuntiDataForTable = getTuntiDataForTable(localDate);
-        if(tuntiDataForTable == null || tuntiDataForTable.isEmpty()){
+    public static ObservableList<TuntiKirjaus> getTuntiDataForTable(){
+        return tuntiKirjausList.stream()
+                .filter(tuntiKirjaus -> tuntiKirjaus.getLocalDateOfStartTime().equals(currentDate))
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+    }
+    public static ObservableList<Paiva> getPaivaDataForTable(){
+        return paivaList;
+    }
+    public static String getYhteenvetoText(){
+        return yhteenvetoText;
+    }
+
+    public static void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
+        tuntiKirjausList.add(tuntiKirjaus);
+        paivaList = getAllPaivas(tuntiKirjausList);
+        yhteenvetoText = getYhteenvetoText(currentDate);
+        addEndTimeToPreviousTuntikirjaus();
+        tuntiKirjausDao.save(tuntiKirjaus);
+    }
+
+    public static LocalDateTime parseTimeFromString(String time) throws DateTimeParseException{
+        LocalDateTime localDateTime;
+
+        LOGGER.debug("Received {} from time field. Trying to parse...", time);
+
+        if(!time.isEmpty()){
+            if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
+                localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
+            } else {
+                if (time.length() <= 2){ // Parse only hours '9' or '12'
+                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
+                } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
+                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
+                } else {
+                    throw new DateTimeParseException("Couldn't parse time from String", time, 5);
+                }
+            }
+        } else {
+            localDateTime = LocalDateTime.of(currentDate, LocalTime.now());
+        }
+
+        return localDateTime;
+    }
+
+    public static void setCurrentDate(Paiva paiva){
+        boolean paivaExists = paivaList.stream()
+                .anyMatch(tempPaiva -> tempPaiva.getLocalDate().equals(paiva.getLocalDate()));
+        if(!paivaExists){
+            paivaList.add(paiva);
+            paivaList = paivaList.sorted();
+        }
+        currentDate = paiva.getLocalDate();
+        yhteenvetoText = getYhteenvetoText(currentDate);
+    }
+
+    private static String getYhteenvetoText(LocalDate localDate){
+        ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
+
+        if(tuntiKirjausListForDay == null || tuntiKirjausListForDay.isEmpty()){
             return "";
         }
 
         Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
 
-        Map<String, String> topicToDuration = tuntiDataForTable.stream()
+        Map<String, String> topicToDuration = tuntiKirjausListForDay.stream()
                 .filter(predicate)
                 .collect(
                         Collectors.groupingBy(
@@ -73,47 +124,19 @@ public class MainViewService {
         return returnValue.toString();
     }
 
-    public static void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausList.add(tuntiKirjaus);
-        addEndTimeToPreviousTuntikirjaus();
-        tuntiKirjausDao.save(tuntiKirjaus);
-    }
-
-    public static LocalDateTime parseTimeFromString(String time) throws DateTimeParseException{
-        LocalDateTime localDateTime;
-
-        LOGGER.debug("Received {} from time field. Trying to parse...", time);
-
-        if(!time.isEmpty()){
-            if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
-                localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
-            } else {
-                if (time.length() <= 2){ // Parse only hours '9' or '12'
-                    localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
-                } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
-                    localDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
-                } else {
-                    throw new DateTimeParseException("Couldn't parse time from String", time, 5);
-                }
-            }
-        } else {
-            localDateTime = LocalDateTime.now();
-        }
-
-        return localDateTime;
-    }
-
     private static void addEndTimeToPreviousTuntikirjaus(){
+        ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
+
         LOGGER.debug("Adding endtime for previous kirjaus");
-        int indexA = tuntiKirjausList.size()-1;
-        int indexB = tuntiKirjausList.size()-2;
+        int indexA = tuntiKirjausListForDay.size()-1;
+        int indexB = tuntiKirjausListForDay.size()-2;
         if(indexA < 0 || indexB < 0){
             LOGGER.debug("Indexes are out of bounds returning");
             return;
         }
 
-        TuntiKirjaus currentKirjaus = tuntiKirjausList.get(indexA);
-        TuntiKirjaus previousKirjaus = tuntiKirjausList.get(indexB);
+        TuntiKirjaus currentKirjaus = tuntiKirjausListForDay.get(indexA);
+        TuntiKirjaus previousKirjaus = tuntiKirjausListForDay.get(indexB);
         LOGGER.debug("Current kirjaus: {}", currentKirjaus);
         LOGGER.debug("Previous kirjaus: {}", previousKirjaus);
 
@@ -123,14 +146,10 @@ public class MainViewService {
         }
     }
 
-    private static Optional<ObservableList<TuntiKirjaus>> getAllKirjausFromDb(){
+    private static ObservableList<TuntiKirjaus> getAllKirjausFromDb(){
         LOGGER.debug("Getting kirjaus' from database...");
-        Optional<ObservableList<TuntiKirjaus>> allKirjaus = tuntiKirjausDao.getAll();
-        LOGGER.debug("Found {} kirjaus' from database.", allKirjaus.map(List::size).orElse(0));
-
-        allKirjaus.ifPresent(kirjaus -> kirjaus.stream()
-                .filter(Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled))
-                .forEach(tuntiKirjaus -> tuntiKirjaus.setDuration(Duration.between(tuntiKirjaus.getStartTime(), tuntiKirjaus.getEndTime().get()))));
+        ObservableList<TuntiKirjaus> allKirjaus = tuntiKirjausDao.getAll().orElse(FXCollections.observableArrayList());
+        LOGGER.debug("Found {} kirjaus' from database.", allKirjaus.size());
 
         return allKirjaus;
     }
@@ -140,6 +159,7 @@ public class MainViewService {
                 .map(TuntiKirjaus::getLocalDateOfStartTime)
                 .distinct()
                 .map(Paiva::new)
+                .sorted()
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
@@ -149,8 +169,8 @@ public class MainViewService {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
-    private static ObservableList<TuntiKirjaus> getAllKirjausForPaiva(Map<LocalDate, ObservableList<TuntiKirjaus>> dateToTuntikirjausMap, LocalDate localDate){
-        return dateToTuntikirjausMap.get(localDate);
+    private static ObservableList<TuntiKirjaus> getAllKirjausForPaiva(LocalDate localDate){
+        return Optional.ofNullable(getDateToTuntikirjausMap().get(localDate)).orElse(FXCollections.observableArrayList());
     }
 
     private static Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(ObservableList<TuntiKirjaus> allTuntikirjaus){
@@ -161,6 +181,40 @@ public class MainViewService {
                                 Collectors.toCollection(FXCollections::observableArrayList)
                         )
                 );
+    }
+
+    private static Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(){
+        ObservableList<TuntiKirjaus> allTuntikirjaus = getAllKirjausFromDb();
+
+        return allTuntikirjaus.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                TuntiKirjaus::getLocalDateOfStartTime,
+                                Collectors.toCollection(FXCollections::observableArrayList)
+                        )
+                );
+    }
+
+    public static boolean populateTestData(){
+        setCurrentDate(new Paiva(LocalDate.now()));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3), LocalDateTime.now().minusHours(4), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4), LocalDateTime.now().minusHours(5), "IBD-1334 Lomakemuutokset", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5), LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6), LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7), null, "IBD-1234 Migraatiot", true));
+
+        setCurrentDate(new Paiva(LocalDate.now().minusDays(1)));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3).minusDays(1), LocalDateTime.now().minusHours(4).minusDays(1), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4).minusDays(1), LocalDateTime.now().minusHours(5).minusDays(1), "IBD-1334 Lomakemuutokset", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(1), LocalDateTime.now().minusHours(6).minusDays(1), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(1), null, "IBD-1234 Migraatiot", true));
+
+        setCurrentDate(new Paiva(LocalDate.now().minusDays(2)));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(2), LocalDateTime.now().minusHours(6).minusDays(2), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6).minusDays(2), LocalDateTime.now().minusHours(7).minusDays(2), "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(2), null, "IBD-1234 Migraatiot", true));
+
+        return true;
     }
 
 }

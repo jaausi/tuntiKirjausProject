@@ -13,12 +13,14 @@ import java.util.Optional;
 
 public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
 
+    public static final boolean DROP_TABLE_ON_START = true;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Override
     public Optional<ObservableList<TuntiKirjaus>> getAll() {
-        String query = "SELECT * FROM Tuntikirjaus";
+        String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
 
         ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
         try {
@@ -129,14 +131,16 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         }
     }
 
-    public static void dropTable() {
+    public static boolean dropTable() {
         String sqlQuery = "DROP TABLE IF EXISTS Tuntikirjaus";
         LOGGER.debug("Dropping table with sql query: {}", sqlQuery);
 
         try {
             DBUtil.dbExecuteUpdate(sqlQuery);
+            return true;
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Couldn't drop table: {}", e.getMessage());
+            return false;
         }
     }
 }

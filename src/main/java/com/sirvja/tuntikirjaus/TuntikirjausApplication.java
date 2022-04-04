@@ -1,5 +1,6 @@
 package com.sirvja.tuntikirjaus;
 
+import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.application.Application;
@@ -31,11 +32,11 @@ public class TuntikirjausApplication extends Application {
 
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
-        //TuntiKirjausDao.dropTable();
         LOGGER.debug("Initializing Tuntikirjaus table...");
         TuntiKirjausDao.initializeTable();
         LOGGER.debug("Tuntikirjaus table initialized.");
-
+//        TuntiKirjausDao.dropTable();
+//        MainViewService.populateTestData();
         launch();
     }
 }

@@ -27,6 +27,6 @@ public class Paiva implements Comparable<Paiva> {
 
     @Override
     public int compareTo(Paiva paiva) {
-        return this.localDate.compareTo(paiva.localDate);
+        return paiva.localDate.compareTo(this.localDate);
     }
 }
