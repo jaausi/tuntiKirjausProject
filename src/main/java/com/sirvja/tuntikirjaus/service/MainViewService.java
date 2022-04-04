@@ -1,6 +1,5 @@
 package com.sirvja.tuntikirjaus.service;
 
-import com.sirvja.tuntikirjaus.controller.MainViewController;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
@@ -15,8 +14,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalUnit;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

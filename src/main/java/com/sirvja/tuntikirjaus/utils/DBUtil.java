@@ -1,17 +1,46 @@
 package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
-import javax.sql.rowset.CachedRowSet;
-import javax.sql.rowset.RowSetProvider;
-import java.sql.*;
-import java.util.Objects;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.*;
+import java.util.Optional;
 
 
 public class DBUtil {
-    private static final String location = Objects.requireNonNull(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db")).toExternalForm();
+    private static String location;
     private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
+
+    public static void checkOrCreateDatabaseFile(){
+        Optional<URL> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db"));
+
+        // Don't use database in resource folder, if running from jar file
+        if(optionalLocation.isPresent() && !optionalLocation.get().toString().contains(".jar")){
+            location = optionalLocation.get().getPath();
+        } else {
+            File currentDir = SystemUtils.getUserDir();
+            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", currentDir);
+
+            try {
+                File directoryFile = new File("database");
+                File databaseFile = new File("database/tuntikirjaus.db");
+
+                assert directoryFile.exists() || directoryFile.mkdir();
+                assert databaseFile.exists() || databaseFile.createNewFile();
+
+                location = databaseFile.getPath();
+            } catch (IOException e){
+                LOGGER.error("Couldn't create database file: {}", e.getMessage());
+            }
+        }
+        LOGGER.debug("Using database in location: {}", location);
+    }
 
     public static Connection connect() {
         String dbPrefix = "jdbc:sqlite:";

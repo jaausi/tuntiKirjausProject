@@ -1,16 +1,13 @@
 package com.sirvja.tuntikirjaus;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.application.Application;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 
 public class TuntikirjausApplication extends Application {
@@ -30,6 +27,8 @@ public class TuntikirjausApplication extends Application {
     }
 
     public static void main(String[] args) {
+        DBUtil.checkOrCreateDatabaseFile();
+
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
         //TuntiKirjausDao.dropTable();

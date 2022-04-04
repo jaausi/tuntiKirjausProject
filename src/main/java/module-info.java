@@ -5,6 +5,7 @@ module com.sirvja.tuntikirjaus {
     requires org.xerial.sqlitejdbc;
     requires java.sql.rowset;
     requires org.slf4j;
+    requires org.apache.commons.lang3;
 
     opens com.sirvja.tuntikirjaus to javafx.fxml;
     exports com.sirvja.tuntikirjaus;
