@@ -4,30 +4,28 @@ import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
-import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MainViewController implements Initializable {
 
@@ -40,13 +38,21 @@ public class MainViewController implements Initializable {
     @FXML
     private TableColumn<TuntiKirjaus, String> aiheColumn;
     @FXML
-    private TableColumn<TuntiKirjaus, Duration> tunnitColumn;
+    private TableColumn<TuntiKirjaus, String> tunnitColumn;
     @FXML
     private TextField aiheField;
     @FXML
     private ListView<Paiva> daysListView = new ListView<>();
     @FXML
     private MenuItem changeThemeMenuItem;
+    @FXML
+    private MenuItem updateDurationsMenuItem;
+    @FXML
+    private MenuItem undoMenuItem;
+    @FXML
+    private MenuItem redoMenuItem;
+    @FXML
+    private MenuItem aboutMenuItem;
     @FXML
     private TextField kellonAikaField;
     @FXML
@@ -68,7 +74,7 @@ public class MainViewController implements Initializable {
     public void initialize (URL url, ResourceBundle rb){
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
-        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, Duration>("duration"));
+        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("duration"));
 
         updateView();
         daysListView.getSelectionModel().selectFirst();
@@ -76,9 +82,32 @@ public class MainViewController implements Initializable {
 
         // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
         daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            MainViewService.setCurrentDate(newValue);
-            updateView();
+            if(newValue != null){
+                MainViewService.setCurrentDate(newValue);
+                updateView();
+            }
         });
+    }
+
+    @FXML
+    protected void onChangeAboutMenuItem() {
+
+    }
+
+    @FXML
+    protected void onChangeRedoMenuItem() {
+
+    }
+
+    @FXML
+    protected void onChangeUndoMenuItem() {
+
+    }
+
+    @FXML
+    protected void onChangeUpdateDurationsMenuItemAction() {
+        LOGGER.debug("Update durations clicked!");
+
     }
 
     @FXML
@@ -112,6 +141,17 @@ public class MainViewController implements Initializable {
         } else {
             styleSheets.add(darkThemeFile);
         }
+    }
+
+    @FXML
+    protected void onTallennaLeikepoydalleButtonClick(){
+        LOGGER.debug("Save to clipboard button pushed!");
+
+        String yhteenvetoText = MainViewService.getYhteenvetoText();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(yhteenvetoText);
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        clipboard.setContent(content);
     }
 
     @FXML
@@ -151,15 +191,6 @@ public class MainViewController implements Initializable {
         updateView();
     }
 
-    private void updateView(){
-        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
-        daysListView.setItems(MainViewService.getPaivaDataForTable());
-        yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
-        kellonAikaField.clear();
-        aiheField.clear();
-    }
-
-
     @FXML
     protected void onValitsePaivaButtonClick() {
         LOGGER.debug("Valitse päivä painettu!");
@@ -186,6 +217,14 @@ public class MainViewController implements Initializable {
     protected void onAiheFieldClick(){
         LOGGER.debug("Aihe field clicked!");
         aiheField.setStyle("-fx-border-color: none ; -fx-border-width: 0px ;");
+    }
+
+    private void updateView(){
+        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+        daysListView.setItems(MainViewService.getPaivaDataForTable());
+        yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
+        kellonAikaField.clear();
+        aiheField.clear();
     }
 
     private void showFieldNotFilledAlert(){

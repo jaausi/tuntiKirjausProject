@@ -1,5 +1,7 @@
 package com.sirvja.tuntikirjaus.domain;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -74,9 +76,13 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.topic = topic;
     }
 
-    public Duration getDuration() {
+    public String getDuration() {
+        return DurationFormatUtils.formatDuration(getDurationInDuration().toMillis(), "H:mm");
+    }
+
+    public Duration getDurationInDuration() {
         if(this.endTime != null){
-            return Duration.between(this.endTime, this.startTime);
+            return Duration.between(this.startTime, this.endTime).abs();
         }
         return Duration.ZERO;
     }
@@ -99,7 +105,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
-        this.duration = Duration.between(this.endTime, this.startTime);
+        this.duration = Duration.between(this.startTime, this.endTime).abs();
     }
 
     public LocalDate getLocalDateOfStartTime(){

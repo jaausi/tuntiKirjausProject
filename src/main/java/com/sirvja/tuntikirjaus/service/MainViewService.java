@@ -8,13 +8,11 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -56,7 +54,9 @@ public class MainViewService {
         tuntiKirjausList.add(tuntiKirjaus);
         paivaList = getAllPaivas(tuntiKirjausList);
         yhteenvetoText = getYhteenvetoText(currentDate);
-        addEndTimeToPreviousTuntikirjaus();
+        // TODO: Previous kirjaus doesn't have id, which makes it impossible to update db
+        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToPreviousTuntikirjaus();
+        previousKirjaus.ifPresent(tuntiKirjausDao::update);
         tuntiKirjausDao.save(tuntiKirjaus);
     }
 
@@ -110,7 +110,7 @@ public class MainViewService {
                         Collectors.groupingBy(
                                 TuntiKirjaus::getTopic,
                                 Collectors.collectingAndThen(
-                                        Collectors.summingLong(t -> t.getDuration().toMinutes()),
+                                        Collectors.summingLong(t -> t.getDurationInDuration().toMinutes()),
                                         minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))
                                 )
                         )
@@ -124,7 +124,7 @@ public class MainViewService {
         return returnValue.toString();
     }
 
-    private static void addEndTimeToPreviousTuntikirjaus(){
+    private static Optional<TuntiKirjaus> addEndTimeToPreviousTuntikirjaus(){
         ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
 
         LOGGER.debug("Adding endtime for previous kirjaus");
@@ -132,7 +132,7 @@ public class MainViewService {
         int indexB = tuntiKirjausListForDay.size()-2;
         if(indexA < 0 || indexB < 0){
             LOGGER.debug("Indexes are out of bounds returning");
-            return;
+            return Optional.empty();
         }
 
         TuntiKirjaus currentKirjaus = tuntiKirjausListForDay.get(indexA);
@@ -140,10 +140,12 @@ public class MainViewService {
         LOGGER.debug("Current kirjaus: {}", currentKirjaus);
         LOGGER.debug("Previous kirjaus: {}", previousKirjaus);
 
-        if(previousKirjaus.isEndTimeNull() && previousKirjaus.isDurationEnabled()){
+        if(previousKirjaus.isEndTimeNull()){
             LOGGER.debug("Allowed to add endtime.");
             previousKirjaus.setEndTime(currentKirjaus.getStartTime());
+
         }
+        return Optional.of(previousKirjaus);
     }
 
     private static ObservableList<TuntiKirjaus> getAllKirjausFromDb(){
@@ -163,27 +165,7 @@ public class MainViewService {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
-    private static ObservableList<Paiva> getAllPaivas(Map<LocalDate, ObservableList<TuntiKirjaus>> dateToTuntikirjausMap){
-        return dateToTuntikirjausMap.keySet().stream()
-                .map(Paiva::new)
-                .collect(Collectors.toCollection(FXCollections::observableArrayList));
-    }
-
-    private static ObservableList<TuntiKirjaus> getAllKirjausForPaiva(LocalDate localDate){
-        return Optional.ofNullable(getDateToTuntikirjausMap().get(localDate)).orElse(FXCollections.observableArrayList());
-    }
-
-    private static Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(ObservableList<TuntiKirjaus> allTuntikirjaus){
-        return allTuntikirjaus.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                TuntiKirjaus::getLocalDateOfStartTime,
-                                Collectors.toCollection(FXCollections::observableArrayList)
-                        )
-                );
-    }
-
-    private static Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(){
+    public static Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(){
         ObservableList<TuntiKirjaus> allTuntikirjaus = getAllKirjausFromDb();
 
         return allTuntikirjaus.stream()

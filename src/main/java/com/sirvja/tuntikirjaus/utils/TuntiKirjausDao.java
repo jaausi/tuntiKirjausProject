@@ -64,9 +64,9 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
 
     @Override
     public void update(TuntiKirjaus tuntiKirjaus) {
-        String query = String.format("UPDATE Tuntikirjaus" +
-                "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', DURATION_ENABLED=%b'" +
-                "WHERE ROWID='%s' LIMIT 1", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.getId());
+        String query = String.format("UPDATE Tuntikirjaus " +
+                "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', DURATION_ENABLED='%b' " +
+                "WHERE ROWID=%s", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.getId());
         LOGGER.debug("Updating Tuntikirjaus with sql query: {}", query);
 
         try{
