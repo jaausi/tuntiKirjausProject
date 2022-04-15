@@ -11,7 +11,7 @@ public interface Dao<T> {
 
     Optional<ObservableList<TuntiKirjaus>> getAll();
 
-    void save(T t);
+    T save(T t);
 
     void update(T t);
 

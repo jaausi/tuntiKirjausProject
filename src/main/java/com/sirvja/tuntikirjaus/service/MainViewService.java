@@ -26,7 +26,7 @@ public class MainViewService {
     private static LocalDate currentDate = LocalDate.now();
     private static ObservableList<TuntiKirjaus> tuntiKirjausList = getInitialTuntiData();
     private static ObservableList<Paiva> paivaList = getInitialPaivaData();
-    private static String yhteenvetoText = getYhteenvetoText();
+    private static String yhteenvetoText = getInitialYhteenvetoText();
 
     private static ObservableList<TuntiKirjaus> getInitialTuntiData(){
         return getAllKirjausFromDb();
@@ -51,13 +51,11 @@ public class MainViewService {
     }
 
     public static void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausList.add(tuntiKirjaus);
+        tuntiKirjausList.add(tuntiKirjausDao.save(tuntiKirjaus));
         paivaList = getAllPaivas(tuntiKirjausList);
         yhteenvetoText = getYhteenvetoText(currentDate);
-        // TODO: Previous kirjaus doesn't have id, which makes it impossible to update db
         Optional<TuntiKirjaus> previousKirjaus = addEndTimeToPreviousTuntikirjaus();
         previousKirjaus.ifPresent(tuntiKirjausDao::update);
-        tuntiKirjausDao.save(tuntiKirjaus);
     }
 
     public static LocalDateTime parseTimeFromString(String time) throws DateTimeParseException{
@@ -108,7 +106,7 @@ public class MainViewService {
                 .filter(predicate)
                 .collect(
                         Collectors.groupingBy(
-                                TuntiKirjaus::getTopic,
+                                TuntiKirjaus::getClassification,
                                 Collectors.collectingAndThen(
                                         Collectors.summingLong(t -> t.getDurationInDuration().toMinutes()),
                                         minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))
@@ -143,9 +141,13 @@ public class MainViewService {
         if(previousKirjaus.isEndTimeNull()){
             LOGGER.debug("Allowed to add endtime.");
             previousKirjaus.setEndTime(currentKirjaus.getStartTime());
-
+            updatePreviousKirjausToTuntikirjausList(previousKirjaus);
         }
         return Optional.of(previousKirjaus);
+    }
+
+    private static void updatePreviousKirjausToTuntikirjausList(TuntiKirjaus previousKirjaus) {
+        tuntiKirjausList.set(previousKirjaus.getId() - 1, previousKirjaus);
     }
 
     private static ObservableList<TuntiKirjaus> getAllKirjausFromDb(){

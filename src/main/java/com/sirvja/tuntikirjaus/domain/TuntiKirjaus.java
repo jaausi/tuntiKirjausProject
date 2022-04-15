@@ -72,6 +72,25 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         return topic;
     }
 
+    public String getClassification(){
+        String prefix = topic.split(" ")[0].toUpperCase();
+
+        String classification = null;
+        if ("OAW".equals(prefix)) {
+            classification = "Other admin work";
+        } else if(prefix.contains("-")) {
+            classification = getProjectFromJiraCode(prefix);
+        } else {
+            classification = prefix;
+        }
+
+        return classification;
+    }
+
+    private String getProjectFromJiraCode(String prefix) {
+        return prefix.split("-")[0];
+    }
+
     public void setTopic(String topic) {
         this.topic = topic;
     }
@@ -114,5 +133,9 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int rowid) {
+        id = rowid;
     }
 }

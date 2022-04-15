@@ -50,16 +50,24 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     }
 
     @Override
-    public void save(TuntiKirjaus tuntiKirjaus) {
+    public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
         String query = String.format("INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, DURATION_ENABLED) " +
-                "VALUES ('%s', '%s', '%s', '%b')", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled());
+                "VALUES ('%s', '%s', '%s', '%b') " +
+                "RETURNING ROWID", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled());
         LOGGER.debug("Inserting Tuntikirjaus with sql query: {}", query);
 
         try{
-            DBUtil.dbExecuteUpdate(query);
+            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
+
+            while (resultSet.next()){
+                LOGGER.debug(String.format("%s",resultSet.getInt("ROWID")));
+                tuntiKirjaus.setId(resultSet.getInt("ROWID"));
+            }
         } catch (SQLException | ClassNotFoundException e){
             LOGGER.error("Couldn't save Tuntikirjaus to database: {}", e.getMessage());
         }
+
+        return tuntiKirjaus;
     }
 
     @Override
