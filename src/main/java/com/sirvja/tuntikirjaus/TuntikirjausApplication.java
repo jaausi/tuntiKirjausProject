@@ -1,21 +1,20 @@
 package com.sirvja.tuntikirjaus;
 
+import com.sirvja.tuntikirjaus.service.MainViewService;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
+import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class TuntikirjausApplication extends Application {
     public static Stage stage;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TuntikirjausApplication.class);
+
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -29,6 +28,15 @@ public class TuntikirjausApplication extends Application {
     }
 
     public static void main(String[] args) {
+        DBUtil.checkOrCreateDatabaseFile();
+
+        System.setProperty("prism.lcdtext", "false");
+        assert DBUtil.checkDrivers();
+        LOGGER.debug("Initializing Tuntikirjaus table...");
+        TuntiKirjausDao.initializeTable();
+        LOGGER.debug("Tuntikirjaus table initialized.");
+//        TuntiKirjausDao.dropTable();
+//        MainViewService.populateTestData();
         launch();
     }
 }
