@@ -26,7 +26,6 @@ public class MainViewService {
     private static LocalDate currentDate = LocalDate.now();
     private static ObservableList<TuntiKirjaus> tuntiKirjausList = getInitialTuntiData();
     private static ObservableList<Paiva> paivaList = getInitialPaivaData();
-    private static String yhteenvetoText = getInitialYhteenvetoText();
 
     private static ObservableList<TuntiKirjaus> getInitialTuntiData(){
         return getAllKirjausFromDb();
@@ -34,26 +33,21 @@ public class MainViewService {
     private static ObservableList<Paiva> getInitialPaivaData(){
         return getAllPaivas(tuntiKirjausList);
     }
-    private static String getInitialYhteenvetoText(){
-        return getYhteenvetoText(currentDate);
-    }
 
     public static ObservableList<TuntiKirjaus> getTuntiDataForTable(){
+        Predicate<TuntiKirjaus> isForToday = tuntiKirjaus -> tuntiKirjaus.getLocalDateOfStartTime().equals(currentDate);
+
         return tuntiKirjausList.stream()
-                .filter(tuntiKirjaus -> tuntiKirjaus.getLocalDateOfStartTime().equals(currentDate))
+                .filter(isForToday)
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
     public static ObservableList<Paiva> getPaivaDataForTable(){
         return paivaList;
     }
-    public static String getYhteenvetoText(){
-        return yhteenvetoText;
-    }
 
     public static void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
         tuntiKirjausList.add(tuntiKirjausDao.save(tuntiKirjaus));
         paivaList = getAllPaivas(tuntiKirjausList);
-        yhteenvetoText = getYhteenvetoText(currentDate);
         Optional<TuntiKirjaus> previousKirjaus = addEndTimeToPreviousTuntikirjaus();
         previousKirjaus.ifPresent(tuntiKirjausDao::update);
     }
@@ -90,10 +84,9 @@ public class MainViewService {
             paivaList = paivaList.sorted();
         }
         currentDate = paiva.getLocalDate();
-        yhteenvetoText = getYhteenvetoText(currentDate);
     }
 
-    private static String getYhteenvetoText(LocalDate localDate){
+    public static String getYhteenvetoText(){
         ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
 
         if(tuntiKirjausListForDay == null || tuntiKirjausListForDay.isEmpty()){
@@ -141,13 +134,9 @@ public class MainViewService {
         if(previousKirjaus.isEndTimeNull()){
             LOGGER.debug("Allowed to add endtime.");
             previousKirjaus.setEndTime(currentKirjaus.getStartTime());
-            updatePreviousKirjausToTuntikirjausList(previousKirjaus);
         }
-        return Optional.of(previousKirjaus);
-    }
 
-    private static void updatePreviousKirjausToTuntikirjausList(TuntiKirjaus previousKirjaus) {
-        tuntiKirjausList.set(previousKirjaus.getId() - 1, previousKirjaus);
+        return Optional.of(previousKirjaus);
     }
 
     private static ObservableList<TuntiKirjaus> getAllKirjausFromDb(){

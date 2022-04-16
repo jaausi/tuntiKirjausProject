@@ -13,9 +13,9 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String topic;
-    private Boolean durationEnabled;
-    private Duration duration;
+    private boolean durationEnabled;
 
+    //**************** CONSTRUCTORS *****************//
     public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
@@ -26,7 +26,6 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.topic = topic;
         this.durationEnabled = durationEnabled;
     }
-
     public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
@@ -39,37 +38,49 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.durationEnabled = durationEnabled;
     }
 
+    //**************** Common methods for object *****************//
     @Override
     public int compareTo(TuntiKirjaus tuntiKirjaus){
         return this.startTime.compareTo(tuntiKirjaus.startTime);
     }
 
-    public Boolean getDurationEnabled() {
-        return durationEnabled;
+    public int getId() {
+        return id;
+    }
+    public void setId(int rowid) {
+        id = rowid;
     }
 
-    public void setDurationEnabled(Boolean durationEnabled) {
-        this.durationEnabled = durationEnabled;
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
+    public Optional<LocalDateTime> getEndTime() {
+        return Optional.ofNullable(endTime);
+    }
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
     public boolean isEndTimeNull(){
-        return this.endTime == null;
+        return getEndTime().isEmpty();
     }
 
     public boolean isDurationEnabled(){
         return this.durationEnabled;
     }
-
-    public LocalTime getTime() {
-        return LocalTime.of(startTime.getHour(), startTime.getMinute());
+    public void setDurationEnabled(boolean durationEnabled) {
+        this.durationEnabled = durationEnabled;
     }
 
-    public void setTime(LocalTime localTime){
-        this.startTime = LocalDateTime.of(LocalDate.now(), localTime);
-    }
-
-    public String getTopic() {
-        return topic;
+    public Duration getDurationInDuration() {
+        Optional<LocalDateTime> optionalEndTime = getEndTime();
+        if(optionalEndTime.isPresent()){
+            return Duration.between(this.startTime, optionalEndTime.get()).abs();
+        }
+        return Duration.ZERO;
     }
 
     public String getClassification(){
@@ -81,61 +92,37 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         } else if(prefix.contains("-")) {
             classification = getProjectFromJiraCode(prefix);
         } else {
-            classification = prefix;
+            classification = topic;
         }
 
         return classification;
     }
-
     private String getProjectFromJiraCode(String prefix) {
         return prefix.split("-")[0];
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getDuration() {
-        return DurationFormatUtils.formatDuration(getDurationInDuration().toMillis(), "H:mm");
-    }
-
-    public Duration getDurationInDuration() {
-        if(this.endTime != null){
-            return Duration.between(this.startTime, this.endTime).abs();
-        }
-        return Duration.ZERO;
-    }
-
-    public void setDuration(Duration duration) {
-        this.duration = duration;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public Optional<LocalDateTime> getEndTime() {
-        return Optional.ofNullable(endTime);
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-        this.duration = Duration.between(this.startTime, this.endTime).abs();
     }
 
     public LocalDate getLocalDateOfStartTime(){
         return this.startTime.toLocalDate();
     }
 
-    public int getId() {
-        return id;
-    }
 
-    public void setId(int rowid) {
-        id = rowid;
+    //**************** Methods for tableview *****************//
+    public LocalTime getTime() {
+        return LocalTime.of(startTime.getHour(), startTime.getMinute());
+    }
+    public void setTime(LocalTime localTime){
+        this.startTime = LocalDateTime.of(LocalDate.now(), localTime);
+    }
+    public String getTopic() {
+        return topic;
+    }
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+    public String getDurationString() {
+        if(isEndTimeNull() || !isDurationEnabled()){
+            return "-";
+        }
+        return DurationFormatUtils.formatDuration(getDurationInDuration().toMillis(), "H:mm");
     }
 }
