@@ -14,7 +14,7 @@ import java.io.IOException;
 public class TuntikirjausApplication extends Application {
     public static Stage stage;
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntikirjausApplication.class);
-
+    public static final boolean DROP_TABLE_ON_START = false;
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -32,11 +32,15 @@ public class TuntikirjausApplication extends Application {
 
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
+
+        if(DROP_TABLE_ON_START){
+            TuntiKirjausDao.dropTable();
+            MainViewService.populateTestData();
+        }
+
         LOGGER.debug("Initializing Tuntikirjaus table...");
         TuntiKirjausDao.initializeTable();
         LOGGER.debug("Tuntikirjaus table initialized.");
-//        TuntiKirjausDao.dropTable();
-//        MainViewService.populateTestData();
         launch();
     }
 }

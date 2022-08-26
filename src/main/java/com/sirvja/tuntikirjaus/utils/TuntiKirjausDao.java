@@ -12,9 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
-
-    public static final boolean DROP_TABLE_ON_START = true;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
