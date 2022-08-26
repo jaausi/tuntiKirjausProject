@@ -6,7 +6,10 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.Clipboard;
@@ -14,9 +17,13 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,6 +52,8 @@ public class MainViewController implements Initializable {
     private MenuItem changeThemeMenuItem;
     @FXML
     private MenuItem updateDurationsMenuItem;
+    @FXML
+    private MenuItem reportsMenuItem;
     @FXML
     private MenuItem undoMenuItem;
     @FXML
@@ -138,6 +147,23 @@ public class MainViewController implements Initializable {
             styleSheets.remove(darkThemeFile);
         } else {
             styleSheets.add(darkThemeFile);
+        }
+    }
+
+    protected void onOpenReportsMenuItem(){
+        LOGGER.debug("Open reports clicked!");
+
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("reports_view.fxml"));
+            Parent root1 = (Parent) fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initStyle(StageStyle.UNDECORATED);
+            stage.setTitle("ABC");
+            stage.setScene(new Scene(root1));
+            stage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
