@@ -150,6 +150,7 @@ public class MainViewController implements Initializable {
         }
     }
 
+    @FXML
     protected void onOpenReportsMenuItem(){
         LOGGER.debug("Open reports clicked!");
 
@@ -159,7 +160,7 @@ public class MainViewController implements Initializable {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UNDECORATED);
-            stage.setTitle("ABC");
+            stage.setTitle("Tuntikirjaus reporting");
             stage.setScene(new Scene(root1));
             stage.show();
         } catch (IOException e) {
