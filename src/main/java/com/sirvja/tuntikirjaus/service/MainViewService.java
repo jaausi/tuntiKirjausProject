@@ -24,7 +24,7 @@ public class MainViewService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewService.class);
 
     private static LocalDate currentDate = LocalDate.now();
-    private static ObservableList<TuntiKirjaus> tuntiKirjausList = getInitialTuntiData();
+    private static final ObservableList<TuntiKirjaus> tuntiKirjausList = getInitialTuntiData();
     private static ObservableList<Paiva> paivaList = getInitialPaivaData();
 
     private static ObservableList<TuntiKirjaus> getInitialTuntiData(){

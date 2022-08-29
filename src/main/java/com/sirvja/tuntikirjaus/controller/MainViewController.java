@@ -19,7 +19,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,13 +154,20 @@ public class MainViewController implements Initializable {
         LOGGER.debug("Open reports clicked!");
 
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("reports_view.fxml"));
-            Parent root1 = (Parent) fxmlLoader.load();
+            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml"));
+            Parent root1 = fxmlLoader.load();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initStyle(StageStyle.UNDECORATED);
             stage.setTitle("Tuntikirjaus reporting");
-            stage.setScene(new Scene(root1));
+            Scene scene = new Scene(root1);
+
+            ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
+            String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
+            if(styleSheets.contains(darkThemeFile)){
+                scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
+            }
+
+            stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
             throw new RuntimeException(e);

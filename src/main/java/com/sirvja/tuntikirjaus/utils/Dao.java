@@ -9,7 +9,7 @@ public interface Dao<T> {
 
     Optional<T> get(int id);
 
-    Optional<ObservableList<TuntiKirjaus>> getAll();
+    Optional<ObservableList<T>> getAll();
 
     T save(T t);
 
