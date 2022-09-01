@@ -44,6 +44,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -59,6 +60,7 @@
           <items>
             <MenuItem fx:id="updateDurationsMenuItem" mnemonicParsing="false" onAction="#onChangeUpdateDurationsMenuItemAction" text="Päivitä kestot" />
             <MenuItem id="changeTheme" fx:id="changeThemeMenuItem" mnemonicParsing="false" onAction="#onChangeThemeMenuItemAction" text="Vaihda teema" />
+            <MenuItem fx:id="reportsMenuItem" mnemonicParsing="false" onAction="#onOpenReportsMenuItem" text="Open reports" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
@@ -74,11 +76,14 @@
         </Menu>
       </menus>
     </MenuBar>
-    <SplitPane dividerPositions="0.2505567928730512, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.2505567928730512, 0.7505567928730512" focusTraversable="false" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
       <items>
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
-                  <ListView fx:id="daysListView" prefHeight="389.0" prefWidth="222.0" VBox.vgrow="ALWAYS" />
+                  <ListView fx:id="daysListView" focusTraversable="false" prefHeight="389.0" prefWidth="222.0" VBox.vgrow="ALWAYS">
+                     <tooltip>
+                        <Tooltip text="Tässä näytetään lista päivistä, joille&#10;olet syöttänyt tuntikirjauksia. Listan&#10;elementtiä klikkaamalla saat esiin&#10;kyseisen päivän tunnit." />
+                     </tooltip></ListView>
                   <Button fx:id="valitsePaivaButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onValitsePaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Valitse päivä" />
                   <Button fx:id="uusiPaivaButton" layoutX="10.0" layoutY="484.0" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onUusiPaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Uusi päivä" />
                </children>
@@ -98,11 +103,17 @@
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Syötä työn aloituskellonaika jossakin&#10;seuraavista muodoista:&#10;&lt;h&gt;&#10;&lt;hh&gt;&#10;&lt;hmm&gt;&#10;&lt;hhmm&gt;&#10;&lt;h:m&gt;&#10;&lt;h:mm&gt;&#10;&lt;hh:mm&gt;&#10;&#10;Jos kellonaika kentän jättää tyhjäksi&#10;tulkitaan syötetyn työn aloitusajaksi&#10;nykyhetki." />
+                                       </tooltip>
                                     </TextField>
                                     <TextField fx:id="aiheField" layoutX="10.0" layoutY="10.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" onKeyPressed="#onKeyPressedToAiheField" onMouseClicked="#onAiheFieldClick" prefHeight="26.0" prefWidth="320.0" promptText="Aihe" HBox.hgrow="ALWAYS">
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Syötä aihe seuraavassa muodossa:&#10;&lt;taskin id&gt; &lt;tehdyn työn kuvaus/tyyppi&gt;&#10;Esim:&#10;UR-1234 Koodaus&#10;TYR-1234 Korjasin potilaslista bugin&#10;&#10;Jos tehty työ ei liity taskiin, esim palaverit&#10;syötä taskin id:n tilalle 'oaw' tai 'OAW',&#10;tällöin id parsitaan yhteenvetoon 'Other admin work'.&#10;Esim:&#10;oaw Daily&#10;oaw Refinement&#10;&#10;Työpäivän päättymisen voi merkitä esim. tekstillä&#10;'Lopetus'." />
+                                       </tooltip>
                                     </TextField>
                                  </children>
                               </HBox>
@@ -118,7 +129,7 @@
                         </VBox>
                      </children>
                   </AnchorPane>
-                  <TableView fx:id="tuntiTaulukko" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
+                  <TableView fx:id="tuntiTaulukko" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
                     <columns>
                       <TableColumn fx:id="kellonaikaColumn" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" text="Kellonaika" />
                       <TableColumn fx:id="aiheColumn" minWidth="100.0" prefWidth="290.0" text="Aihe" />
@@ -132,8 +143,11 @@
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="100.0" styleClass="right-box">
                <children>
-                  <TextArea fx:id="yhteenvetoTextArea" prefHeight="474.0" prefWidth="220.0" VBox.vgrow="ALWAYS" />
-                  <Button fx:id="tallennaLeikepoydalleButton" onAction="#onTallennaLeikepoydalleButtonClick" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" prefHeight="77.0" prefWidth="220.0" text="Tallenna leikepöydälle" />
+                  <TextArea fx:id="yhteenvetoTextArea" focusTraversable="false" prefHeight="474.0" prefWidth="220.0" VBox.vgrow="ALWAYS">
+                     <tooltip>
+                        <Tooltip text="Tässä näytetään aktiivisen päivän&#10;yhteenveto syötetyistä tunneista.&#10;Yhteenvedon avulla päivän tehdyt&#10;työt on helppo syöttää Tiimaan." />
+                     </tooltip></TextArea>
+                  <Button fx:id="tallennaLeikepoydalleButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaLeikepoydalleButtonClick" prefHeight="77.0" prefWidth="220.0" text="Tallenna leikepöydälle" />
                </children>
             </VBox>
       </items>

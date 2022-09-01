@@ -2,6 +2,7 @@ package com.sirvja.tuntikirjaus;
 
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
+import com.sirvja.tuntikirjaus.utils.ReportConfigDao;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -41,6 +42,9 @@ public class TuntikirjausApplication extends Application {
         LOGGER.debug("Initializing Tuntikirjaus table...");
         TuntiKirjausDao.initializeTable();
         LOGGER.debug("Tuntikirjaus table initialized.");
+        LOGGER.debug("Initializing ReportConfig table...");
+        ReportConfigDao.initializeTable();
+        LOGGER.debug("ReportConfig table initialized.");
         launch();
     }
 }

@@ -107,8 +107,8 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
                 LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
                 tuntiKirjaus = new TuntiKirjaus(
                         resultSet.getInt("ROWID"),
-                        LocalDateTime.parse(resultSet.getString("START_TIME"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                        LocalDateTime.parse(resultSet.getString("END_TIME"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                        LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
+                        LocalDateTime.parse(resultSet.getString("END_TIME"), dateTimeFormatter),
                         resultSet.getString("TOPIC"),
                         Boolean.parseBoolean(resultSet.getString("DURATION_ENABLED"))
                 );

@@ -84,3 +84,18 @@
     -fx-border-color: #272121;
     -fx-text-fill: #FF4D00;
 }
+
+.date-picker {
+    -fx-background-color: linear-gradient(to bottom, #2B2B2B, #272121);
+    -fx-border-color: #272121;
+    -fx-text-fill: #FF4D00;
+}
+
+.arrow {
+    -fx-text-fill: #FF4D00;
+    -fx-background-color: #FF4D00;
+}
+
+.label {
+    -fx-text-fill: #FF4D00;
+}
