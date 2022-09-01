@@ -110,6 +110,9 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     public LocalTime getTime() {
         return LocalTime.of(startTime.getHour(), startTime.getMinute());
     }
+    public LocalDateTime getDateTime(){
+        return startTime;
+    }
     public void setTime(LocalTime localTime){
         this.startTime = LocalDateTime.of(LocalDate.now(), localTime);
     }

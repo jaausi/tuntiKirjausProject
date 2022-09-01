@@ -43,6 +43,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox prefHeight="550.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.ReportsViewController">
@@ -83,7 +84,7 @@
                   </AnchorPane>
                   <TableView fx:id="raportitTuntiTaulukko" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0">
                      <columns>
-                        <TableColumn fx:id="raportitKellonaikaColumn" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" text="Kellonaika" />
+                        <TableColumn fx:id="raportitKellonaikaColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Ajankohta" />
                         <TableColumn fx:id="raportitAiheColumn" minWidth="100.0" prefWidth="290.0" text="Aihe" />
                         <TableColumn fx:id="raportitTunnitColumn" maxWidth="76.0" minWidth="76.0" prefWidth="76.0" text="Tunnit" />
                      </columns>
@@ -100,12 +101,14 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                                  <children>
-                                    <Label text="Yhteensä (tuntia): " />
+                                    <Label maxWidth="57.5" minWidth="57.5" prefWidth="57.5" text="Yhteensä: " />
                                     <TextField fx:id="tunnitYhteensaField" disable="true" editable="false" focusTraversable="false" layoutX="15.0" layoutY="17.0" maxHeight="26.0" maxWidth="110.0" minHeight="26.0" minWidth="110.0" prefHeight="26.0" prefWidth="110.0">
                                        <HBox.margin>
                                           <Insets />
                                        </HBox.margin>
                                     </TextField>
+                                    <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="tyhjennaKentatButton" maxHeight="26.0" maxWidth="200.0" minHeight="26.0" minWidth="100.0" mnemonicParsing="false" onAction="#onTyhjennaKentatButtonClick" prefHeight="26.0" prefWidth="200.0" text="Tyhjennä kentät" />
                                  </children>
                               </HBox>
                               <HBox alignment="CENTER_RIGHT" layoutX="15.0" layoutY="15.0" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">

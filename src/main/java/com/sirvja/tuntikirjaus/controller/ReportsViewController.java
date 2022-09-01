@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,7 +35,7 @@ public class ReportsViewController implements Initializable {
     @FXML
     private DatePicker loppupaivaDatePicker;
     @FXML
-    private TableColumn<TuntiKirjaus, LocalTime> raportitKellonaikaColumn;
+    private TableColumn<TuntiKirjaus, LocalDateTime> raportitKellonaikaColumn;
     @FXML
     private TableColumn<TuntiKirjaus, String> raportitAiheColumn;
     @FXML
@@ -47,10 +48,12 @@ public class ReportsViewController implements Initializable {
     private ListView<ReportConfig> tallennetutRaportitListView = new ListView<>();
     @FXML
     private TextField tunnitYhteensaField;
+    @FXML
+    private Button tyhjennaKentatButton;
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
-        raportitKellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
+        raportitKellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalDateTime>("dateTime"));
         raportitAiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
         raportitTunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("durationString"));
 
@@ -80,6 +83,22 @@ public class ReportsViewController implements Initializable {
     @FXML
     protected void onAvaaRaporttiButtonClick() {
         LOGGER.debug("Avaa raportti clicked.");
+        Optional<ReportConfig> optionalReportConfig = Optional.ofNullable(tallennetutRaportitListView.getSelectionModel().getSelectedItem());
+
+        optionalReportConfig.ifPresent(reportConfig -> {
+            alkupaivaDatePicker.valueProperty().setValue(reportConfig.getStartDate().orElse(null));
+            loppupaivaDatePicker.valueProperty().setValue(reportConfig.getEndDate().orElse(null));
+            hakusanaField.setText(reportConfig.getSearchQuery());
+        });
+
+        onHaeButtonClick();
+    }
+
+    @FXML
+    protected void onTyhjennaKentatButtonClick(){
+        alkupaivaDatePicker.valueProperty().setValue(null);
+        loppupaivaDatePicker.valueProperty().setValue(null);
+        hakusanaField.setText(null);
     }
 
     @FXML
@@ -93,9 +112,11 @@ public class ReportsViewController implements Initializable {
         long sumOfHoursInMinutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(tuntiKirjausList);
         String hours = String.valueOf(Math.round(sumOfHoursInMinutes/60f));
         String minutes = String.valueOf(Math.round(sumOfHoursInMinutes%60f));
+        DecimalFormat decimalFormat = new DecimalFormat("0.0");
+        String htps = decimalFormat.format(sumOfHoursInMinutes/60.0f/7.5);
 
         raportitTuntiTaulukko.setItems(tuntiKirjausList);
-        tunnitYhteensaField.setText(String.format("%sh %sm", hours, minutes));
+        tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
     }
 
     @FXML
@@ -106,24 +127,22 @@ public class ReportsViewController implements Initializable {
         Optional<String> optionalSearchQuery = Optional.ofNullable(hakusanaField.getText());
 
         // create a text input dialog
-        TextInputDialog td = new TextInputDialog("enter any text");
+        TextInputDialog td = new TextInputDialog("Syötä raportin nimi");
 
         // setHeaderText
-        td.setHeaderText("enter your name");
-        td.showAndWait();
+        td.setHeaderText("Raportin talennus");
+        td.showAndWait().ifPresent(reportName -> {
+            ReportConfig reportConfig = new ReportConfig(
+                    optionalAlkuPaiva.orElse(null),
+                    optionalLoppupaiva.orElse(null),
+                    optionalSearchQuery.orElse(null),
+                    reportName
+            );
 
-        Optional<String> optionalReportName = Optional.of(td.getEditor().getText());
+            ReportsViewService.addReportConfigToDb(reportConfig);
 
-        ReportConfig reportConfig = new ReportConfig(
-                optionalAlkuPaiva.orElse(null),
-                optionalLoppupaiva.orElse(null),
-                optionalSearchQuery.orElse(null),
-                optionalReportName.orElse(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")))
-        );
-
-        ReportsViewService.addReportConfigToDb(reportConfig);
-
-        updateView();
+            updateView();
+        });
     }
 
     private void updateView(){
