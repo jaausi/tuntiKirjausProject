@@ -99,3 +99,8 @@
 .label {
     -fx-text-fill: #FF4D00;
 }
+
+.tooltip {
+    -fx-show-delay: 250ms;
+    -fx-show-duration: 10000ms;
+}
