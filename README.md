@@ -26,6 +26,18 @@ Run the project (if you don't want to lose fed data, leave out "clean")
 mvn clean javafx:run  
 ```
 
+## How to Install the application
+
+```
+# This command:
+#   1) builds new jar from sources, 
+#   2) creates folder tuntikirjaus under user home dir, 
+#   3) creates folder for database under tuntikirjaus folder, 
+#   4) copies built jar to tuntikirjaus folder and 
+#   5) gives alias to be saved in .bash_aliases file for easy use of application.
+make install
+```
+
 ## How to Use the Application
 
 ### Normal Use
