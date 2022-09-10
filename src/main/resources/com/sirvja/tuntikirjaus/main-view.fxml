@@ -52,7 +52,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<?import com.sirvja.tuntikirjaus.utils.AutoCompleteTextField?>
+<?import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField?>
 <VBox prefHeight="600.0" prefWidth="900.0" styleClass="main-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.MainViewController">
   <children>
     <MenuBar VBox.vgrow="NEVER">

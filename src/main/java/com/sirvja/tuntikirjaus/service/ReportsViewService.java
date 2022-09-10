@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 
 public class ReportsViewService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportsViewService.class);
     private static final ReportConfigDao reportConfigDao = new ReportConfigDao();
     private static final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportsViewService.class);
 
     private static final LocalDate currentDate = LocalDate.now();
     private static final ObservableList<ReportConfig> reportConfigList = getInitialReportConfigs();

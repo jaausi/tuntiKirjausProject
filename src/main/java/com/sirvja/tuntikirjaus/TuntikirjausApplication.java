@@ -1,9 +1,7 @@
 package com.sirvja.tuntikirjaus;
 
 import com.sirvja.tuntikirjaus.service.MainViewService;
-import com.sirvja.tuntikirjaus.utils.DBUtil;
-import com.sirvja.tuntikirjaus.utils.ReportConfigDao;
-import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.utils.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -12,10 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
+import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
+
 public class TuntikirjausApplication extends Application {
-    public static Stage stage;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntikirjausApplication.class);
-    public static final boolean DROP_TABLE_ON_START = false;
+    public static Stage stage;
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -29,22 +29,7 @@ public class TuntikirjausApplication extends Application {
     }
 
     public static void main(String[] args) {
-        DBUtil.checkOrCreateDatabaseFile();
-
-        System.setProperty("prism.lcdtext", "false");
-        assert DBUtil.checkDrivers();
-
-        if(DROP_TABLE_ON_START){
-            TuntiKirjausDao.dropTable();
-            MainViewService.populateTestData();
-        }
-
-        LOGGER.debug("Initializing Tuntikirjaus table...");
-        TuntiKirjausDao.initializeTable();
-        LOGGER.debug("Tuntikirjaus table initialized.");
-        LOGGER.debug("Initializing ReportConfig table...");
-        ReportConfigDao.initializeTable();
-        LOGGER.debug("ReportConfig table initialized.");
+        Initializer.initializeApplication();
         launch();
     }
 }

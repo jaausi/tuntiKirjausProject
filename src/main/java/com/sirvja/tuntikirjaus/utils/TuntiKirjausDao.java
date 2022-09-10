@@ -7,17 +7,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
+import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
+import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
+
 public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
-    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Override
     public Optional<ObservableList<TuntiKirjaus>> getAll() {
-        String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
+        return getAllInternal(Optional.empty());
+    }
+
+    @Override
+    public Optional<ObservableList<TuntiKirjaus>> getAllFrom(LocalDate localDate) {
+        return getAllInternal(Optional.of(localDate));
+    }
+
+    public Optional<ObservableList<TuntiKirjaus>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
+        String query = optionalLocalDate
+                .map(localDate ->
+                        "SELECT * FROM Tuntikirjaus WHERE CAST(strftime('%s', START_TIME)  AS  integer) > CAST(strftime('%s', '" +
+                                localDate.format(dateFormatter) + "')  AS  integer) ORDER BY START_TIME ASC;")
+                .orElse("SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC");
+        //String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
+        LOGGER.debug("Query: {}", query);
 
         ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
         try {
@@ -120,7 +138,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         return Optional.ofNullable(tuntiKirjaus);
     }
 
-    public static void initializeTable() {
+    public static void initializeTableIfNotExisting() {
         String sqlQuery = "CREATE TABLE IF NOT EXISTS Tuntikirjaus(" +
                 "ROWID              INTEGER                     PRIMARY KEY," +
                 "START_TIME         TEXT                        NOT NULL," +

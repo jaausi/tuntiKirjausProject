@@ -9,18 +9,27 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
+import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
+
 public class ReportConfigDao implements Dao<ReportConfig> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportConfigDao.class);
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public Optional<ObservableList<ReportConfig>> getAll() {
-        String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";
+        return getAllInternal(Optional.empty());
+    }
 
+    @Override
+    public Optional<ObservableList<ReportConfig>> getAllFrom(LocalDate localDate) {
+        return getAllInternal(Optional.of(localDate));
+    }
+
+    public Optional<ObservableList<ReportConfig>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
+        String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";
+        LOGGER.debug("Query: {}", query);
         ObservableList<ReportConfig> returnObject = FXCollections.observableArrayList();
         try {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
@@ -44,6 +53,7 @@ public class ReportConfigDao implements Dao<ReportConfig> {
 
         return Optional.of(returnObject);
     }
+
 
     @Override
     public ReportConfig save(ReportConfig reportConfig) {
@@ -119,7 +129,7 @@ public class ReportConfigDao implements Dao<ReportConfig> {
         return Optional.ofNullable(reportConfig);
     }
 
-    public static void initializeTable() {
+    public static void initializeTableIfNotExisting() {
         String sqlQuery = "CREATE TABLE IF NOT EXISTS ReportConfig(" +
                 "ROWID              INTEGER                     PRIMARY KEY," +
                 "START_DATE         TEXT                                ," +

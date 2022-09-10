@@ -19,11 +19,11 @@ public class DBUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
 
     public static void checkOrCreateDatabaseFile(){
-        Optional<URL> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db"));
+        Optional<String> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db").toExternalForm());
 
         // Don't use database in resource folder, if running from jar file
-        if(optionalLocation.isPresent() && !optionalLocation.get().toString().contains(".jar")){
-            location = optionalLocation.get().getPath();
+        if(optionalLocation.isPresent() && !optionalLocation.get().contains(".jar")){
+            location = optionalLocation.get();
         } else {
             File currentDir = SystemUtils.getUserDir();
             LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", currentDir);

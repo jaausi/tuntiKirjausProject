@@ -1,7 +1,5 @@
-package com.sirvja.tuntikirjaus.utils;
+package com.sirvja.tuntikirjaus.customFields;
 
-import com.sirvja.tuntikirjaus.controller.MainViewController;
-import com.sirvja.tuntikirjaus.service.MainViewService;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Side;
@@ -218,9 +216,9 @@ public class AutoCompleteTextField<S> extends TextField {
             });
             menuItems.add(item);
 
-            LOGGER.debug(String.format("CustomMenuItem: \n\t- StyleClass: %s\n\t- Style: %s", item.getStyleClass(), item.getStyle()));
-            LOGGER.debug(String.format("TextFlow: \n\t- StyleClass: %s\n\t- Style: %s", entryFlow.getStyleClass(), entryFlow.getStyle()));
-            LOGGER.debug(String.format("Text (post): \n\t- StyleClass: %s\n\t- Style: %s", post.getStyleClass(), post.getStyle()));
+            //LOGGER.debug(String.format("CustomMenuItem: \n\t- StyleClass: %s\n\t- Style: %s", item.getStyleClass(), item.getStyle()));
+            //LOGGER.debug(String.format("TextFlow: \n\t- StyleClass: %s\n\t- Style: %s", entryFlow.getStyleClass(), entryFlow.getStyle()));
+            //LOGGER.debug(String.format("Text (post): \n\t- StyleClass: %s\n\t- Style: %s", post.getStyleClass(), post.getStyle()));
         }
         entriesPopup.getItems().clear();
         entriesPopup.getItems().addAll(menuItems);
