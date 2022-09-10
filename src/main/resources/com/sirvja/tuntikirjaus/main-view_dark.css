@@ -79,13 +79,40 @@
     -fx-prompt-text-fill: rgba(181, 181, 181, 0.5);
 }
 
-.button {
-    -fx-background-color: linear-gradient(to bottom, #2B2B2B, #272121);
-    -fx-border-color: #272121;
-    -fx-text-fill: #FF4D00;
+.context-menu {
+    -fx-background-color: #2B2B2B;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 0 6 6 6, 0 5 5 5, 0 4 4 4;
+    -fx-padding: 0.333333em 0.083333em 0.666667em 0.083333em; /* 4 1 8 1 */
 }
 
-.date-picker {
+.menu-item .label {
+    -fx-text-fill: #FF4D00;
+    -fx-background-color: #2B2B2B;
+}
+
+.menu-item:focused {
+    -fx-background-color: #FF4D00;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: #2B2B2B;
+    -fx-background-color: #FF4D00;
+}
+
+.auto-complete-field {
+    -fx-highlight-text-fill: #2B2B2B;
+}
+
+.auto-complete-field Text {
+    -fx-fill: #B5B5B5;
+}
+
+.auto-complete-field .menu-item:focused Text {
+    -fx-fill: #2B2B2B;
+}
+
+.button {
     -fx-background-color: linear-gradient(to bottom, #2B2B2B, #272121);
     -fx-border-color: #272121;
     -fx-text-fill: #FF4D00;

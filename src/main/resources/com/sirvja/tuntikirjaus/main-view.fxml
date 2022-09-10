@@ -52,6 +52,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
+<?import com.sirvja.tuntikirjaus.utils.AutoCompleteTextField?>
 <VBox prefHeight="600.0" prefWidth="900.0" styleClass="main-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.MainViewController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
@@ -107,14 +108,14 @@
                                           <Tooltip text="Syötä työn aloituskellonaika jossakin&#10;seuraavista muodoista:&#10;&lt;h&gt;&#10;&lt;hh&gt;&#10;&lt;hmm&gt;&#10;&lt;hhmm&gt;&#10;&lt;h:m&gt;&#10;&lt;h:mm&gt;&#10;&lt;hh:mm&gt;&#10;&#10;Jos kellonaika kentän jättää tyhjäksi&#10;tulkitaan syötetyn työn aloitusajaksi&#10;nykyhetki." />
                                        </tooltip>
                                     </TextField>
-                                    <TextField fx:id="aiheField" layoutX="10.0" layoutY="10.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" onKeyPressed="#onKeyPressedToAiheField" onMouseClicked="#onAiheFieldClick" prefHeight="26.0" prefWidth="320.0" promptText="Aihe" HBox.hgrow="ALWAYS">
+                                    <AutoCompleteTextField fx:id="aiheField" styleClass="auto-complete-field" layoutX="10.0" layoutY="10.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" onKeyPressed="#onKeyPressedToAiheField" onMouseClicked="#onAiheFieldClick" prefHeight="26.0" prefWidth="320.0" promptText="Aihe" HBox.hgrow="ALWAYS">
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>
                                        <tooltip>
                                           <Tooltip text="Syötä aihe seuraavassa muodossa:&#10;&lt;taskin id&gt; &lt;tehdyn työn kuvaus/tyyppi&gt;&#10;Esim:&#10;UR-1234 Koodaus&#10;TYR-1234 Korjasin potilaslista bugin&#10;&#10;Jos tehty työ ei liity taskiin, esim palaverit&#10;syötä taskin id:n tilalle 'oaw' tai 'OAW',&#10;tällöin id parsitaan yhteenvetoon 'Other admin work'.&#10;Esim:&#10;oaw Daily&#10;oaw Refinement&#10;&#10;Työpäivän päättymisen voi merkitä esim. tekstillä&#10;'Lopetus'." />
                                        </tooltip>
-                                    </TextField>
+                                    </AutoCompleteTextField>
                                  </children>
                               </HBox>
                               <HBox alignment="CENTER_RIGHT" layoutX="15.0" layoutY="15.0" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">

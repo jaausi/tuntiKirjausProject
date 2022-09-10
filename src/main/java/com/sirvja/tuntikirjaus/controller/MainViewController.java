@@ -4,6 +4,7 @@ import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
+import com.sirvja.tuntikirjaus.utils.AutoCompleteTextField;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class MainViewController implements Initializable {
 
@@ -44,7 +45,7 @@ public class MainViewController implements Initializable {
     @FXML
     private TableColumn<TuntiKirjaus, String> tunnitColumn;
     @FXML
-    private TextField aiheField;
+    private AutoCompleteTextField<String> aiheField;
     @FXML
     private ListView<Paiva> daysListView = new ListView<>();
     @FXML
@@ -91,6 +92,14 @@ public class MainViewController implements Initializable {
             if(newValue != null){
                 MainViewService.setCurrentDate(newValue);
                 updateView();
+            }
+        });
+
+        aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue != null){
+                aiheField.setText(newValue);
+                aiheField.positionCaret(newValue.length());
             }
         });
     }
