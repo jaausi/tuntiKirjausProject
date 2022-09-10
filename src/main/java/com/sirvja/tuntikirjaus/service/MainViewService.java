@@ -13,8 +13,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -168,24 +170,35 @@ public class MainViewService {
                 );
     }
 
-    public static boolean populateTestData(){
-        setCurrentDate(new Paiva(LocalDate.now()));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3), LocalDateTime.now().minusHours(4), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4), LocalDateTime.now().minusHours(5), "IBD-1334 Lomakemuutokset", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5), LocalDateTime.now().minusHours(6), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6), LocalDateTime.now().minusHours(7), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7), null, "IBD-1234 Migraatiot", true));
+    public static Optional<Set<String>> getAiheEntries(){
+        Set<String> alltopics = getAllKirjausFromDb().stream()
+                .map(TuntiKirjaus::getTopic)
+                .collect(Collectors.toSet());
 
-        setCurrentDate(new Paiva(LocalDate.now().minusDays(1)));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3).minusDays(1), LocalDateTime.now().minusHours(4).minusDays(1), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4).minusDays(1), LocalDateTime.now().minusHours(5).minusDays(1), "IBD-1334 Lomakemuutokset", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(1), LocalDateTime.now().minusHours(6).minusDays(1), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(1), null, "IBD-1234 Migraatiot", true));
+        LOGGER.debug(String.format("Got all topics from db: %s", alltopics));
+
+        return Optional.of(alltopics);
+    }
+
+    public static boolean populateTestData(){
 
         setCurrentDate(new Paiva(LocalDate.now().minusDays(2)));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(2), LocalDateTime.now().minusHours(6).minusDays(2), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6).minusDays(2), LocalDateTime.now().minusHours(7).minusDays(2), "IBD-1234 Migraatiot", true));
-        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(2), null, "IBD-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(2), LocalDateTime.now().minusHours(6).minusDays(2), "IBD-1220 Koodaus", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6).minusDays(2), LocalDateTime.now().minusHours(7).minusDays(2), "HAAV-1102 Koodaus", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(2), null, "HAAV-1234 Migraatiot", true));
+
+        setCurrentDate(new Paiva(LocalDate.now().minusDays(1)));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3).minusDays(1), LocalDateTime.now().minusHours(4).minusDays(1), "LON-1244 Koodaus", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4).minusDays(1), LocalDateTime.now().minusHours(5).minusDays(1), "POL-1334 Katselmointi", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(1), LocalDateTime.now().minusHours(6).minusDays(1), "TYR-1234 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7).minusDays(1), null, "IBD-1534 Testaus", true));
+
+        setCurrentDate(new Paiva(LocalDate.now()));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(3), LocalDateTime.now().minusHours(4), "IBD-1114 Koodaus", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(4), LocalDateTime.now().minusHours(5), "NEF-1334 Lomakemuutokset", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(5), LocalDateTime.now().minusHours(6), "UR-1234 Testaus", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(6), LocalDateTime.now().minusHours(7), "IBD-1224 Migraatiot", true));
+        addTuntikirjaus(new TuntiKirjaus(LocalDateTime.now().minusHours(7), null, "VI-1234 Katselmointi", true));
 
         return true;
     }
