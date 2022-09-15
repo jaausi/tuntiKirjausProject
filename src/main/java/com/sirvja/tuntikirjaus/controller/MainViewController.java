@@ -227,6 +227,8 @@ public class MainViewController implements Initializable {
 
         MainViewService.addTuntikirjaus(tuntiKirjaus);
 
+        aiheField.getEntries().add(tuntiKirjaus.getTopic());
+
         updateView();
     }
 
