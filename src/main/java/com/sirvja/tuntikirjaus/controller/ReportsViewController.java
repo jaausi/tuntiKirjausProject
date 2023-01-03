@@ -25,6 +25,12 @@ public class ReportsViewController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
     @FXML
+    private Button dateBackward;
+    @FXML
+    private Button dateForward;
+    @FXML
+    private Button dateNow;
+    @FXML
     private DatePicker alkupaivaDatePicker;
     @FXML
     private Button avaaRaporttiButton;
@@ -60,6 +66,34 @@ public class ReportsViewController implements Initializable {
         updateView();
     }
 
+
+    @FXML
+    protected void onDateBackwardClick() {
+        LocalDate currentAlkupaiva = alkupaivaDatePicker.valueProperty().getValue();
+        LocalDate currentLoppupaiva = loppupaivaDatePicker.valueProperty().getValue();
+
+        alkupaivaDatePicker.valueProperty().setValue(currentAlkupaiva.minusDays(1));
+        loppupaivaDatePicker.valueProperty().setValue(currentLoppupaiva.minusDays(1));
+
+        onHaeButtonClick();
+    }
+
+    @FXML
+    protected void onDateForwardClick() {
+        LocalDate currentAlkupaiva = alkupaivaDatePicker.valueProperty().getValue();
+        LocalDate currentLoppupaiva = loppupaivaDatePicker.valueProperty().getValue();
+
+        alkupaivaDatePicker.valueProperty().setValue(currentAlkupaiva.plusDays(1));
+        loppupaivaDatePicker.valueProperty().setValue(currentLoppupaiva.plusDays(1));
+
+        onHaeButtonClick();
+    }
+
+    @FXML
+    protected void onDateNowClick() {
+        alkupaivaDatePicker.valueProperty().setValue(LocalDate.now());
+        loppupaivaDatePicker.valueProperty().setValue(LocalDate.now());
+    }
     @FXML
     protected void onAiheFieldClick() {
         LOGGER.debug("Aihe field clicked.");
