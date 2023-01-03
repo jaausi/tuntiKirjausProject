@@ -229,6 +229,10 @@ public class AutoCompleteTextField<S> extends TextField {
         return lastSelectedItem;
     }
 
+    public void setLastSelectedItem(S lastSelectedItem) {
+        this.lastSelectedItem.set(lastSelectedItem);
+    }
+
     public ContextMenu getEntryMenu() {
         return entriesPopup;
     }

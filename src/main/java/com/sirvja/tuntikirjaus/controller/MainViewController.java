@@ -99,6 +99,7 @@ public class MainViewController implements Initializable {
             if(newValue != null){
                 aiheField.setText(newValue);
                 aiheField.positionCaret(newValue.length());
+                aiheField.setLastSelectedItem(null);
             }
         });
     }
