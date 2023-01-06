@@ -77,6 +77,7 @@ public class MainViewController implements Initializable {
     private Color x4;
     @FXML
     private TextArea yhteenvetoTextArea;
+    private Object valueBeforeEdit;
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
@@ -125,9 +126,8 @@ public class MainViewController implements Initializable {
                     if(!facedError){
                         kirjausToEdit.setStartTime(newValue);
                         MainViewService.update(kirjausToEdit);
-                    }else {
-                        //TODO: How to restore the table cell value to original
                     }
+                    tuntiTaulukko.refresh();
                 }
         );
 
@@ -321,6 +321,7 @@ public class MainViewController implements Initializable {
 
     private void updateView(){
         tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+        tuntiTaulukko.refresh();
         daysListView.setItems(MainViewService.getPaivaDataForTable());
         yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
         kellonAikaField.clear();
