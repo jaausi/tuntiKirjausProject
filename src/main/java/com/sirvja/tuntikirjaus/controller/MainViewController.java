@@ -91,6 +91,54 @@ public class MainViewController implements Initializable {
         aiheColumn.setSortable(false);
         tunnitColumn.setSortable(false);
 
+        setEditListenerToKellonaikaColumn();
+
+        setEditListenetToAiheColumn();
+
+        updateView();
+
+        setListenerForDayListView();
+
+        daysListView.getSelectionModel().selectFirst();
+
+        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+
+        initializeAutoCompleteAiheField();
+    }
+
+    private void initializeAutoCompleteAiheField() {
+        aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue != null){
+                aiheField.setText(newValue);
+                aiheField.positionCaret(newValue.length());
+                aiheField.setLastSelectedItem(null);
+            }
+        });
+    }
+
+    private void setListenerForDayListView() {
+        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
+        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue != null){
+                MainViewService.setCurrentDate(newValue);
+                updateView();
+            }
+        });
+    }
+
+    private void setEditListenetToAiheColumn() {
+        aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        aiheColumn.setOnEditCommit(
+                t -> {
+                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
+                    kirjausToEdit.setTopic(t.getNewValue());
+                    MainViewService.update(kirjausToEdit);
+                }
+        );
+    }
+
+    private void setEditListenerToKellonaikaColumn() {
         kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter()));
         kellonaikaColumn.setOnEditCommit(
                 t -> {
@@ -130,36 +178,6 @@ public class MainViewController implements Initializable {
                     tuntiTaulukko.refresh();
                 }
         );
-
-        aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        aiheColumn.setOnEditCommit(
-                t -> {
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
-                    kirjausToEdit.setTopic(t.getNewValue());
-                    MainViewService.update(kirjausToEdit);
-                }
-        );
-
-        updateView();
-        daysListView.getSelectionModel().selectFirst();
-        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
-
-        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
-        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue != null){
-                MainViewService.setCurrentDate(newValue);
-                updateView();
-            }
-        });
-
-        aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
-        aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue != null){
-                aiheField.setText(newValue);
-                aiheField.positionCaret(newValue.length());
-                aiheField.setLastSelectedItem(null);
-            }
-        });
     }
 
     @FXML
