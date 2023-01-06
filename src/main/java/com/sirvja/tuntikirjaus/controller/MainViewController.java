@@ -5,6 +5,7 @@ import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
+import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +14,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
@@ -75,25 +77,36 @@ public class MainViewController implements Initializable {
     private Color x4;
     @FXML
     private TextArea yhteenvetoTextArea;
+    private Object valueBeforeEdit;
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
+        tuntiTaulukko.setEditable(true);
+
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
         tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("durationString"));
 
+        kellonaikaColumn.setSortable(false);
+        aiheColumn.setSortable(false);
+        tunnitColumn.setSortable(false);
+
+        setEditListenerToKellonaikaColumn();
+
+        setEditListenetToAiheColumn();
+
         updateView();
+
+        setListenerForDayListView();
+
         daysListView.getSelectionModel().selectFirst();
+
         MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
 
-        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
-        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue != null){
-                MainViewService.setCurrentDate(newValue);
-                updateView();
-            }
-        });
+        initializeAutoCompleteAiheField();
+    }
 
+    private void initializeAutoCompleteAiheField() {
         aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
         aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
@@ -102,6 +115,69 @@ public class MainViewController implements Initializable {
                 aiheField.setLastSelectedItem(null);
             }
         });
+    }
+
+    private void setListenerForDayListView() {
+        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
+        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue != null){
+                MainViewService.setCurrentDate(newValue);
+                updateView();
+            }
+        });
+    }
+
+    private void setEditListenetToAiheColumn() {
+        aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        aiheColumn.setOnEditCommit(
+                t -> {
+                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
+                    kirjausToEdit.setTopic(t.getNewValue());
+                    MainViewService.update(kirjausToEdit);
+                }
+        );
+    }
+
+    private void setEditListenerToKellonaikaColumn() {
+        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter()));
+        kellonaikaColumn.setOnEditCommit(
+                t -> {
+                    int tablePosition = t.getTablePosition().getRow();
+                    int lastPosition = t.getTableView().getItems().size() - 1;
+                    LocalDateTime newValue = LocalDateTime.of(MainViewService.getCurrentDate(), t.getNewValue());
+                    boolean facedError = false;
+
+                    if(tablePosition < lastPosition){
+                        TuntiKirjaus followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
+                        // If edited time is after next kirjaus start time, abort.
+                        if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
+                            showNotCorrectTimeAlert(true);
+                            facedError = true;
+                        }
+                    }
+
+                    // If not the first row of a day. Edit also the previous row end time.
+                    if(tablePosition > 0){
+                        TuntiKirjaus previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
+                        // If edited time is before previous kirjaus start time, abort.
+                        if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
+                            showNotCorrectTimeAlert(false);
+                            facedError = true;
+                        }
+                        if(!facedError){
+                            previousKirjausToEdit.setEndTime(newValue);
+                            MainViewService.update(previousKirjausToEdit);
+                        }
+                    }
+
+                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
+                    if(!facedError){
+                        kirjausToEdit.setStartTime(newValue);
+                        MainViewService.update(kirjausToEdit);
+                    }
+                    tuntiTaulukko.refresh();
+                }
+        );
     }
 
     @FXML
@@ -263,6 +339,7 @@ public class MainViewController implements Initializable {
 
     private void updateView(){
         tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+        tuntiTaulukko.refresh();
         daysListView.setItems(MainViewService.getPaivaDataForTable());
         yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
         kellonAikaField.clear();
@@ -286,7 +363,20 @@ public class MainViewController implements Initializable {
         alert.showAndWait();
     }
 
-    private void showTimeInWrongFormatAlert(String problem){
+    private void showNotCorrectTimeAlert(boolean isTooLarge){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Varoitus!");
+        if(isTooLarge){
+            alert.setHeaderText("Syötetty aika on suurempi kuin seuraava syötetty aika");
+            alert.setContentText("Syötä aika, joka on ennen ajanhetkeä joka on seuraavan listalla.");
+        } else {
+            alert.setHeaderText("Syötetty aika on pienempi kuin edellinen aika");
+            alert.setContentText("Syötä aika, joka on edellisen syötetyn ajanhetken jälkeen.");
+        }
+        alert.showAndWait();
+    }
+
+    public static void showTimeInWrongFormatAlert(String problem){
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Varoitus!");
         alert.setHeaderText("Syötetty aika on väärässä formaatissa");

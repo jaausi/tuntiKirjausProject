@@ -2,6 +2,7 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -62,6 +63,8 @@ public class MainViewService {
         if(!time.isEmpty()){
             if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
                 localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
+            } else if (time.contains(".")) {
+                localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H.mm")));
             } else {
                 if (time.length() <= 2){ // Parse only hours '9' or '12'
                     localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
@@ -86,6 +89,10 @@ public class MainViewService {
             paivaList = paivaList.sorted();
         }
         currentDate = paiva.getLocalDate();
+    }
+
+    public static LocalDate getCurrentDate(){
+        return currentDate;
     }
 
     public static String getYhteenvetoText(){
@@ -178,5 +185,9 @@ public class MainViewService {
         LOGGER.debug(String.format("Got all topics from db: %s", alltopics));
 
         return Optional.of(alltopics);
+    }
+
+    public static void update(TuntiKirjaus tuntiKirjaus){
+        tuntiKirjausDao.update(tuntiKirjaus);
     }
 }
