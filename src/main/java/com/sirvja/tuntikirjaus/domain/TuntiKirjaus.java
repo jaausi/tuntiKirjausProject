@@ -128,4 +128,12 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         }
         return DurationFormatUtils.formatDuration(getDurationInDuration().toMillis(), "H:mm");
     }
+
+    @Override
+    public String toString(){
+        return String.format("{\n\tid: %s\n", getId()) +
+                String.format("\tstart time: %s\n", getStartTime()) +
+                String.format("\tend time: %s\n", getEndTime().map(LocalDateTime::toString).orElse("-")) +
+                String.format("\ttopic: %s\n}", getTopic());
+    }
 }

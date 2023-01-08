@@ -102,7 +102,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     @Override
     public void delete(TuntiKirjaus tuntiKirjaus) {
         String query = String.format("DELETE FROM Tuntikirjaus " +
-                "WHERE ROWID='%s' LIMIT 1", tuntiKirjaus.getId());
+                "WHERE ROWID=%s", tuntiKirjaus.getId());
         LOGGER.debug("Deleting Tuntikirjaus with sql query: {}", query);
 
         try{
