@@ -11,18 +11,28 @@
 
 .table-cell {
     -fx-background-color: transparent;
-    -fx-border-color: #272121;
     -fx-text-fill: #B5B5B5;
+    -fx-border-color: #272121;
 }
 
-.table-row-cell, list-cell{
+.table-row-cell, list-cell {
     -fx-background-color: transparent;
     -fx-border-color: #272121;
 }
 
-
 .table-row-cell:selected, .list-cell:selected {
     -fx-background-color: #FF4D00;
+    -fx-text-fill: #272121;
+}
+
+.text-field-table-cell .text-field:focused {
+    -fx-text-fill: #FF4D00;
+    -fx-background-color: #272121;
+    -fx-highlight-fill: #FF4D00;
+    -fx-highlight-text-fill: #272121;
+}
+
+.table-view .table-row-cell:selected .table-cell {
     -fx-text-fill: #272121;
 }
 
