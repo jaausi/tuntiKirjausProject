@@ -2,7 +2,6 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.utils.DBUtil;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,12 +13,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.FETCH_DAYS_SINCE;
 
@@ -51,8 +52,14 @@ public class MainViewService {
     public static void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
         tuntiKirjausList.add(tuntiKirjausDao.save(tuntiKirjaus));
         paivaList = getAllPaivas(tuntiKirjausList);
-        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToPreviousTuntikirjaus();
+        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
         previousKirjaus.ifPresent(tuntiKirjausDao::update);
+    }
+
+    public static void removeTuntikirjaus(TuntiKirjaus tuntiKirjaus){
+        tuntiKirjausDao.delete(tuntiKirjaus);
+        tuntiKirjausList.remove(tuntiKirjaus);
+        handlePreviousKirjausAfterRemove(tuntiKirjaus);
     }
 
     public static LocalDateTime parseTimeFromString(String time) throws DateTimeParseException{
@@ -124,7 +131,7 @@ public class MainViewService {
         return returnValue.toString();
     }
 
-    private static Optional<TuntiKirjaus> addEndTimeToPreviousTuntikirjaus(){
+    private static Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(){
         ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
 
         LOGGER.debug("Adding endtime for previous kirjaus");
@@ -147,6 +154,38 @@ public class MainViewService {
 
         return Optional.of(previousKirjaus);
     }
+
+    private static void handlePreviousKirjausAfterRemove(TuntiKirjaus tuntiKirjaus){
+        Predicate<TuntiKirjaus> isPrevious = previousTk -> previousTk.getEndTime()
+                .map(previousEndTime -> previousEndTime.equals(tuntiKirjaus.getStartTime()))
+                .orElse(false);
+        Predicate<TuntiKirjaus> isNext = nextTk -> tuntiKirjaus.getEndTime()
+                .map(currentEndTime -> currentEndTime.equals(nextTk.getStartTime()))
+                .orElse(false);
+
+        Optional<TuntiKirjaus> previousKirjaus = tuntiKirjausList.stream()
+                .filter(isPrevious)
+                .findAny();
+
+        Optional<TuntiKirjaus> nextKirjaus = tuntiKirjausList.stream()
+                .filter(isNext)
+                .findAny();
+
+        if(previousKirjaus.isPresent() && nextKirjaus.isPresent()){
+            handleRemovedInMiddle(previousKirjaus.get(), nextKirjaus.get());
+        } else previousKirjaus.ifPresent(MainViewService::handleRemovedInEnd);
+    }
+
+    private static void handleRemovedInMiddle(TuntiKirjaus previousKirjaus, TuntiKirjaus nextKirjaus) {
+        previousKirjaus.setEndTime(nextKirjaus.getStartTime());
+        update(previousKirjaus);
+    }
+
+    private static void handleRemovedInEnd(TuntiKirjaus previousKirjaus) {
+        previousKirjaus.setEndTime(null);
+        update(previousKirjaus);
+    }
+
 
     private static ObservableList<TuntiKirjaus> getAllKirjausFromDb(){
         LOGGER.debug("Getting kirjaus' from database...");

@@ -70,7 +70,7 @@ public class MainViewController implements Initializable {
     @FXML
     private Button uusiPaivaButton;
     @FXML
-    private Button valitsePaivaButton;
+    private Button poistaKirjausButton;
     @FXML
     private Font x3;
     @FXML
@@ -310,11 +310,17 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
-    protected void onValitsePaivaButtonClick() {
-        LOGGER.debug("Valitse päivä painettu!");
-        Paiva selectedPaiva = daysListView.getSelectionModel().getSelectedItem();
-        LOGGER.debug("Following date selected: {}", selectedPaiva);
-        MainViewService.setCurrentDate(selectedPaiva);
+    protected void onPoistaKirjausButtonClick() {
+        LOGGER.debug("Poista kirjaus painettu!");
+        TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
+        LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
+        if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
+                String.format("Poistettava kirjaus: \n%s" +
+                        "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
+                "siirtämällä lopetusajan poistettavan kirjauksen lopetusaikaan.", selectedKirjaus))){
+            return;
+        }
+        MainViewService.removeTuntikirjaus(selectedKirjaus);
         updateView();
     }
 
@@ -382,6 +388,15 @@ public class MainViewController implements Initializable {
         alert.setHeaderText("Syötetty aika on väärässä formaatissa");
         alert.setContentText("Virhe: "+problem);
         alert.showAndWait();
+    }
+
+    public static boolean showConfirmationAlert(String confirmationHeader, String confirmationText){
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, confirmationText, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+        alert.setTitle("Vahvista valinta!");
+        alert.setHeaderText(confirmationHeader);
+        alert.showAndWait();
+
+        return alert.getResult() == ButtonType.YES;
     }
 
 }
