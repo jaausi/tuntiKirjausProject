@@ -52,6 +52,25 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>module-info.class</exclude>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+                <exclude>META-INF/MANIFEST.MF</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-aarch64-android.json</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-arm64-ios.json</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-x86_64-ios.json</exclude>
+                <exclude>META-INF/substrate/config/resourcebundles</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig.json</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
       </plugin>
     </plugins>
   </build>
