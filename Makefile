@@ -1,10 +1,14 @@
 build: build-jar
+build-standalone: build-jar-with-jre
+
+# Update existing installation
+update: build-jar copy-jar-to-app-dir
 
 # Install application to home folder to be used with external jre
 install: build-jar create-app-dir-and-database-dir copy-jar-to-app-dir create-shell-alias
 
 build-jar:
-	mvn package
+	mvn clean package
 
 create-app-dir-and-database-dir:
 	mkdir -pv ~/tuntikirjaus/database
