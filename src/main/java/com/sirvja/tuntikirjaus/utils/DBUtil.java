@@ -28,7 +28,7 @@ public class DBUtil {
             location = optionalLocation.get();
             System.out.println(String.format("Current dir: %s", location));
         } else {
-            Path rootPath = Paths.get("/tmp/database");
+            Path rootPath = Paths.get(System.getProperty("user.home")+"/tuntikirjaus/database");
 
             System.out.println(String.format("Current dir: %s", rootPath));
             LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", rootPath);
@@ -36,8 +36,8 @@ public class DBUtil {
             try {
                 Files.createDirectories(rootPath);
 
-                File directoryFile = new File("/tmp/database");
-                File databaseFile = new File("/tmp/database/tuntikirjaus.db");
+                File directoryFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database");
+                File databaseFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database/tuntikirjaus.db");
 
                 assert directoryFile.exists() || directoryFile.mkdir();
                 assert databaseFile.exists() || databaseFile.createNewFile();

@@ -1,5 +1,7 @@
 package com.sirvja.tuntikirjaus.domain;
 
+import javafx.css.converter.DurationConverter;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -137,5 +139,5 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\ttopic: %s\n}", getTopic());
     }
 
-    private final Function<Duration, String> durationToString = duration -> String.format("%s:%s", duration.toHours(), duration.toMinutes());
+    private final Function<Duration, String> durationToString = duration -> String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
 }
