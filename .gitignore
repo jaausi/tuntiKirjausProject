@@ -4,3 +4,6 @@ out/
 
 database.sqlite
 database
+
+*.app/
+*.dmg

@@ -33,6 +33,9 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <jlinkExecutable>/Users/sirvio/.sdkman/candidates/java/19.0.1-zulu/bin/jlink</jlinkExecutable>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -113,9 +116,9 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.version>17</java.version>
+    <java.version>19</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.8.1</junit.version>
-    <logback.version>1.2.10</logback.version>
+    <logback.version>1.4.5</logback.version>
   </properties>
 </project>

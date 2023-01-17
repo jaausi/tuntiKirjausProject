@@ -4,6 +4,7 @@ module com.sirvja.tuntikirjaus {
     requires org.xerial.sqlitejdbc;
     requires java.sql.rowset;
     requires org.slf4j;
+    requires ch.qos.logback.classic;
     requires javafx.graphics;
     requires javafx.controls;
 

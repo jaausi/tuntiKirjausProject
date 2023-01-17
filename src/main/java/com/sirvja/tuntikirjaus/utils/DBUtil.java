@@ -8,6 +8,8 @@ import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Optional;
@@ -26,13 +28,16 @@ public class DBUtil {
             location = optionalLocation.get();
             System.out.println(String.format("Current dir: %s", location));
         } else {
-            File currentDir = Paths.get("").toFile();
-            System.out.println(String.format("Current dir: %s", currentDir));
-            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", currentDir);
+            Path rootPath = Paths.get("/tmp/database");
+
+            System.out.println(String.format("Current dir: %s", rootPath));
+            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", rootPath);
 
             try {
-                File directoryFile = new File("database");
-                File databaseFile = new File("database/tuntikirjaus.db");
+                Files.createDirectories(rootPath);
+
+                File directoryFile = new File("/tmp/database");
+                File databaseFile = new File("/tmp/database/tuntikirjaus.db");
 
                 assert directoryFile.exists() || directoryFile.mkdir();
                 assert databaseFile.exists() || databaseFile.createNewFile();
