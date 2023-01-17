@@ -28,9 +28,11 @@ build-jar-with-jre:
 
 copy-run-command-script:
 	cp run.command target/tuntikirjaus/run.command
+	chmod +x target/tuntikirjaus/run.command
+	cp tuntikirjausResized.png target/tuntikirjaus/bin
 
 create-app-bundle:
-	appify target/tuntikirjaus/run.command TuntikirjausApp.app
+	appify target/tuntikirjaus/run.command TuntikirjausApp.app tuntikirjausResized.png
 
 copy-built-binaries-to-app-bundle:
 	cp -r target/tuntikirjaus/* TuntikirjausApp.app/Contents/MacOS/
