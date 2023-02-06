@@ -1,19 +1,20 @@
 
 name: GitHub Actions To Build Verify and Release
-on: [push]
+on:
+  release:
+    types: [created]
 jobs:
-  Build-Verify-Release:
-    runs-on: macos-latest
+  Build-Release:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
           java-version: '19'
           distribution: 'temurin'
-      - run: mvn --batch-mode --update-snapshots verify
       - run: mvn clean javafx:jlink
       - run: mkdir staging && cp target/*.zip staging
       - uses: actions/upload-artifact@v3
         with:
-          name: Package
+          name: Tuntikirjaus-package-with-jre
           path: staging
