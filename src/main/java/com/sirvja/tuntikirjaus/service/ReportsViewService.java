@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -21,13 +22,16 @@ public class ReportsViewService {
     private static final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
 
     private static final LocalDate currentDate = LocalDate.now();
-    private static final ObservableList<ReportConfig> reportConfigList = getInitialReportConfigs();
+    private static final ObservableList<ReportConfig> reportConfigList = FXCollections.observableArrayList();
 
-    private static ObservableList<ReportConfig> getInitialReportConfigs(){
-        return reportConfigDao.getAll().orElse(null);
+    private static void getInitialReportConfigsFromDb(){
+        reportConfigDao.getAll().map(reportConfigList::addAll);
     }
 
     public static ObservableList<ReportConfig> getReportConfigDataForList(){
+        if(reportConfigList.isEmpty()){
+            getInitialReportConfigsFromDb();
+        }
         return reportConfigList;
     }
 
@@ -57,5 +61,18 @@ public class ReportsViewService {
         reportConfigList.add(savedReportConfig);
 
         return savedReportConfig;
+    }
+
+    public static String getHtpsStringFromMinutes(long sumOfHoursInMinutes) {
+        DecimalFormat decimalFormat = new DecimalFormat("0.0");
+        return decimalFormat.format(sumOfHoursInMinutes /60.0f/7.5);
+    }
+
+    public static String getMinutesStringFromMinutes(long sumOfHoursInMinutes) {
+        return String.valueOf((int) (sumOfHoursInMinutes % 60f));
+    }
+
+    public static String getHoursStringFromMinutes(long sumOfHoursInMinutes) {
+        return String.valueOf((int) (sumOfHoursInMinutes / 60));
     }
 }

@@ -89,7 +89,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         String prefix = topic.split(" ")[0].toUpperCase();
 
         String classification = null;
-        if ("OAW".equals(prefix)) {
+        if ("OAW".equalsIgnoreCase(prefix)) {
             classification = "Other admin work";
         } else if(prefix.contains("-")) {
             classification = getProjectFromJiraCode(prefix);
