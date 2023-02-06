@@ -1,12 +1,14 @@
 package com.sirvja.tuntikirjaus.domain;
 
-import org.apache.commons.lang3.time.DurationFormatUtils;
+import javafx.css.converter.DurationConverter;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private int id;
@@ -126,7 +128,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         if(isEndTimeNull() || !isDurationEnabled()){
             return "-";
         }
-        return DurationFormatUtils.formatDuration(getDurationInDuration().toMillis(), "H:mm");
+        return durationToString.apply(getDurationInDuration());
     }
 
     @Override
@@ -137,4 +139,5 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\ttopic: %s\n}", getTopic());
     }
 
+    private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());
 }

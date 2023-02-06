@@ -3,3 +3,9 @@ target/
 out/
 
 database.sqlite
+database
+
+*.app/
+*.dmg
+
+.DS_Store

@@ -33,6 +33,9 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <jlinkExecutable>jlink</jlinkExecutable>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -52,6 +55,29 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>module-info.class</exclude>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+                <exclude>META-INF/MANIFEST.MF</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-aarch64-android.json</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-arm64-ios.json</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig-x86_64-ios.json</exclude>
+                <exclude>META-INF/substrate/config/resourcebundles</exclude>
+                <exclude>META-INF/substrate/config/reflectionconfig.json</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M8</version>
       </plugin>
     </plugins>
   </build>
@@ -94,9 +120,9 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.version>17</java.version>
+    <java.version>19</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.8.1</junit.version>
-    <logback.version>1.2.10</logback.version>
+    <logback.version>1.4.5</logback.version>
   </properties>
 </project>

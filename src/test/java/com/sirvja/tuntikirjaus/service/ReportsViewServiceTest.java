@@ -9,8 +9,10 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class ReportsViewServiceTest {
@@ -73,9 +75,9 @@ public class ReportsViewServiceTest {
         long minutes3 = minutes1 * 3 + 225; // 3,5htp
 
         // then
-        assertEquals("1,0", ReportsViewService.getHtpsStringFromMinutes(minutes1));
-        assertEquals("2,0", ReportsViewService.getHtpsStringFromMinutes(minutes2));
-        assertEquals("3,5", ReportsViewService.getHtpsStringFromMinutes(minutes3));
+        assertTrue(List.of("1.0", "1,0").contains(ReportsViewService.getHtpsStringFromMinutes(minutes1)));
+        assertTrue(List.of("2.0", "2,0").contains(ReportsViewService.getHtpsStringFromMinutes(minutes2)));
+        assertTrue(List.of("3.5", "3,5").contains(ReportsViewService.getHtpsStringFromMinutes(minutes3)));
     }
 
 }

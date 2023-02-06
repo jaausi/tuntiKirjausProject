@@ -1,14 +1,16 @@
 package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
-import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Optional;
 
@@ -22,15 +24,20 @@ public class DBUtil {
         Optional<String> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db").toExternalForm());
 
         // Don't use database in resource folder, if running from jar file
-        if(optionalLocation.isPresent() && !optionalLocation.get().contains(".jar")){
+        if(optionalLocation.isPresent() && !optionalLocation.get().contains(".jar") && false){
             location = optionalLocation.get();
+            System.out.println(String.format("Current dir: %s", location));
         } else {
-            File currentDir = SystemUtils.getUserDir();
-            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", currentDir);
+            Path rootPath = Paths.get(System.getProperty("user.home")+"/tuntikirjaus/database");
+
+            System.out.println(String.format("Current dir: %s", rootPath));
+            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", rootPath);
 
             try {
-                File directoryFile = new File("database");
-                File databaseFile = new File("database/tuntikirjaus.db");
+                Files.createDirectories(rootPath);
+
+                File directoryFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database");
+                File databaseFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database/tuntikirjaus.db");
 
                 assert directoryFile.exists() || directoryFile.mkdir();
                 assert databaseFile.exists() || databaseFile.createNewFile();
