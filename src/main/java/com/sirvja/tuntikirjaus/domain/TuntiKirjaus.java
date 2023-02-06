@@ -139,5 +139,5 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\ttopic: %s\n}", getTopic());
     }
 
-    private final Function<Duration, String> durationToString = duration -> String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
+    private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());
 }
