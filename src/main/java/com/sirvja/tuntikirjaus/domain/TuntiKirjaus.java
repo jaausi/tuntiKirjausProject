@@ -87,7 +87,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         String prefix = topic.split(" ")[0].toUpperCase();
 
         String classification = null;
-        if ("OAW".equals(prefix)) {
+        if ("OAW".equalsIgnoreCase(prefix)) {
             classification = "Other admin work";
         } else if(prefix.contains("-")) {
             classification = getProjectFromJiraCode(prefix);
@@ -136,4 +136,5 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\tend time: %s\n", getEndTime().map(LocalDateTime::toString).orElse("-")) +
                 String.format("\ttopic: %s\n}", getTopic());
     }
+
 }

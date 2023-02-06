@@ -12,11 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -144,10 +141,9 @@ public class ReportsViewController implements Initializable {
 
         ObservableList<TuntiKirjaus> tuntiKirjausList = ReportsViewService.getAllTuntikirjaus(optionalAlkuPaiva, optionalLoppupaiva, optionalSearchQuery);
         long sumOfHoursInMinutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(tuntiKirjausList);
-        String hours = String.valueOf(Math.round(sumOfHoursInMinutes/60f));
-        String minutes = String.valueOf(Math.round(sumOfHoursInMinutes%60f));
-        DecimalFormat decimalFormat = new DecimalFormat("0.0");
-        String htps = decimalFormat.format(sumOfHoursInMinutes/60.0f/7.5);
+        String hours = ReportsViewService.getHoursStringFromMinutes(sumOfHoursInMinutes);
+        String minutes = ReportsViewService.getMinutesStringFromMinutes(sumOfHoursInMinutes);
+        String htps = ReportsViewService.getHtpsStringFromMinutes(sumOfHoursInMinutes);
 
         raportitTuntiTaulukko.setItems(tuntiKirjausList);
         tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
