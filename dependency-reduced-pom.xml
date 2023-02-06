@@ -34,7 +34,7 @@
           </execution>
         </executions>
         <configuration>
-          <jlinkExecutable>/Users/sirvio/.sdkman/candidates/java/19.0.1-zulu/bin/jlink</jlinkExecutable>
+          <jlinkExecutable>jlink</jlinkExecutable>
         </configuration>
       </plugin>
       <plugin>
@@ -74,6 +74,10 @@
             </filter>
           </filters>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M8</version>
       </plugin>
     </plugins>
   </build>
