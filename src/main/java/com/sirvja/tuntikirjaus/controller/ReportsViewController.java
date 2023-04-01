@@ -50,6 +50,8 @@ public class ReportsViewController implements Initializable {
     @FXML
     private ListView<ReportConfig> tallennetutRaportitListView = new ListView<>();
     @FXML
+    private TextArea reportsYhteenvetoTextArea;
+    @FXML
     private TextField tunnitYhteensaField;
     @FXML
     private Button tyhjennaKentatButton;
@@ -140,12 +142,14 @@ public class ReportsViewController implements Initializable {
         Optional<String> optionalSearchQuery = Optional.ofNullable(hakusanaField.getText());
 
         ObservableList<TuntiKirjaus> tuntiKirjausList = ReportsViewService.getAllTuntikirjaus(optionalAlkuPaiva, optionalLoppupaiva, optionalSearchQuery);
+        String yhteenvetoText = ReportsViewService.getYhteenvetoText(tuntiKirjausList);
         long sumOfHoursInMinutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(tuntiKirjausList);
         String hours = ReportsViewService.getHoursStringFromMinutes(sumOfHoursInMinutes);
         String minutes = ReportsViewService.getMinutesStringFromMinutes(sumOfHoursInMinutes);
         String htps = ReportsViewService.getHtpsStringFromMinutes(sumOfHoursInMinutes);
 
         raportitTuntiTaulukko.setItems(tuntiKirjausList);
+        reportsYhteenvetoTextArea.setText(yhteenvetoText);
         tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
     }
 
