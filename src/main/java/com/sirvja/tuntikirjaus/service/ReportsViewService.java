@@ -12,7 +12,10 @@ import org.slf4j.LoggerFactory;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ReportsViewService {
@@ -74,5 +77,33 @@ public class ReportsViewService {
 
     public static String getHoursStringFromMinutes(long sumOfHoursInMinutes) {
         return String.valueOf((int) (sumOfHoursInMinutes / 60));
+    }
+
+    public static String getYhteenvetoText(List<TuntiKirjaus> tuntiKirjausList){
+
+        if(tuntiKirjausList == null || tuntiKirjausList.isEmpty()){
+            return "";
+        }
+
+        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+
+        Map<String, String> topicToDuration = tuntiKirjausList.stream()
+                .filter(predicate)
+                .collect(
+                        Collectors.groupingBy(
+                                TuntiKirjaus::getClassification,
+                                Collectors.collectingAndThen(
+                                        Collectors.summingLong(t -> t.getDurationInDuration().toMinutes()),
+                                        minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))
+                                )
+                        )
+                );
+
+        StringBuilder returnValue = new StringBuilder();
+        for(Map.Entry<String, String> entry: topicToDuration.entrySet()){
+            returnValue.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+        }
+
+        return returnValue.toString();
     }
 }

@@ -40,7 +40,9 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -148,6 +150,11 @@
             <VBox maxWidth="250.0" minWidth="150.0" styleClass="right-box">
                <children>
                   <ListView fx:id="tallennetutRaportitListView" prefWidth="220.0" VBox.vgrow="ALWAYS" />
+                  <TextArea fx:id="reportsYhteenvetoTextArea" focusTraversable="false" prefHeight="474.0" prefWidth="220.0">
+                     <tooltip>
+                        <Tooltip text="Tässä näytetään yhteenveto syötetyistä &#10;tunneista valitulta ajanjaksolta.&#10;Yhteenvedon avulla päivän tehdyt&#10;työt on helppo syöttää tuntienkohdennus &#10;järjestelmään." />
+                     </tooltip>
+                  </TextArea>
                   <Button fx:id="avaaRaporttiButton" maxHeight="100.0" maxWidth="1.7976931348623157E308" minHeight="50.0" mnemonicParsing="false" onAction="#onAvaaRaporttiButtonClick" prefHeight="100.0" prefWidth="220.0" text="Avaa raportti" />
                </children>
             </VBox>
