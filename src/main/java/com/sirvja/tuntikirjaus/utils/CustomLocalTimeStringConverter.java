@@ -11,7 +11,7 @@ public class CustomLocalTimeStringConverter extends LocalTimeStringConverter {
     @Override
     public LocalTime fromString(String value) {
         try {
-            return MainViewService.parseTimeFromString(value).toLocalTime();
+            return TimeUtils.parseTimeFromString(value);
         } catch (DateTimeParseException e){
             MainViewController.showTimeInWrongFormatAlert(e.getMessage());
             return null;

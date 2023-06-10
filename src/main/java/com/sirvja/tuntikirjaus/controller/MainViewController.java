@@ -6,6 +6,7 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
+import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -79,6 +80,9 @@ public class MainViewController implements Initializable {
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
 
+    private TuntiKirjausDao tuntiKirjausDao;
+    private MainViewService mainViewService;
+
     @Override
     public void initialize (URL url, ResourceBundle rb){
         tuntiTaulukko.setEditable(true);
@@ -101,13 +105,16 @@ public class MainViewController implements Initializable {
 
         daysListView.getSelectionModel().selectFirst();
 
-        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+        tuntiKirjausDao = new TuntiKirjausDao();
+        mainViewService = new MainViewService(tuntiKirjausDao);
+
+        mainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
 
         initializeAutoCompleteAiheField();
     }
 
     private void initializeAutoCompleteAiheField() {
-        aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getEntries().addAll(mainViewService.getAiheEntries().orElse(new TreeSet<>()));
         aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
                 aiheField.setText(newValue);
@@ -121,7 +128,7 @@ public class MainViewController implements Initializable {
         // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
         daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
-                MainViewService.setCurrentDate(newValue);
+                mainViewService.setCurrentDate(newValue);
                 updateView();
             }
         });
@@ -133,7 +140,7 @@ public class MainViewController implements Initializable {
                 t -> {
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     kirjausToEdit.setTopic(t.getNewValue());
-                    MainViewService.update(kirjausToEdit);
+                    mainViewService.update(kirjausToEdit);
                 }
         );
     }
@@ -144,7 +151,7 @@ public class MainViewController implements Initializable {
                 t -> {
                     int tablePosition = t.getTablePosition().getRow();
                     int lastPosition = t.getTableView().getItems().size() - 1;
-                    LocalDateTime newValue = LocalDateTime.of(MainViewService.getCurrentDate(), t.getNewValue());
+                    LocalDateTime newValue = LocalDateTime.of(mainViewService.getCurrentDate(), t.getNewValue());
                     boolean facedError = false;
 
                     if(tablePosition < lastPosition){
@@ -166,14 +173,14 @@ public class MainViewController implements Initializable {
                         }
                         if(!facedError){
                             previousKirjausToEdit.setEndTime(newValue);
-                            MainViewService.update(previousKirjausToEdit);
+                            mainViewService.update(previousKirjausToEdit);
                         }
                     }
 
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
                     if(!facedError){
                         kirjausToEdit.setStartTime(newValue);
-                        MainViewService.update(kirjausToEdit);
+                        mainViewService.update(kirjausToEdit);
                     }
                     tuntiTaulukko.refresh();
                 }
@@ -263,7 +270,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaLeikepoydalleButtonClick(){
         LOGGER.debug("Save to clipboard button pushed!");
 
-        String yhteenvetoText = MainViewService.getYhteenvetoText();
+        String yhteenvetoText = mainViewService.getYhteenvetoText();
         ClipboardContent content = new ClipboardContent();
         content.putString(yhteenvetoText);
         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -284,7 +291,7 @@ public class MainViewController implements Initializable {
 
         LocalDateTime localDateTime;
         try {
-            localDateTime = MainViewService.parseTimeFromString(time);
+            localDateTime = mainViewService.parseTimeFromString(time);
         } catch (DateTimeParseException e){
             LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -294,7 +301,7 @@ public class MainViewController implements Initializable {
 
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
 
-        ObservableList<TuntiKirjaus> tuntidata = MainViewService.getTuntiDataForTable();
+        ObservableList<TuntiKirjaus> tuntidata = mainViewService.getTuntiDataForTable();
 
         if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -302,7 +309,7 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        MainViewService.addTuntikirjaus(tuntiKirjaus);
+        mainViewService.addTuntikirjaus(tuntiKirjaus);
 
         aiheField.getEntries().add(tuntiKirjaus.getTopic());
 
@@ -320,14 +327,14 @@ public class MainViewController implements Initializable {
                 "siirtämällä lopetusajan poistettavan kirjauksen lopetusaikaan.", selectedKirjaus))){
             return;
         }
-        MainViewService.removeTuntikirjaus(selectedKirjaus);
+        mainViewService.removeTuntikirjaus(selectedKirjaus);
         updateView();
     }
 
     @FXML
     protected void onUusiPaivaButtonClick() {
         LOGGER.debug("Uusi päivä painettu!");
-        MainViewService.setCurrentDate(new Paiva(LocalDate.now()));
+        mainViewService.setCurrentDate(new Paiva(LocalDate.now()));
         updateView();
     }
 
@@ -344,10 +351,10 @@ public class MainViewController implements Initializable {
     }
 
     private void updateView(){
-        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+        tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
         tuntiTaulukko.refresh();
-        daysListView.setItems(MainViewService.getPaivaDataForTable());
-        yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
+        daysListView.setItems(mainViewService.getPaivaDataForTable());
+        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
         kellonAikaField.clear();
         aiheField.clear();
     }

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -137,6 +138,19 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\tstart time: %s\n", getStartTime()) +
                 String.format("\tend time: %s\n", getEndTime().map(LocalDateTime::toString).orElse("-")) +
                 String.format("\ttopic: %s\n}", getTopic());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TuntiKirjaus that = (TuntiKirjaus) o;
+        return id == that.id && startTime.equals(that.startTime) && Objects.equals(endTime, that.endTime) && topic.equals(that.topic);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, startTime, endTime, topic);
     }
 
     private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());

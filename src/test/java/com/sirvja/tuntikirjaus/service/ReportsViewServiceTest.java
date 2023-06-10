@@ -80,4 +80,6 @@ public class ReportsViewServiceTest {
         assertTrue(List.of("3.5", "3,5").contains(ReportsViewService.getHtpsStringFromMinutes(minutes3)));
     }
 
+
+
 }

@@ -4,11 +4,32 @@
 
 The idea of this project came up of the headache to fill up worked hours to Tiima. Long story short, Tiima didn't support filling hours with the precision that was required in our company. With Tuntikirjaus Java FX application it is possible to save worked hours quickly and efficiently while working, and at the end of the day or at the beginning of next day hours can be exported to Tiima (for now manually, but in the future maybe automatically).
 
-## How to Run the Application
+## How to Run the Application (the easiest way)
 
-Requires Java FX 17. For example install Zulu Java FX 17 with sdkman
+To follow this instruction you don't need any JRE (Java Runtime Environment) installed in your computer, everything needed comes with the package downloaded from releases.
+
+Instructions to download the package:
+
+1. Click the latest release on the right hand side of this page.
+
+### Mac OS
+
+2. Download 'Tuntikirjaus.dmg' named package
+3. Double click the downloaded package in your file manager
+4. Move the application to the Applications folder
+
+### Other OS
+
+2. Download 'Tuntikirjaus-package-with-jre.zip' named package
+3. Extract the zip file
+4. Run bin/tuntikirjaus
+
+## How to Develop the Application
+
+Requires Java FX 17 and Maven. Can be installed e.g. with sdkman:
 ```
 sdk install java 17.0.4.fx-zulu
+sdk install maven
 ```
 
 Clone the project to the current folder
@@ -37,6 +58,8 @@ mvn clean javafx:run
 #   5) gives alias to be saved in .bash_aliases file for easy use of application.
 make install
 ```
+
+Makefile contains also other useful scripts e.g. for building the mac installation package and package with jre.
 
 ## How to Use the Application
 
