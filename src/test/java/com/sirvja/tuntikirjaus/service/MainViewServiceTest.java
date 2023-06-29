@@ -5,16 +5,12 @@ import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.ObservableList;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 
-import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,25 +18,26 @@ import static org.mockito.Mockito.when;
 public class MainViewServiceTest {
 
     private TuntiKirjausDao tuntiKirjausDao = mock(TuntiKirjausDao.class);
-    private ObservableList<TuntiKirjaus> tuntiKirjausList = TestUtils.getTuntikirjausListMock(5);
+    private List<TuntiKirjaus> tuntiKirjausList = TestUtils.getTuntikirjausListMock(5);
     private MainViewService mainViewService;
 
     @BeforeEach
     void setup(){
-        when(tuntiKirjausDao.getAllFrom(any())).thenReturn(Optional.of(tuntiKirjausList));
-        mainViewService = new MainViewService(tuntiKirjausDao);
+        when(tuntiKirjausDao.getAllFrom(any())).thenReturn(tuntiKirjausList);
+        mainViewService = new MainViewService();
     }
 
     @Test
     void givenTuntikirjausData_whenGetTuntiDataForTable_thenReturnCorrectHours() throws NoSuchFieldException, IllegalAccessException {
         // Given
-        ObservableList<TuntiKirjaus> hoursForDayExpected = TestUtils.getTuntikirjausListMock(1);
+        List<TuntiKirjaus> hoursForDayExpected = TestUtils.getTuntikirjausListMock(1);
         // When
-        mainViewService.setCurrentDate(new Paiva(TestUtils.getZeroDateTime().toLocalDate()));
         // Then
-        ObservableList<TuntiKirjaus> hoursForDayActual = mainViewService.getTuntiDataForTable();
+        ObservableList<TuntiKirjaus> hoursForDayActual = mainViewService.getTuntiDataForTable(TestUtils.getZeroDateTime().toLocalDate());
         assertEquals(5, hoursForDayActual.size());
         assertEquals(hoursForDayExpected, hoursForDayActual);
+        assertNotSame(hoursForDayExpected, hoursForDayActual);
+        assertNotNull(hoursForDayActual);
     }
 
     @Test
@@ -53,6 +50,8 @@ public class MainViewServiceTest {
         ObservableList<Paiva> paivaListActual = mainViewService.getPaivaDataForTable();
         assertEquals(5, paivaListActual.size());
         assertEquals(paivaListExpected, paivaListActual);
+        assertNotSame(paivaListExpected, paivaListActual);
+        assertNotNull(paivaListActual);
     }
 
 

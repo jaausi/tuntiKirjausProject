@@ -1,11 +1,13 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
+import com.sirvja.tuntikirjaus.commandPattern.receiver.TuntiKirjausList;
+import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.MainViewService;
-import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
+import com.sirvja.tuntikirjaus.utils.ListUtils;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -32,14 +34,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
     @FXML
-    private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
+    private TableView<TuntiKirjaus> tuntiKirjausTableView = new TableView<>();
     @FXML
     private TableColumn<TuntiKirjaus, LocalTime> kellonaikaColumn;
     @FXML
@@ -80,12 +83,34 @@ public class MainViewController implements Initializable {
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
 
-    private TuntiKirjausDao tuntiKirjausDao;
     private MainViewService mainViewService;
+    private ObservableList<TuntiKirjaus> observableTuntikirjausList;
+    private TuntiKirjausList tuntiKirjausList;
+
+    public MainViewController(){
+        mainViewService = new MainViewService();
+    }
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
-        tuntiTaulukko.setEditable(true);
+        initializeTableView();
+
+        setSelectListenerForDayListView();
+
+        setEditListenerToKellonaikaColumn();
+
+        setEditListenerToAiheColumn();
+
+        daysListView.getSelectionModel().selectFirst();
+
+        initializeAutoCompleteAiheField();
+
+        updateView();
+    }
+
+
+    private void initializeTableView() {
+        tuntiKirjausTableView.setEditable(true);
 
         kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
         aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
@@ -94,27 +119,10 @@ public class MainViewController implements Initializable {
         kellonaikaColumn.setSortable(false);
         aiheColumn.setSortable(false);
         tunnitColumn.setSortable(false);
-
-        setEditListenerToKellonaikaColumn();
-
-        setEditListenetToAiheColumn();
-
-        updateView();
-
-        setListenerForDayListView();
-
-        daysListView.getSelectionModel().selectFirst();
-
-        tuntiKirjausDao = new TuntiKirjausDao();
-        mainViewService = new MainViewService(tuntiKirjausDao);
-
-        mainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
-
-        initializeAutoCompleteAiheField();
     }
 
     private void initializeAutoCompleteAiheField() {
-        aiheField.getEntries().addAll(mainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getEntries().addAll(mainViewService.getAiheEntries());
         aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
                 aiheField.setText(newValue);
@@ -124,7 +132,7 @@ public class MainViewController implements Initializable {
         });
     }
 
-    private void setListenerForDayListView() {
+    private void setSelectListenerForDayListView() {
         // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
         daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
@@ -134,13 +142,13 @@ public class MainViewController implements Initializable {
         });
     }
 
-    private void setEditListenetToAiheColumn() {
+    private void setEditListenerToAiheColumn() {
         aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         aiheColumn.setOnEditCommit(
                 t -> {
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     kirjausToEdit.setTopic(t.getNewValue());
-                    mainViewService.update(kirjausToEdit);
+                    mainViewService.updateTuntikirjaus(kirjausToEdit);
                 }
         );
     }
@@ -173,18 +181,22 @@ public class MainViewController implements Initializable {
                         }
                         if(!facedError){
                             previousKirjausToEdit.setEndTime(newValue);
-                            mainViewService.update(previousKirjausToEdit);
+                            mainViewService.updateTuntikirjaus(previousKirjausToEdit);
                         }
                     }
 
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
                     if(!facedError){
                         kirjausToEdit.setStartTime(newValue);
-                        mainViewService.update(kirjausToEdit);
+                        mainViewService.updateTuntikirjaus(kirjausToEdit);
                     }
-                    tuntiTaulukko.refresh();
+                    tuntiKirjausTableView.refresh();
                 }
         );
+    }
+
+    private Optional<LocalDate> getCurrentDate(){
+        return Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).map(Paiva::getLocalDate);
     }
 
     @FXML
@@ -270,7 +282,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaLeikepoydalleButtonClick(){
         LOGGER.debug("Save to clipboard button pushed!");
 
-        String yhteenvetoText = mainViewService.getYhteenvetoText();
+        String yhteenvetoText = mainViewService.getYhteenvetoText(getCurrentDate().orElse(LocalDate.now()));
         ClipboardContent content = new ClipboardContent();
         content.putString(yhteenvetoText);
         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -283,6 +295,8 @@ public class MainViewController implements Initializable {
         String topic = aiheField.getText();
         LOGGER.debug("Save to table button pushed!");
 
+        LocalDate currentDate = getCurrentDate().orElse(LocalDate.now());
+
         if(topic.isEmpty()){
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showFieldNotFilledAlert();
@@ -291,7 +305,7 @@ public class MainViewController implements Initializable {
 
         LocalDateTime localDateTime;
         try {
-            localDateTime = mainViewService.parseTimeFromString(time);
+            localDateTime = mainViewService.parseTimeFromString(time, currentDate);
         } catch (DateTimeParseException e){
             LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -301,7 +315,7 @@ public class MainViewController implements Initializable {
 
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
 
-        ObservableList<TuntiKirjaus> tuntidata = mainViewService.getTuntiDataForTable();
+        ObservableList<TuntiKirjaus> tuntidata = mainViewService.getTuntiDataForTable(currentDate);
 
         if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -319,7 +333,7 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onPoistaKirjausButtonClick() {
         LOGGER.debug("Poista kirjaus painettu!");
-        TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
+        TuntiKirjaus selectedKirjaus = tuntiKirjausTableView.getSelectionModel().getSelectedItem();
         LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
         if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
@@ -351,10 +365,10 @@ public class MainViewController implements Initializable {
     }
 
     private void updateView(){
-        tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
-        tuntiTaulukko.refresh();
+        tuntiKirjausTableView.setItems(observableTuntikirjausList);
+        tuntiKirjausTableView.refresh();
         daysListView.setItems(mainViewService.getPaivaDataForTable());
-        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
+        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText(getCurrentDate().orElse(LocalDate.now())));
         kellonAikaField.clear();
         aiheField.clear();
     }

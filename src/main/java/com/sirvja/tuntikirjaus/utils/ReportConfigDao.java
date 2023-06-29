@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
@@ -17,16 +18,16 @@ public class ReportConfigDao implements Dao<ReportConfig> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportConfigDao.class);
 
     @Override
-    public Optional<ObservableList<ReportConfig>> getAll() {
+    public ObservableList<ReportConfig> getAll() {
         return getAllInternal(Optional.empty());
     }
 
     @Override
-    public Optional<ObservableList<ReportConfig>> getAllFrom(LocalDate localDate) {
+    public ObservableList<ReportConfig> getAllFrom(LocalDate localDate) {
         return getAllInternal(Optional.of(localDate));
     }
 
-    public Optional<ObservableList<ReportConfig>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
+    public ObservableList<ReportConfig> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";
         LOGGER.debug("Query: {}", query);
         ObservableList<ReportConfig> returnObject = FXCollections.observableArrayList();
@@ -47,10 +48,10 @@ public class ReportConfigDao implements Dao<ReportConfig> {
             }
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Couldn't get all ReportConfig' from database: {}", e.getMessage());
-            return Optional.empty();
+            return returnObject;
         }
 
-        return Optional.of(returnObject);
+        return returnObject;
     }
 
 

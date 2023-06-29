@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
@@ -19,27 +21,25 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
     @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAll() {
+    public List<TuntiKirjaus> getAll() {
         return getAllInternal(Optional.empty());
     }
 
     @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAllFrom(LocalDate localDate) {
+    public List<TuntiKirjaus> getAllFrom(LocalDate localDate) {
         return getAllInternal(Optional.of(localDate));
     }
 
-    public Optional<ObservableList<TuntiKirjaus>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
+    public List<TuntiKirjaus> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = optionalLocalDate
                 .map(localDate ->
                         "SELECT * FROM Tuntikirjaus WHERE CAST(strftime('%s', START_TIME)  AS  integer) > CAST(strftime('%s', '" +
                                 localDate.format(dateFormatter) + "')  AS  integer) ORDER BY START_TIME ASC;")
                 .orElse("SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC");
-        //String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
         LOGGER.debug("Query: {}", query);
 
-        ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
-        try {
-            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
+        ArrayList<TuntiKirjaus> returnObject = new ArrayList<>();
+        try (ResultSet resultSet = DBUtil.dbExecuteQuery(query)) {
 
             while (resultSet.next()){
                 LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
@@ -58,10 +58,10 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             }
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
-            return Optional.empty();
+            return List.of();
         }
 
-        return Optional.of(returnObject);
+        return returnObject;
     }
 
     @Override

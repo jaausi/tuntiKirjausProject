@@ -28,7 +28,7 @@ public class ReportsViewService {
     private static final ObservableList<ReportConfig> reportConfigList = FXCollections.observableArrayList();
 
     private static void getInitialReportConfigsFromDb(){
-        reportConfigDao.getAll().map(reportConfigList::addAll);
+        reportConfigList.addAll(reportConfigDao.getAll());
     }
 
     public static ObservableList<ReportConfig> getReportConfigDataForList(){
@@ -39,17 +39,11 @@ public class ReportsViewService {
     }
 
     public static ObservableList<TuntiKirjaus> getAllTuntikirjaus(Optional<LocalDate> optionalAlkuPaiva, Optional<LocalDate> optionalLoppupaiva, Optional<String> optionalSearchQuery) {
-        Optional<ObservableList<TuntiKirjaus>> allTuntikirjaus = tuntiKirjausDao.getAll();
-
-        if(allTuntikirjaus.isPresent()){
-            return tuntiKirjausDao.getAll().get().stream()
+            return tuntiKirjausDao.getAll().stream()
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().isAfter(optionalAlkuPaiva.orElse(LocalDate.MIN).atStartOfDay()))
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().isBefore(optionalLoppupaiva.orElse(LocalDate.MAX).atTime(23, 59)))
                     .filter(tuntiKirjaus -> tuntiKirjaus.getTopic().toLowerCase().contains(optionalSearchQuery.orElse("").toLowerCase()))
                     .collect(Collectors.toCollection(FXCollections::observableArrayList));
-        } else {
-            return FXCollections.observableArrayList();
-        }
     }
 
     public static long getSumOfHoursFromTuntikirjausList(ObservableList<TuntiKirjaus> tuntikirjausList){

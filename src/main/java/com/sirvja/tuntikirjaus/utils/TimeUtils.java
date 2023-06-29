@@ -1,9 +1,11 @@
 package com.sirvja.tuntikirjaus.utils;
 
+import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -35,5 +37,13 @@ public class TimeUtils {
         }
 
         return localTime;
+    }
+
+    public static LocalDate toLocalDate(Paiva paiva) {
+        return paiva.getLocalDate();
+    }
+
+    public static Paiva toPaiva(LocalDate localDate) {
+        return new Paiva(localDate);
     }
 }

@@ -14,7 +14,7 @@ public class Initializer {
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();
-        initializeTestData();
+        initializeDb();
     }
 
     private static void createDbTablesIfNotExisting(){
@@ -26,7 +26,7 @@ public class Initializer {
         LOGGER.debug("ReportConfig table initialized.");
     }
 
-    private static void initializeTestData(){
+    private static void initializeDb(){
         if(DROP_TABLE_ON_START){
             TuntiKirjausDao.dropTable();
             ReportConfigDao.dropTable();

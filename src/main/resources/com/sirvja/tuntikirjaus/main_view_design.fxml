@@ -120,7 +120,7 @@
                         </VBox>
                      </children>
                   </AnchorPane>
-                  <TableView fx:id="tuntiTaulukko" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
+                  <TableView fx:id="tuntiKirjausTableView" focusTraversable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
                     <columns>
                       <TableColumn fx:id="kellonaikaColumn" maxWidth="75.0" minWidth="75.0" prefWidth="75.0" text="Kellonaika" />
                       <TableColumn fx:id="aiheColumn" minWidth="100.0" prefWidth="290.0" text="Aihe" />

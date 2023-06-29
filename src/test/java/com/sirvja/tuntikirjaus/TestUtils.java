@@ -9,6 +9,8 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestUtils {
 
@@ -21,8 +23,8 @@ public class TestUtils {
     public static LocalDateTime getZeroDateTime(){
         return zeroDateTime;
     }
-    public static ObservableList<TuntiKirjaus> getTuntikirjausListMock(int amountOfDays){
-        ObservableList<TuntiKirjaus> tuntiKirjausList = FXCollections.observableArrayList();
+    public static List<TuntiKirjaus> getTuntikirjausListMock(int amountOfDays){
+        List<TuntiKirjaus> tuntiKirjausList = new ArrayList<>();
 
         for(int i = 0; i<amountOfDays; i++){
             final LocalDateTime thisDateTime = zeroDateTime.plusDays(i);
