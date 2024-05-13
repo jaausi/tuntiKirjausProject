@@ -3,7 +3,8 @@ target/
 out/
 
 database.sqlite
-database
+database/
+database/tuntikirjaus.db
 
 *.app/
 *.dmg
