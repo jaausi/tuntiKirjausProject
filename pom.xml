@@ -76,6 +76,7 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Testing libraries -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -103,13 +104,18 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <version>9.1.0</version>
+                <configuration>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <nvdApiKey>${env.NVDAPIKEY}</nvdApiKey>
+                    <formats>
+                        <format>XML</format>
+                        <format>HTML</format>
+                    </formats>
+                    <outputDirectory>reports</outputDirectory>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
