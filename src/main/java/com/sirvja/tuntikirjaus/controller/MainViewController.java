@@ -1,10 +1,12 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
-import com.sirvja.tuntikirjaus.domain.Paiva;
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
+import com.sirvja.tuntikirjaus.model.DayRecord;
+import com.sirvja.tuntikirjaus.model.HourRecord;
+import com.sirvja.tuntikirjaus.model.HourRecordTable;
+import com.sirvja.tuntikirjaus.service.MainViewService;
+import com.sirvja.tuntikirjaus.service.HourRecordTableService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -13,7 +15,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -24,6 +25,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
@@ -31,24 +33,32 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.TreeSet;
 
+@Component
 public class MainViewController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
+    private final HourRecordTableService hourRecordTableService;
+
+    // Main hour record table which shows the saved hour records
     @FXML
-    private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
+    private TableView<HourRecord> hourRecordTableView = new TableView<>();
     @FXML
-    private TableColumn<TuntiKirjaus, LocalTime> kellonaikaColumn;
+    private TableColumn<HourRecord, LocalTime> timeTableColumn;
     @FXML
-    private TableColumn<TuntiKirjaus, String> aiheColumn;
+    private TableColumn<HourRecord, String> topicTableColumn;
     @FXML
-    private TableColumn<TuntiKirjaus, String> tunnitColumn;
+    private TableColumn<HourRecord, String> durationTableColumn;
+
+
     @FXML
     private AutoCompleteTextField<String> aiheField;
     @FXML
-    private ListView<Paiva> daysListView = new ListView<>();
+    private ListView<DayRecord> daysListView = new ListView<>();
     @FXML
     private MenuItem changeThemeMenuItem;
     @FXML
@@ -79,17 +89,20 @@ public class MainViewController implements Initializable {
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
 
+    public MainViewController(HourRecordTableService hourRecordTableService) {
+        this.hourRecordTableService = hourRecordTableService;
+    }
+
+    @FXML
     @Override
     public void initialize (URL url, ResourceBundle rb){
-        tuntiTaulukko.setEditable(true);
 
-        kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
-        aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
-        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("durationString"));
-
-        kellonaikaColumn.setSortable(false);
-        aiheColumn.setSortable(false);
-        tunnitColumn.setSortable(false);
+        hourRecordTableService.initializeHourRecordTable(new HourRecordTable(
+                hourRecordTableView,
+                timeTableColumn,
+                topicTableColumn,
+                durationTableColumn
+        ));
 
         setEditListenerToKellonaikaColumn();
 
@@ -101,7 +114,7 @@ public class MainViewController implements Initializable {
 
         daysListView.getSelectionModel().selectFirst();
 
-        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new DayRecord(LocalDate.now())));
 
         initializeAutoCompleteAiheField();
     }
@@ -128,10 +141,10 @@ public class MainViewController implements Initializable {
     }
 
     private void setEditListenetToAiheColumn() {
-        aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        aiheColumn.setOnEditCommit(
+        topicTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        topicTableColumn.setOnEditCommit(
                 t -> {
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
+                    HourRecord kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     kirjausToEdit.setTopic(t.getNewValue());
                     MainViewService.update(kirjausToEdit);
                 }
@@ -139,8 +152,8 @@ public class MainViewController implements Initializable {
     }
 
     private void setEditListenerToKellonaikaColumn() {
-        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter()));
-        kellonaikaColumn.setOnEditCommit(
+        timeTableColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter()));
+        timeTableColumn.setOnEditCommit(
                 t -> {
                     int tablePosition = t.getTablePosition().getRow();
                     int lastPosition = t.getTableView().getItems().size() - 1;
@@ -148,7 +161,7 @@ public class MainViewController implements Initializable {
                     boolean facedError = false;
 
                     if(tablePosition < lastPosition){
-                        TuntiKirjaus followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
+                        HourRecord followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
                         // If edited time is after next kirjaus start time, abort.
                         if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
                             showNotCorrectTimeAlert(true);
@@ -158,7 +171,7 @@ public class MainViewController implements Initializable {
 
                     // If not the first row of a day. Edit also the previous row end time.
                     if(tablePosition > 0){
-                        TuntiKirjaus previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
+                        HourRecord previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
                         // If edited time is before previous kirjaus start time, abort.
                         if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
                             showNotCorrectTimeAlert(false);
@@ -170,12 +183,12 @@ public class MainViewController implements Initializable {
                         }
                     }
 
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
+                    HourRecord kirjausToEdit = t.getTableView().getItems().get(tablePosition);
                     if(!facedError){
                         kirjausToEdit.setStartTime(newValue);
                         MainViewService.update(kirjausToEdit);
                     }
-                    tuntiTaulukko.refresh();
+                    hourRecordTableView.refresh();
                 }
         );
     }
@@ -292,19 +305,19 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+        HourRecord hourRecord = new HourRecord(localDateTime, null, topic, true);
 
-        ObservableList<TuntiKirjaus> tuntidata = MainViewService.getTuntiDataForTable();
+        ObservableList<HourRecord> tuntidata = MainViewService.getTuntiDataForTable();
 
-        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
+        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(hourRecord) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showNotCorrectTimeAlert();
             return;
         }
 
-        MainViewService.addTuntikirjaus(tuntiKirjaus);
+        MainViewService.addTuntikirjaus(hourRecord);
 
-        aiheField.getEntries().add(tuntiKirjaus.getTopic());
+        aiheField.getEntries().add(hourRecord.getTopic());
 
         updateView();
     }
@@ -312,7 +325,7 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onPoistaKirjausButtonClick() {
         LOGGER.debug("Poista kirjaus painettu!");
-        TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
+        HourRecord selectedKirjaus = hourRecordTableView.getSelectionModel().getSelectedItem();
         LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
         if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
@@ -327,7 +340,7 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onUusiPaivaButtonClick() {
         LOGGER.debug("Uusi päivä painettu!");
-        MainViewService.setCurrentDate(new Paiva(LocalDate.now()));
+        MainViewService.setCurrentDate(new DayRecord(LocalDate.now()));
         updateView();
     }
 
@@ -344,8 +357,8 @@ public class MainViewController implements Initializable {
     }
 
     private void updateView(){
-        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
-        tuntiTaulukko.refresh();
+        hourRecordTableView.setItems(MainViewService.getTuntiDataForTable());
+        hourRecordTableView.refresh();
         daysListView.setItems(MainViewService.getPaivaDataForTable());
         yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
         kellonAikaField.clear();

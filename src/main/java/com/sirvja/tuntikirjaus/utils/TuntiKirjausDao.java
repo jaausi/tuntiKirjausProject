@@ -1,6 +1,6 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.model.HourRecord;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -9,26 +9,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
 
-public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
+public class TuntiKirjausDao implements Dao<HourRecord> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
     @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAll() {
+    public Optional<ObservableList<HourRecord>> getAll() {
         return getAllInternal(Optional.empty());
     }
 
     @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAllFrom(LocalDate localDate) {
+    public Optional<ObservableList<HourRecord>> getAllFrom(LocalDate localDate) {
         return getAllInternal(Optional.of(localDate));
     }
 
-    public Optional<ObservableList<TuntiKirjaus>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
+    public Optional<ObservableList<HourRecord>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = optionalLocalDate
                 .map(localDate ->
                         "SELECT * FROM Tuntikirjaus WHERE CAST(strftime('%s', START_TIME)  AS  integer) > CAST(strftime('%s', '" +
@@ -37,7 +36,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         //String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
         LOGGER.debug("Query: {}", query);
 
-        ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
+        ObservableList<HourRecord> returnObject = FXCollections.observableArrayList();
         try {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
 
@@ -47,7 +46,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
                 Optional<String> endTime = Optional.ofNullable(endTimeString.isEmpty() || endTimeString.equals("null") ? null : endTimeString);
                 LocalDateTime localEndDateTime = endTime.map(s -> LocalDateTime.parse(s, dateTimeFormatter)).orElse(null);
                 returnObject.add(
-                        new TuntiKirjaus(
+                        new HourRecord(
                                 resultSet.getInt("ROWID"),
                                 LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                                 localEndDateTime,
@@ -65,10 +64,10 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     }
 
     @Override
-    public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
+    public HourRecord save(HourRecord hourRecord) {
         String query = String.format("INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, DURATION_ENABLED) " +
                 "VALUES ('%s', '%s', '%s', '%b') " +
-                "RETURNING ROWID", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled());
+                "RETURNING ROWID", hourRecord.getStartTime().format(dateTimeFormatter), hourRecord.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), hourRecord.getTopic(), hourRecord.isDurationEnabled());
         LOGGER.debug("Inserting Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -76,20 +75,20 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
 
             while (resultSet.next()){
                 LOGGER.debug(String.format("%s",resultSet.getInt("ROWID")));
-                tuntiKirjaus.setId(resultSet.getInt("ROWID"));
+                hourRecord.setId(resultSet.getInt("ROWID"));
             }
         } catch (SQLException | ClassNotFoundException e){
             LOGGER.error("Couldn't save Tuntikirjaus to database: {}", e.getMessage());
         }
 
-        return tuntiKirjaus;
+        return hourRecord;
     }
 
     @Override
-    public void update(TuntiKirjaus tuntiKirjaus) {
+    public void update(HourRecord hourRecord) {
         String query = String.format("UPDATE Tuntikirjaus " +
                 "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', DURATION_ENABLED='%b' " +
-                "WHERE ROWID=%s", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.getId());
+                "WHERE ROWID=%s", hourRecord.getStartTime().format(dateTimeFormatter), hourRecord.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), hourRecord.getTopic(), hourRecord.isDurationEnabled(), hourRecord.getId());
         LOGGER.debug("Updating Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -100,9 +99,9 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     }
 
     @Override
-    public void delete(TuntiKirjaus tuntiKirjaus) {
+    public void delete(HourRecord hourRecord) {
         String query = String.format("DELETE FROM Tuntikirjaus " +
-                "WHERE ROWID=%s", tuntiKirjaus.getId());
+                "WHERE ROWID=%s", hourRecord.getId());
         LOGGER.debug("Deleting Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -113,17 +112,17 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     }
 
     @Override
-    public Optional<TuntiKirjaus> get(int id) {
+    public Optional<HourRecord> get(int id) {
         String query = String.format("SELECT * FROM Tuntikirjaus WHERE ROWID=%s LIMIT 1", id);
         LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
 
-        TuntiKirjaus tuntiKirjaus = null;
+        HourRecord hourRecord = null;
         try {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
 
             while (resultSet.next()){
                 LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
-                tuntiKirjaus = new TuntiKirjaus(
+                hourRecord = new HourRecord(
                         resultSet.getInt("ROWID"),
                         LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                         LocalDateTime.parse(resultSet.getString("END_TIME"), dateTimeFormatter),
@@ -135,7 +134,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
         }
 
-        return Optional.ofNullable(tuntiKirjaus);
+        return Optional.ofNullable(hourRecord);
     }
 
     public static void initializeTableIfNotExisting() {

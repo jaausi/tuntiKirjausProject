@@ -1,6 +1,5 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import javafx.collections.ObservableList;
 
 import java.time.LocalDate;

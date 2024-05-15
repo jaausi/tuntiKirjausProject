@@ -1,5 +1,6 @@
 package com.sirvja.tuntikirjaus;
 
+import com.sirvja.tuntikirjaus.controller.MainViewController;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.*;
 import javafx.application.Application;
@@ -62,9 +63,11 @@ public class TuntikirjausApplication extends Application {
 @Component
 class StageInitializer implements ApplicationListener<StageReadyEvent> {
     private final ApplicationContext applicationContext;
+    private final MainViewController mainViewController;
 
-    StageInitializer(ApplicationContext applicationContext) {
+    StageInitializer(ApplicationContext applicationContext, MainViewController mainViewController) {
         this.applicationContext = applicationContext;
+        this.mainViewController = mainViewController;
     }
 
     @Override
@@ -72,7 +75,9 @@ class StageInitializer implements ApplicationListener<StageReadyEvent> {
         try {
             Stage stage = stageReadyEvent.getStage();
             FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("main-view.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), 900, 600);
+            fxmlLoader.setControllerFactory(this.applicationContext::getBean);
+            Parent root = fxmlLoader.load();
+            Scene scene = new Scene(root, 900, 600);
             scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
             stage.setScene(scene);
             stage.setTitle("Tuntikirjaus App");

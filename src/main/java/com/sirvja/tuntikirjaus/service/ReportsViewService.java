@@ -1,7 +1,7 @@
 package com.sirvja.tuntikirjaus.service;
 
-import com.sirvja.tuntikirjaus.domain.ReportConfig;
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.model.HourRecord;
+import com.sirvja.tuntikirjaus.model.ReportConfig;
 import com.sirvja.tuntikirjaus.utils.ReportConfigDao;
 import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
 import javafx.collections.FXCollections;
@@ -38,8 +38,8 @@ public class ReportsViewService {
         return reportConfigList;
     }
 
-    public static ObservableList<TuntiKirjaus> getAllTuntikirjaus(Optional<LocalDate> optionalAlkuPaiva, Optional<LocalDate> optionalLoppupaiva, Optional<String> optionalSearchQuery) {
-        Optional<ObservableList<TuntiKirjaus>> allTuntikirjaus = tuntiKirjausDao.getAll();
+    public static ObservableList<HourRecord> getAllTuntikirjaus(Optional<LocalDate> optionalAlkuPaiva, Optional<LocalDate> optionalLoppupaiva, Optional<String> optionalSearchQuery) {
+        Optional<ObservableList<HourRecord>> allTuntikirjaus = tuntiKirjausDao.getAll();
 
         if(allTuntikirjaus.isPresent()){
             return tuntiKirjausDao.getAll().get().stream()
@@ -52,9 +52,9 @@ public class ReportsViewService {
         }
     }
 
-    public static long getSumOfHoursFromTuntikirjausList(ObservableList<TuntiKirjaus> tuntikirjausList){
+    public static long getSumOfHoursFromTuntikirjausList(ObservableList<HourRecord> tuntikirjausList){
         return tuntikirjausList.stream()
-                .map(TuntiKirjaus::getDurationInDuration)
+                .map(HourRecord::getDurationInDuration)
                 .mapToLong(Duration::toMinutes)
                 .sum();
     }
@@ -79,19 +79,19 @@ public class ReportsViewService {
         return String.valueOf((int) (sumOfHoursInMinutes / 60));
     }
 
-    public static String getYhteenvetoText(List<TuntiKirjaus> tuntiKirjausList){
+    public static String getYhteenvetoText(List<HourRecord> hourRecordList){
 
-        if(tuntiKirjausList == null || tuntiKirjausList.isEmpty()){
+        if(hourRecordList == null || hourRecordList.isEmpty()){
             return "";
         }
 
-        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+        Predicate<HourRecord> predicate = Predicate.not(HourRecord::isEndTimeNull).and(HourRecord::isDurationEnabled);
 
-        Map<String, String> topicToDuration = tuntiKirjausList.stream()
+        Map<String, String> topicToDuration = hourRecordList.stream()
                 .filter(predicate)
                 .collect(
                         Collectors.groupingBy(
-                                TuntiKirjaus::getClassification,
+                                HourRecord::getClassification,
                                 Collectors.collectingAndThen(
                                         Collectors.summingLong(t -> t.getDurationInDuration().toMinutes()),
                                         minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))

@@ -11,19 +11,27 @@
     </parent>
 
     <groupId>com.sirvja</groupId>
-    <artifactId>tuntiKirjaus</artifactId>
+    <artifactId>hourRecord</artifactId>
     <version>1.0.1-SNAPSHOT</version>
-    <name>tuntiKirjaus</name>
+    <name>hourRecord</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
+        <java.version>21.0.3</java.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

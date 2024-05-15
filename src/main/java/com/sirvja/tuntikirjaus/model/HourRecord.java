@@ -1,16 +1,13 @@
-package com.sirvja.tuntikirjaus.domain;
-
-import javafx.css.converter.DurationConverter;
+package com.sirvja.tuntikirjaus.model;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
+public class HourRecord implements Comparable<HourRecord>{
     private int id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -18,7 +15,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private boolean durationEnabled;
 
     //**************** CONSTRUCTORS *****************//
-    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+    public HourRecord(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
@@ -28,7 +25,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.topic = topic;
         this.durationEnabled = durationEnabled;
     }
-    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+    public HourRecord(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
@@ -42,8 +39,8 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
     //**************** Common methods for object *****************//
     @Override
-    public int compareTo(TuntiKirjaus tuntiKirjaus){
-        return this.startTime.compareTo(tuntiKirjaus.startTime);
+    public int compareTo(HourRecord hourRecord){
+        return this.startTime.compareTo(hourRecord.startTime);
     }
 
     public int getId() {

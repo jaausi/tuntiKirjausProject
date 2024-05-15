@@ -1,6 +1,6 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.domain.ReportConfig;
+import com.sirvja.tuntikirjaus.model.ReportConfig;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;

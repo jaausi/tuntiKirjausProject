@@ -1,4 +1,4 @@
-package com.sirvja.tuntikirjaus.domain;
+package com.sirvja.tuntikirjaus.model;
 
 import java.time.LocalDate;
 import java.util.Optional;
