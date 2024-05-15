@@ -1,5 +1,6 @@
 package com.sirvja.tuntikirjaus.service;
 
+import com.sirvja.tuntikirjaus.exception.HourRecordNotFoundException;
 import com.sirvja.tuntikirjaus.model.HourRecord;
 import com.sirvja.tuntikirjaus.model.HourRecordTable;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
@@ -8,13 +9,24 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+@Log4j2
 @Service
 public class HourRecordTableService {
+
+    private final NewMainViewService newMainViewService;
+    private final AlertService alertService;
+
+    public HourRecordTableService(NewMainViewService newMainViewService, AlertService alertService) {
+        this.newMainViewService = newMainViewService;
+        this.alertService = alertService;
+    }
 
     public void initializeHourRecordTable(HourRecordTable hourRecordTable) {
         hourRecordTable.getHourRecordTableView().setEditable(true);
@@ -24,7 +36,7 @@ public class HourRecordTableService {
         initializeDurationTableColumn(hourRecordTable.getDurationTableColumn());
     }
 
-    private static void initializeTimeTableColumn(TableColumn<HourRecord, LocalTime> timeTableColumn) {
+    private void initializeTimeTableColumn(TableColumn<HourRecord, LocalTime> timeTableColumn) {
         timeTableColumn.setCellValueFactory(new PropertyValueFactory<>("time"));
         timeTableColumn.setSortable(false);
 
@@ -33,42 +45,54 @@ public class HourRecordTableService {
         timeTableColumn.setOnEditCommit(createEditEventHandlerForTimeTableColumn());
     }
 
-    private static EventHandler<TableColumn.CellEditEvent<HourRecord, LocalTime>> createEditEventHandlerForTimeTableColumn() {
-        return t -> {
-            int tablePosition = t.getTablePosition().getRow();
-            int lastPosition = t.getTableView().getItems().size() - 1;
-            LocalDateTime newValue = LocalDateTime.of(MainViewService.getCurrentDate(), t.getNewValue());
+    private EventHandler<TableColumn.CellEditEvent<HourRecord, LocalTime>> createEditEventHandlerForTimeTableColumn() {
+        return cellEditEvent -> {
+            int tablePosition = cellEditEvent.getTablePosition().getRow();
+            int lastPosition = cellEditEvent.getTableView().getItems().size() - 1;
+            LocalDateTime newValue = LocalDateTime.of(newMainViewService.getCurrentDate().orElse(LocalDate.now()), cellEditEvent.getNewValue());
             boolean facedError = false;
 
             if(tablePosition < lastPosition){
-                HourRecord followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
+                HourRecord followingKirjausToEdit = cellEditEvent.getTableView().getItems().get(tablePosition + 1);
                 // If edited time is after next kirjaus start time, abort.
                 if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                    showNotCorrectTimeAlert(true);
+                    alertService.showNotCorrectTimeAlert(true);
                     facedError = true;
                 }
             }
 
             // If not the first row of a day. Edit also the previous row end time.
             if(tablePosition > 0){
-                HourRecord previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
+                HourRecord previousKirjausToEdit = cellEditEvent.getTableView().getItems().get(tablePosition - 1);
                 // If edited time is before previous kirjaus start time, abort.
                 if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                    showNotCorrectTimeAlert(false);
+                    alertService.showNotCorrectTimeAlert(false);
                     facedError = true;
                 }
                 if(!facedError){
                     previousKirjausToEdit.setEndTime(newValue);
-                    MainViewService.update(previousKirjausToEdit); // TODO: Refactor me
+                    try {
+                        newMainViewService.updateHourRecord(previousKirjausToEdit);
+                    } catch (HourRecordNotFoundException e) {
+                        log.error("Tried to update previous hour record but it was not found.");
+                        alertService.showSomethingWentWrongAlert("Yritettiin päivittää edellistä tuntikirjausta, mutta sitä ei löytynyt.");
+                        facedError = true;
+                    }
                 }
             }
 
-            HourRecord kirjausToEdit = t.getTableView().getItems().get(tablePosition);
+            HourRecord kirjausToEdit = cellEditEvent.getTableView().getItems().get(tablePosition);
             if(!facedError){
                 kirjausToEdit.setStartTime(newValue);
-                MainViewService.update(kirjausToEdit); // TODO: Refactor me
+                MainViewService.update(kirjausToEdit);
+                try {
+                    newMainViewService.updateHourRecord(kirjausToEdit);
+                } catch (HourRecordNotFoundException e) {
+                    log.error("Tried to update current hour record but it was not found.");
+                    alertService.showSomethingWentWrongAlert("Yritettiin päivittää valittua tuntikirjausta, mutta sitä ei löytynyt.");
+                }
             }
-            //hourRecordTableView.refresh(); // TODO: Refactor me
+            refreshHourRecordTable();
         };
     }
 
@@ -93,5 +117,9 @@ public class HourRecordTableService {
     private static void initializeDurationTableColumn(TableColumn<HourRecord, String> durationTableColumn) {
         durationTableColumn.setCellValueFactory(new PropertyValueFactory<>("durationString"));
         durationTableColumn.setSortable(false);
+    }
+
+    public void refreshHourRecordTable() {
+        newMainViewService.g
     }
 }

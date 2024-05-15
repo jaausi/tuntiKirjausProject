@@ -5,6 +5,7 @@ import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.model.DayRecord;
 import com.sirvja.tuntikirjaus.model.HourRecord;
 import com.sirvja.tuntikirjaus.model.HourRecordTable;
+import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.service.HourRecordTableService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
@@ -43,6 +44,7 @@ public class MainViewController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
     private final HourRecordTableService hourRecordTableService;
+    private final AlertService alertService;
 
     // Main hour record table which shows the saved hour records
     @FXML
@@ -89,8 +91,9 @@ public class MainViewController implements Initializable {
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
 
-    public MainViewController(HourRecordTableService hourRecordTableService) {
+    public MainViewController(HourRecordTableService hourRecordTableService, AlertService alertService) {
         this.hourRecordTableService = hourRecordTableService;
+        this.alertService = alertService;
     }
 
     @FXML
@@ -164,7 +167,7 @@ public class MainViewController implements Initializable {
                         HourRecord followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
                         // If edited time is after next kirjaus start time, abort.
                         if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(true);
+                            alertService.showNotCorrectTimeAlert(true);
                             facedError = true;
                         }
                     }
@@ -174,7 +177,7 @@ public class MainViewController implements Initializable {
                         HourRecord previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
                         // If edited time is before previous kirjaus start time, abort.
                         if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(false);
+                            alertService.showNotCorrectTimeAlert(false);
                             facedError = true;
                         }
                         if(!facedError){
@@ -291,7 +294,7 @@ public class MainViewController implements Initializable {
 
         if(topic.isEmpty()){
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showFieldNotFilledAlert();
+            alertService.showFieldNotFilledAlert();
             return;
         }
 
@@ -301,7 +304,7 @@ public class MainViewController implements Initializable {
         } catch (DateTimeParseException e){
             LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showTimeInWrongFormatAlert(e.getMessage());
+            alertService.showTimeInWrongFormatAlert(e.getMessage());
             return;
         }
 
@@ -311,7 +314,7 @@ public class MainViewController implements Initializable {
 
         if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(hourRecord) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showNotCorrectTimeAlert();
+            alertService.showNotCorrectTimeAlert();
             return;
         }
 
@@ -327,7 +330,7 @@ public class MainViewController implements Initializable {
         LOGGER.debug("Poista kirjaus painettu!");
         HourRecord selectedKirjaus = hourRecordTableView.getSelectionModel().getSelectedItem();
         LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
-        if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
+        if(!alertService.showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
                         "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
                 "siirtämällä lopetusajan poistettavan kirjauksen lopetusaikaan.", selectedKirjaus))){
@@ -365,51 +368,12 @@ public class MainViewController implements Initializable {
         aiheField.clear();
     }
 
-    private void showFieldNotFilledAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Pakollisia kenttiä täyttämättä");
-        alert.setContentText("Punaisella korostettuihin kenttiin tulee syöttää" +
-                " arvo ennen taulukkoon lisäämistä.");
-        alert.showAndWait();
-    }
-
-    private void showNotCorrectTimeAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Syötetty aika on pienempi kuin viimeisin aika");
-        alert.setContentText("Syötä aika, joka on listan viimeisimmän ajan jälkeen.");
-        alert.showAndWait();
-    }
-
-    private void showNotCorrectTimeAlert(boolean isTooLarge){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        if(isTooLarge){
-            alert.setHeaderText("Syötetty aika on suurempi kuin seuraava syötetty aika");
-            alert.setContentText("Syötä aika, joka on ennen ajanhetkeä joka on seuraavan listalla.");
-        } else {
-            alert.setHeaderText("Syötetty aika on pienempi kuin edellinen aika");
-            alert.setContentText("Syötä aika, joka on edellisen syötetyn ajanhetken jälkeen.");
-        }
-        alert.showAndWait();
-    }
-
     public static void showTimeInWrongFormatAlert(String problem){
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Varoitus!");
         alert.setHeaderText("Syötetty aika on väärässä formaatissa");
         alert.setContentText("Virhe: "+problem);
         alert.showAndWait();
-    }
-
-    public static boolean showConfirmationAlert(String confirmationHeader, String confirmationText){
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, confirmationText, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-        alert.setTitle("Vahvista valinta!");
-        alert.setHeaderText(confirmationHeader);
-        alert.showAndWait();
-
-        return alert.getResult() == ButtonType.YES;
     }
 
 }
