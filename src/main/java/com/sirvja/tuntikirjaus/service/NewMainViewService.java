@@ -29,8 +29,4 @@ public class NewMainViewService {
     public void updateHourRecord(HourRecord hourRecord) throws HourRecordNotFoundException {
         mainViewDAO.updateHourRecord(hourRecord);
     }
-
-    public Optional<HourRecordTable> getHourRecordTable() {
-        return mainViewDAO.getHourRecordTable();
-    }
 }

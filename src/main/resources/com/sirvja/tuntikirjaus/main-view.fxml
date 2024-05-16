@@ -85,7 +85,7 @@
                      <tooltip>
                         <Tooltip text="Tässä näytetään lista päivistä, joille&#10;olet syöttänyt tuntikirjauksia. Listan&#10;elementtiä klikkaamalla saat esiin&#10;kyseisen päivän tunnit." />
                      </tooltip></ListView>
-                  <Button fx:id="uusiPaivaButton" layoutX="10.0" layoutY="484.0" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onUusiPaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Uusi päivä" />
+                  <Button fx:id="addCurrentDayButton" layoutX="10.0" layoutY="484.0" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onUusiPaivaButtonClick" prefHeight="77.0" prefWidth="220.0" text="Uusi päivä" />
                </children>
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0">
@@ -99,7 +99,7 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                                  <children>
-                                    <TextField fx:id="kellonAikaField" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" onKeyPressed="#onKeyPressedToKellonaikaField" onMouseClicked="#onKellonaikaFieldClick" prefHeight="26.0" prefWidth="90.0" promptText="Kellonaika">
+                                    <TextField fx:id="timeField" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" onKeyPressed="#onKeyPressedToKellonaikaField" onMouseClicked="#onKellonaikaFieldClick" prefHeight="26.0" prefWidth="90.0" promptText="Kellonaika">
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>
@@ -107,7 +107,7 @@
                                           <Tooltip text="Syötä työn aloituskellonaika jossakin&#10;seuraavista muodoista:&#10;&lt;h&gt;&#10;&lt;hh&gt;&#10;&lt;hmm&gt;&#10;&lt;hhmm&gt;&#10;&lt;h:m&gt;&#10;&lt;h:mm&gt;&#10;&lt;hh:mm&gt;&#10;&#10;Jos kellonaika kentän jättää tyhjäksi&#10;tulkitaan syötetyn työn aloitusajaksi&#10;nykyhetki." />
                                        </tooltip>
                                     </TextField>
-                                    <AutoCompleteTextField fx:id="aiheField" styleClass="auto-complete-field" layoutX="10.0" layoutY="10.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" onKeyPressed="#onKeyPressedToAiheField" onMouseClicked="#onAiheFieldClick" prefHeight="26.0" prefWidth="320.0" promptText="Aihe" HBox.hgrow="ALWAYS">
+                                    <AutoCompleteTextField fx:id="topicField" styleClass="auto-complete-field" layoutX="10.0" layoutY="10.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" onKeyPressed="#onKeyPressedToAiheField" onMouseClicked="#onAiheFieldClick" prefHeight="26.0" prefWidth="320.0" promptText="Aihe" HBox.hgrow="ALWAYS">
                                        <HBox.margin>
                                           <Insets left="5.0" right="5.0" />
                                        </HBox.margin>
@@ -122,7 +122,7 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                                  <children>
-                                    <Button fx:id="tallennaTaulukkoonButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaTaulukkoonButtonClick" prefHeight="26.0" prefWidth="432.0" text="Tallenna taulukkoon" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="saveToTableButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaTaulukkoonButtonClick" prefHeight="26.0" prefWidth="432.0" text="Tallenna taulukkoon" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                            </children>
@@ -148,7 +148,7 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                                  <children>
-                                    <Button fx:id="poistaKirjausButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onPoistaKirjausButtonClick" prefHeight="26.0" prefWidth="432.0" text="Poista kirjaus" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="deleteFromTableButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onPoistaKirjausButtonClick" prefHeight="26.0" prefWidth="432.0" text="Poista kirjaus" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                            </children>
@@ -159,11 +159,11 @@
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="100.0" styleClass="right-box">
                <children>
-                  <TextArea fx:id="yhteenvetoTextArea" focusTraversable="false" prefHeight="474.0" prefWidth="220.0" VBox.vgrow="ALWAYS">
+                  <TextArea fx:id="summaryTextArea" focusTraversable="false" prefHeight="474.0" prefWidth="220.0" VBox.vgrow="ALWAYS">
                      <tooltip>
                         <Tooltip text="Tässä näytetään aktiivisen päivän&#10;yhteenveto syötetyistä tunneista.&#10;Yhteenvedon avulla päivän tehdyt&#10;työt on helppo syöttää Tiimaan." />
                      </tooltip></TextArea>
-                  <Button fx:id="tallennaLeikepoydalleButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaLeikepoydalleButtonClick" prefHeight="77.0" prefWidth="220.0" text="Tallenna leikepöydälle" />
+                  <Button fx:id="saveToClipboardButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaLeikepoydalleButtonClick" prefHeight="77.0" prefWidth="220.0" text="Tallenna leikepöydälle" />
                </children>
             </VBox>
       </items>
