@@ -1,8 +1,13 @@
 package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
+import com.sirvja.tuntikirjaus.exception.DatabaseNotInitializedException;
+import lombok.extern.log4j.Log4j2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
@@ -15,49 +20,46 @@ import java.sql.*;
 import java.util.Optional;
 
 
+@Log4j2
+@Service
 public class DBUtil {
 
-    private static String location;
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
+    @Value("${tuntikirjaus.in-memory.database.location}")
+    private String databaseLocation;
+    private final String databaseFileName = Constants.DATABASE_FILE_NAME;
+    private Optional<Path> optionalDbFile;
 
-    public static void checkOrCreateDatabaseFile(){
-        Optional<String> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db").toExternalForm());
+    public void checkOrCreateDatabaseFile() throws IOException {
+        log.debug("In check or create database file");
 
-        // Don't use database in resource folder, if running from jar file
-        if(optionalLocation.isPresent() && !optionalLocation.get().contains(".jar") && false){
-            location = optionalLocation.get();
-            System.out.println(String.format("Current dir: %s", location));
-        } else {
-            Path rootPath = Paths.get(System.getProperty("user.home")+"/tuntikirjaus/database");
-
-            System.out.println(String.format("Current dir: %s", rootPath));
-            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", rootPath);
-
-            try {
-                Files.createDirectories(rootPath);
-
-                File directoryFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database");
-                File databaseFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database/tuntikirjaus.db");
-
-                assert directoryFile.exists() || directoryFile.mkdir();
-                assert databaseFile.exists() || databaseFile.createNewFile();
-
-                location = databaseFile.getPath();
-            } catch (IOException e){
-                LOGGER.error("Couldn't create database file: {}", e.getMessage());
-            }
+        if(!checkIfDatabaseExists()) {
+            log.debug("No database file found");
+            createDatabaseFile();
         }
-        LOGGER.debug("Using database in location: {}", location);
+        optionalDbFile = Optional.of(Paths.get(databaseLocation, databaseFileName));
     }
 
-    public static Connection connect() {
+    private boolean createDatabaseFile() throws IOException {
+        log.debug("Creating database file");
+        Path databaseFilePath = Paths.get(databaseLocation, databaseFileName);
+        return databaseFilePath.toFile().createNewFile();
+    }
+
+    private boolean checkIfDatabaseExists() {
+        log.debug("Checking if database file exists in folder: {}", databaseLocation);
+        Path databaseFilePath = Paths.get(databaseLocation, databaseFileName);
+        return databaseFilePath.toFile().exists();
+    }
+
+    public Connection connect() throws DatabaseNotInitializedException {
+        Path databaseFilePath = optionalDbFile.orElseThrow(() -> new DatabaseNotInitializedException("You need to initialize the database with dbUtil.checkOrCreateDatabaseFile() before calling connect"));
         String dbPrefix = "jdbc:sqlite:";
         Connection connection;
         try {
-            LOGGER.debug("Connecting to database with address: {}", dbPrefix+location);
-            connection = DriverManager.getConnection(dbPrefix + location);
+            log.debug("Connecting to database with address: {}", dbPrefix + databaseFilePath);
+            connection = DriverManager.getConnection(dbPrefix + databaseFilePath);
         } catch (SQLException exception) {
-            LOGGER.error("Could not connect to SQLite DB at: {}", location);
+            log.error("Could not connect to SQLite DB at: {}", databaseFilePath);
             return null;
         }
         return connection;
@@ -69,7 +71,7 @@ public class DBUtil {
             DriverManager.registerDriver(new org.sqlite.JDBC());
             return true;
         } catch (ClassNotFoundException | SQLException e) {
-            LOGGER.error("Could not start SQLite Drivers");
+            log.error("Could not start SQLite Drivers");
             return false;
         }
     }
@@ -83,8 +85,8 @@ public class DBUtil {
         CachedRowSet crs = RowSetProvider.newFactory().createCachedRowSet();
         try {
             //Connect to DB (Establish Oracle Connection)
-            connection = connect();
-            LOGGER.debug("Select statement: {}", queryStmt);
+//            connection = connect();
+            log.debug("Select statement: {}", queryStmt);
             //Create statement
             assert connection != null;
             statement = connection.createStatement();
@@ -92,7 +94,7 @@ public class DBUtil {
             resultSet = statement.executeQuery(queryStmt);
             crs.populate(resultSet);
         } catch (Exception e) {
-            LOGGER.error("Problem occurred at executeUpdate operation : {}", e.getMessage());
+            log.error("Problem occurred at executeUpdate operation : {}", e.getMessage());
             throw e;
         } finally {
             closeQuietly(connection);
@@ -108,12 +110,12 @@ public class DBUtil {
         Connection connection = null;
         Statement statement = null;
         try {
-            connection = connect();
+//            connection = connect();
             assert connection != null;
             statement = connection.createStatement();
             statement.executeUpdate(updateStmt);
         } catch (Exception e) {
-            LOGGER.error("Problem occurred at executeUpdate operation : {}" + e.getMessage());
+            log.error("Problem occurred at executeUpdate operation : {}" + e.getMessage());
             throw e;
         } finally {
             closeQuietly(connection);

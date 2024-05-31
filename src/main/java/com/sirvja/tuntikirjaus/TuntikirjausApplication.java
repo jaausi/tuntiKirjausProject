@@ -1,7 +1,6 @@
 package com.sirvja.tuntikirjaus;
 
 import com.sirvja.tuntikirjaus.controller.MainViewController;
-import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.*;
 import javafx.application.Application;
 import javafx.application.HostServices;
@@ -13,38 +12,44 @@ import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.*;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
-
+@Log4j2
 public class TuntikirjausApplication extends Application {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TuntikirjausApplication.class);
-
     private ConfigurableApplicationContext context;
+    private final Initializer initializer;
     public static Stage stage;
+
+    public TuntikirjausApplication(Initializer initializer) {
+        this.initializer = initializer;
+    }
 
     @Override
     public void init() {
-        Initializer.initializeApplication();
+        try {
+            initializer.initializeApplication();
 
-        ApplicationContextInitializer<GenericApplicationContext> initializer = applicationContext -> {
-            applicationContext.registerBean(Application.class, () -> TuntikirjausApplication.this);
-            applicationContext.registerBean(Parameters.class, this::getParameters);
-            applicationContext.registerBean(HostServices.class, this::getHostServices);
-        };
+            ApplicationContextInitializer<GenericApplicationContext> initializer = applicationContext -> {
+                applicationContext.registerBean(Application.class, () -> TuntikirjausApplication.this);
+                applicationContext.registerBean(Parameters.class, this::getParameters);
+                applicationContext.registerBean(HostServices.class, this::getHostServices);
+            };
 
-        this.context = new SpringApplicationBuilder()
-                .sources(Launcher.class)
-                .initializers(initializer)
-                .run(getParameters().getRaw().toArray(new String[0]));
+            this.context = new SpringApplicationBuilder()
+                    .sources(Launcher.class)
+                    .initializers(initializer)
+                    .run(getParameters().getRaw().toArray(new String[0]));
+        } catch (IOException e) {
+            log.error("Couldn't initialize the application, something went wrong in database file creation: {}", e.getMessage());
+            log.error("Error: ", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -12,4 +12,7 @@ public class Constants {
     public static final LocalDate FETCH_DAYS_SINCE = LocalDate.now().minusDays(AMOUNT_OF_DAYS_TO_FETCH);
     public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     public static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    // Other
+    public static final String DATABASE_FILE_NAME = "tuntikirjaus.db";
 }

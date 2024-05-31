@@ -2,9 +2,10 @@ package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.model.HourRecord;
 import com.sirvja.tuntikirjaus.model.DayRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -12,12 +13,18 @@ import static com.sirvja.tuntikirjaus.service.MainViewService.addTuntikirjaus;
 import static com.sirvja.tuntikirjaus.service.MainViewService.setCurrentDate;
 import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
 
+@Log4j2
+@Service
 public class Initializer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Initializer.class);
+    private final DBUtil dbUtil;
 
-    public static void initializeApplication(){
-        DBUtil.checkOrCreateDatabaseFile();
+    public Initializer(DBUtil dbUtil) {
+        this.dbUtil = dbUtil;
+    }
+
+    public void initializeApplication() throws IOException {
+        dbUtil.checkOrCreateDatabaseFile();
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();
@@ -25,12 +32,12 @@ public class Initializer {
     }
 
     private static void createDbTablesIfNotExisting(){
-        LOGGER.debug("Initializing Tuntikirjaus table...");
+        log.debug("Initializing Tuntikirjaus table...");
         TuntiKirjausDao.initializeTableIfNotExisting();
-        LOGGER.debug("Tuntikirjaus table initialized.");
-        LOGGER.debug("Initializing ReportConfig table...");
+        log.debug("Tuntikirjaus table initialized.");
+        log.debug("Initializing ReportConfig table...");
         ReportConfigDao.initializeTableIfNotExisting();
-        LOGGER.debug("ReportConfig table initialized.");
+        log.debug("ReportConfig table initialized.");
     }
 
     private static void initializeTestData(){
