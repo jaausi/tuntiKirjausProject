@@ -187,10 +187,10 @@ public class MainViewService {
 
     private static ObservableList<HourRecord> getAllKirjausFromDb(){
         LOGGER.debug("Getting kirjaus' from database...");
-        ObservableList<HourRecord> allKirjaus = tuntiKirjausDao.getAllFrom(FETCH_DAYS_SINCE).orElse(FXCollections.observableArrayList());
-        LOGGER.debug("Found {} kirjaus' from database.", allKirjaus.size());
+//        ObservableList<HourRecord> allKirjaus = tuntiKirjausDao.getAllFrom(FETCH_DAYS_SINCE).orElse(FXCollections.observableArrayList());
+//        LOGGER.debug("Found {} kirjaus' from database.", allKirjaus.size());
 
-        return allKirjaus;
+        return FXCollections.observableArrayList();
     }
 
     private static ObservableList<DayRecord> getAllPaivas(ObservableList<HourRecord> hourRecordList){

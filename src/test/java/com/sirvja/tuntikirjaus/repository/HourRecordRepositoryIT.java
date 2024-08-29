@@ -4,19 +4,15 @@ import com.sirvja.tuntikirjaus.model.HourRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
-import static org.mockito.ArgumentMatchers.any;
 
-@SpringBootTest(classes = {JdbcTemplate.class, HourRecordRepositoryInMemoryImpl.class})
+@SpringBootTest(classes = {})
 public class HourRecordRepositoryIT {
     @Autowired
     private HourRecordRepository hourRecordRepository;
@@ -36,6 +32,6 @@ public class HourRecordRepositoryIT {
                 hourRecord.isDurationEnabled()
         );
 
-        Assertions.assertEquals(hourRecord, hourRecordRepository.get(1).orElse(null));
+        Assertions.assertEquals(hourRecord, hourRecordRepository.findById(1).orElse(null));
     }
 }

@@ -5,14 +5,17 @@ import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.model.DayRecord;
 import com.sirvja.tuntikirjaus.model.HourRecord;
 import com.sirvja.tuntikirjaus.model.HourRecordTable;
+import com.sirvja.tuntikirjaus.repository.HourRecordRepository;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.HourRecordInputService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.service.HourRecordTableService;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.fxml.JavaFXBuilderFactory;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -24,18 +27,16 @@ import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Log4j2
 @Component
@@ -44,6 +45,7 @@ public class MainViewController implements Initializable {
     private final HourRecordTableService hourRecordTableService;
     private final AlertService alertService;
     private final HourRecordInputService hourRecordInputService;
+    private final HourRecordRepository hourRecordRepository;
 
     // Main hour record table which shows the saved hour records
     @FXML
@@ -95,10 +97,11 @@ public class MainViewController implements Initializable {
     private Color x4;
     private Object valueBeforeEdit;
 
-    public MainViewController(HourRecordTableService hourRecordTableService, AlertService alertService, HourRecordInputService hourRecordInputService) {
+    public MainViewController(HourRecordTableService hourRecordTableService, AlertService alertService, HourRecordInputService hourRecordInputService, HourRecordRepository hourRecordRepository) {
         this.hourRecordTableService = hourRecordTableService;
         this.alertService = alertService;
         this.hourRecordInputService = hourRecordInputService;
+        this.hourRecordRepository = hourRecordRepository;
     }
 
     @FXML
@@ -256,8 +259,7 @@ public class MainViewController implements Initializable {
 
     private void updateView(){
         // hourRecordTableService.setHourRecordsToTable(); // TODO: Fix me
-
-        hourRecordTableView.setItems(MainViewService.getTuntiDataForTable());
+        hourRecordTableView.setItems(StreamSupport.stream(hourRecordRepository.findAll().spliterator(), false).collect(Collectors.toCollection(FXCollections::observableArrayList)));
         hourRecordTableView.refresh();
         daysListView.setItems(MainViewService.getPaivaDataForTable());
         summaryTextArea.setText(MainViewService.getYhteenvetoText());

@@ -1,19 +1,13 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.exception.DatabaseNotInitializedException;
 import lombok.extern.log4j.Log4j2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;

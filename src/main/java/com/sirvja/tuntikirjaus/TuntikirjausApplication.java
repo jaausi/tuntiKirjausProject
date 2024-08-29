@@ -23,33 +23,24 @@ import java.io.IOException;
 public class TuntikirjausApplication extends Application {
 
     private ConfigurableApplicationContext context;
-    private final Initializer initializer;
     public static Stage stage;
 
-    public TuntikirjausApplication(Initializer initializer) {
-        this.initializer = initializer;
+    public TuntikirjausApplication() {
     }
 
     @Override
     public void init() {
-        try {
-            initializer.initializeApplication();
 
-            ApplicationContextInitializer<GenericApplicationContext> initializer = applicationContext -> {
-                applicationContext.registerBean(Application.class, () -> TuntikirjausApplication.this);
-                applicationContext.registerBean(Parameters.class, this::getParameters);
-                applicationContext.registerBean(HostServices.class, this::getHostServices);
-            };
+        ApplicationContextInitializer<GenericApplicationContext> initializer = applicationContext -> {
+            applicationContext.registerBean(Application.class, () -> TuntikirjausApplication.this);
+            applicationContext.registerBean(Parameters.class, this::getParameters);
+            applicationContext.registerBean(HostServices.class, this::getHostServices);
+        };
 
-            this.context = new SpringApplicationBuilder()
-                    .sources(Launcher.class)
-                    .initializers(initializer)
-                    .run(getParameters().getRaw().toArray(new String[0]));
-        } catch (IOException e) {
-            log.error("Couldn't initialize the application, something went wrong in database file creation: {}", e.getMessage());
-            log.error("Error: ", e);
-            throw new RuntimeException(e);
-        }
+        this.context = new SpringApplicationBuilder()
+                .sources(Launcher.class)
+                .initializers(initializer)
+                .run(getParameters().getRaw().toArray(new String[0]));
     }
 
     @Override

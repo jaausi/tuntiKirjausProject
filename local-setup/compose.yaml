@@ -1,0 +1,19 @@
+name: tuntikirjaus
+
+services:
+  mysql-db:
+    container_name: tuntikirjaus-db
+    image: docker.io/mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MYSQL_DATABASE=tuntikirjaus
+      - MYSQL_USER=${APP_USER}
+      - MYSQL_PASSWORD=${APP_PASSWORD}
+    ports:
+      - ${DB_PORT}:3306
+    volumes:
+      - my-db:/var/lib/mysql
+    env_file: .env
+
+volumes:
+  my-db:

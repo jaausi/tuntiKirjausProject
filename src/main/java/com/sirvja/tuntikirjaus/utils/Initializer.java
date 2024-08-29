@@ -17,14 +17,12 @@ import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
 @Service
 public class Initializer {
 
-    private final DBUtil dbUtil;
 
-    public Initializer(DBUtil dbUtil) {
-        this.dbUtil = dbUtil;
+    public Initializer() {
     }
 
     public void initializeApplication() throws IOException {
-        dbUtil.checkOrCreateDatabaseFile();
+//        dbUtil.checkOrCreateDatabaseFile();
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();

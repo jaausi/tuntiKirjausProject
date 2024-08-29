@@ -1,5 +1,8 @@
 package com.sirvja.tuntikirjaus.model;
 
+import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -12,7 +15,11 @@ import java.util.function.Function;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
 
+@NoArgsConstructor
+@Entity
 public class HourRecord implements Comparable<HourRecord>{
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -183,6 +190,6 @@ public class HourRecord implements Comparable<HourRecord>{
         result = 31 * result + topic.hashCode();
         return result;
     }
-
+    @Transient
     private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());
 }
