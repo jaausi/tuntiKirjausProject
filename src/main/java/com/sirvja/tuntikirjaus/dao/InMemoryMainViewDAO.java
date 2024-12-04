@@ -10,8 +10,10 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryMainViewDAO implements MainViewDAO {
@@ -28,22 +30,30 @@ public class InMemoryMainViewDAO implements MainViewDAO {
 
     @Override
     public List<HourRecord> getHourRecords() {
-        return null;
+        return MainView.getInstance().getHourRecordList();
     }
 
     @Override
-    public List<HourRecord> setHourRecords(List<HourRecord> hourRecordList) {
-        return null;
+    public void setHourRecords(List<HourRecord> hourRecordList) {
+        MainView.getInstance().setHourRecordList(hourRecordList);
     }
 
     @Override
     public Optional<HourRecord> getHourRecord(int hourRecordId) {
-        return Optional.empty();
+        return MainView.getInstance().getHourRecordList().stream()
+                .filter(hourRecord -> hourRecordId == hourRecord.getId())
+                .findAny();
     }
 
     @Override
     public void updateHourRecord(HourRecord hourRecord) throws HourRecordNotFoundException {
+        getHourRecord(hourRecord.getId()).orElseThrow(HourRecordNotFoundException::new);
 
+        List<HourRecord> updatedHourRecordList = MainView.getInstance().hourRecordList.stream()
+                .map(hourRecordToBeEdited -> hourRecordToBeEdited.getId() == hourRecord.getId() ? hourRecord : hourRecordToBeEdited)
+                .collect(Collectors.toList());
+
+        setHourRecords(updatedHourRecordList);
     }
 
     @Override
@@ -67,22 +77,22 @@ public class InMemoryMainViewDAO implements MainViewDAO {
     }
 
     @Override
-    public Optional<TextField> getTimeField() {
+    public Optional<LocalTime> getTimeField() {
         return Optional.empty();
     }
 
     @Override
-    public void setTimeField() {
+    public void setTimeField(LocalTime timeField) {
 
     }
 
     @Override
-    public Optional<AutoCompleteTextField<String>> getTopicField() {
+    public Optional<String> getTopicField() {
         return Optional.empty();
     }
 
     @Override
-    public void setTopicField() {
+    public void setTopicField(String topicField) {
 
     }
 

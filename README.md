@@ -6,6 +6,12 @@ The idea of this project came up of the headache to fill up worked hours to Tiim
 
 ## How to Run the Application
 
+TODO: Write better, just a quick note
+
+1. podman db on
+2. mvn clean package
+3. java -jar targer/*.jar
+
 Requires Java FX 17. For example install Zulu Java FX 17 with sdkman
 ```
 sdk install java 17.0.4.fx-zulu
