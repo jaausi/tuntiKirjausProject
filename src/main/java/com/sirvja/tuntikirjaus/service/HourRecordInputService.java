@@ -48,11 +48,11 @@ public class HourRecordInputService {
     }
 
     private void handleHourRecordSave() {
-        TextField timeField = null;
-        AutoCompleteTextField<String> topicField = null;
+        TextField timeField = new TextField();
+        AutoCompleteTextField<String> topicField = new AutoCompleteTextField<>();
         try {
-            timeField = mainViewDAO.getTimeField().orElseThrow(() -> new FieldNotInitializedException("time field not initialized"));
-            topicField = mainViewDAO.getTopicField().orElseThrow(() -> new FieldNotInitializedException("topic field not initialized"));
+            timeField.setText(mainViewDAO.getTimeField().orElseThrow(() -> new FieldNotInitializedException("time field not initialized")).toString());
+            topicField.setText( mainViewDAO.getTopicField().orElseThrow(() -> new FieldNotInitializedException("topic field not initialized")));
         } catch (FieldNotInitializedException e) {
             alertService.showSomethingWentWrongAlert(String.format("Tallennus ei onnistunut, syy: %s", e.getMessage()));
             return;
