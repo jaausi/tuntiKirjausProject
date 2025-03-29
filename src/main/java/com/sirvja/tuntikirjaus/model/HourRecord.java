@@ -1,16 +1,25 @@
-package com.sirvja.tuntikirjaus.domain;
+package com.sirvja.tuntikirjaus.model;
 
-import javafx.css.converter.DurationConverter;
+import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
+import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
+
+@NoArgsConstructor
+@Entity
+public class HourRecord implements Comparable<HourRecord>{
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -18,7 +27,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private boolean durationEnabled;
 
     //**************** CONSTRUCTORS *****************//
-    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+    public HourRecord(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
@@ -28,7 +37,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.topic = topic;
         this.durationEnabled = durationEnabled;
     }
-    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+    public HourRecord(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
@@ -40,10 +49,30 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.durationEnabled = durationEnabled;
     }
 
+    public static HourRecord of(ResultSet rs, int rowNumber) throws SQLException {
+        return new HourRecord(
+                rs.getInt("ROWID"),
+                LocalDateTime.parse(rs.getString("START_TIME"), dateTimeFormatter),
+                LocalDateTime.parse(rs.getString("END_TIME"), dateTimeFormatter),
+                rs.getString("TOPIC"),
+                Boolean.parseBoolean(rs.getString("DURATION_ENABLED"))
+        );
+    }
+
+    public static HourRecord of(int id, HourRecord hourRecord) {
+        return new HourRecord(
+                id,
+                hourRecord.getStartTime(),
+                hourRecord.getEndTime().orElse(null),
+                hourRecord.getTopic(),
+                hourRecord.isDurationEnabled()
+        );
+    }
+
     //**************** Common methods for object *****************//
     @Override
-    public int compareTo(TuntiKirjaus tuntiKirjaus){
-        return this.startTime.compareTo(tuntiKirjaus.startTime);
+    public int compareTo(HourRecord hourRecord){
+        return this.startTime.compareTo(hourRecord.startTime);
     }
 
     public int getId() {
@@ -139,5 +168,28 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\ttopic: %s\n}", getTopic());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HourRecord that = (HourRecord) o;
+
+        if (id != that.id) return false;
+        if (durationEnabled != that.durationEnabled) return false;
+        if (!startTime.equals(that.startTime)) return false;
+        if (!Objects.equals(endTime, that.endTime)) return false;
+        return topic.equals(that.topic);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + startTime.hashCode();
+        result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
+        result = 31 * result + topic.hashCode();
+        return result;
+    }
+    @Transient
     private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());
 }

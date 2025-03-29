@@ -14,7 +14,7 @@ create-app-dir-and-database-dir:
 	mkdir -pv ~/tuntikirjaus/database
 
 copy-jar-to-app-dir:
-	cp target/tuntiKirjaus-*-SNAPSHOT.jar ~/tuntikirjaus/tuntikirjaus.jar
+	cp target/hourRecord-*-SNAPSHOT.jar ~/tuntikirjaus/tuntikirjaus.jar
 
 create-shell-alias:
 	echo "Create a shell alias for tuntikirjaus application: alias tuntikirjaus='cd ~/tuntikirjaus; java -jar ~/tuntikirjaus/tuntikirjaus.jar'"

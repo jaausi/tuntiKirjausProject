@@ -1,7 +1,7 @@
 package com.sirvja.tuntikirjaus.controller;
 
-import com.sirvja.tuntikirjaus.domain.ReportConfig;
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.model.HourRecord;
+import com.sirvja.tuntikirjaus.model.ReportConfig;
 import com.sirvja.tuntikirjaus.service.ReportsViewService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -38,13 +38,13 @@ public class ReportsViewController implements Initializable {
     @FXML
     private DatePicker loppupaivaDatePicker;
     @FXML
-    private TableColumn<TuntiKirjaus, LocalDateTime> raportitKellonaikaColumn;
+    private TableColumn<HourRecord, LocalDateTime> raportitKellonaikaColumn;
     @FXML
-    private TableColumn<TuntiKirjaus, String> raportitAiheColumn;
+    private TableColumn<HourRecord, String> raportitAiheColumn;
     @FXML
-    private TableColumn<TuntiKirjaus, String> raportitTunnitColumn;
+    private TableColumn<HourRecord, String> raportitTunnitColumn;
     @FXML
-    private TableView<TuntiKirjaus> raportitTuntiTaulukko = new TableView<>();
+    private TableView<HourRecord> raportitTuntiTaulukko = new TableView<>();
     @FXML
     private Button tallennaRaportti;
     @FXML
@@ -58,9 +58,9 @@ public class ReportsViewController implements Initializable {
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
-        raportitKellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalDateTime>("dateTime"));
-        raportitAiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
-        raportitTunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("durationString"));
+        raportitKellonaikaColumn.setCellValueFactory(new PropertyValueFactory<HourRecord, LocalDateTime>("dateTime"));
+        raportitAiheColumn.setCellValueFactory(new PropertyValueFactory<HourRecord, String>("topic"));
+        raportitTunnitColumn.setCellValueFactory(new PropertyValueFactory<HourRecord, String>("durationString"));
 
         updateView();
     }
@@ -141,14 +141,14 @@ public class ReportsViewController implements Initializable {
         Optional<LocalDate> optionalLoppupaiva = Optional.ofNullable(loppupaivaDatePicker.valueProperty().getValue());
         Optional<String> optionalSearchQuery = Optional.ofNullable(hakusanaField.getText());
 
-        ObservableList<TuntiKirjaus> tuntiKirjausList = ReportsViewService.getAllTuntikirjaus(optionalAlkuPaiva, optionalLoppupaiva, optionalSearchQuery);
-        String yhteenvetoText = ReportsViewService.getYhteenvetoText(tuntiKirjausList);
-        long sumOfHoursInMinutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(tuntiKirjausList);
+        ObservableList<HourRecord> hourRecordList = ReportsViewService.getAllTuntikirjaus(optionalAlkuPaiva, optionalLoppupaiva, optionalSearchQuery);
+        String yhteenvetoText = ReportsViewService.getYhteenvetoText(hourRecordList);
+        long sumOfHoursInMinutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(hourRecordList);
         String hours = ReportsViewService.getHoursStringFromMinutes(sumOfHoursInMinutes);
         String minutes = ReportsViewService.getMinutesStringFromMinutes(sumOfHoursInMinutes);
         String htps = ReportsViewService.getHtpsStringFromMinutes(sumOfHoursInMinutes);
 
-        raportitTuntiTaulukko.setItems(tuntiKirjausList);
+        raportitTuntiTaulukko.setItems(hourRecordList);
         reportsYhteenvetoTextArea.setText(yhteenvetoText);
         tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
     }

@@ -1,15 +1,15 @@
-package com.sirvja.tuntikirjaus.domain;
+package com.sirvja.tuntikirjaus.model;
 
 import java.time.LocalDate;
 
-public class Paiva implements Comparable<Paiva> {
+public class DayRecord implements Comparable<DayRecord> {
     private LocalDate localDate;
 
-    public Paiva() {
+    public DayRecord() {
         this.localDate = LocalDate.now();
     }
 
-    public Paiva(LocalDate localDate) {
+    public DayRecord(LocalDate localDate) {
         this.localDate = localDate;
     }
 
@@ -26,7 +26,7 @@ public class Paiva implements Comparable<Paiva> {
     }
 
     @Override
-    public int compareTo(Paiva paiva) {
-        return paiva.localDate.compareTo(this.localDate);
+    public int compareTo(DayRecord dayRecord) {
+        return dayRecord.localDate.compareTo(this.localDate);
     }
 }

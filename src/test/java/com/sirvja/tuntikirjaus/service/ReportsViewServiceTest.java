@@ -1,6 +1,6 @@
 package com.sirvja.tuntikirjaus.service;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.model.HourRecord;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,21 +21,21 @@ public class ReportsViewServiceTest {
             LocalDate.of(2023, 1, 1),
             LocalTime.of(0,0,0)
     );
-    static ObservableList<TuntiKirjaus> tuntiKirjausList = FXCollections.observableArrayList();
+    static ObservableList<HourRecord> hourRecordList = FXCollections.observableArrayList();
 
     @BeforeAll
     static void setup(){
-        tuntiKirjausList.add(new TuntiKirjaus(1, zeroDateTime, zeroDateTime.plusHours(1), "IBD-1 Koodaus", true)); // 1h
-        tuntiKirjausList.add(new TuntiKirjaus(2, zeroDateTime.plusHours(1), zeroDateTime.plusHours(2).plusMinutes(30), "IBD-2 Katselmointi", true)); // 2h30min
-        tuntiKirjausList.add(new TuntiKirjaus(2, zeroDateTime.plusHours(2).plusMinutes(30), zeroDateTime.plusHours(4), "oaw Lounas", true)); // 4h
-        tuntiKirjausList.add(new TuntiKirjaus(2, zeroDateTime.plusHours(4), zeroDateTime.plusHours(6).plusMinutes(23), "IBD-3 Suunnittelu", true)); // 6h23min
-        tuntiKirjausList.add(new TuntiKirjaus(2, zeroDateTime.plusHours(6).plusMinutes(23), zeroDateTime.plusHours(8).plusMinutes(23), "IBD-4 Koodaus", true)); // 8h23min
+        hourRecordList.add(new HourRecord(1, zeroDateTime, zeroDateTime.plusHours(1), "IBD-1 Koodaus", true)); // 1h
+        hourRecordList.add(new HourRecord(2, zeroDateTime.plusHours(1), zeroDateTime.plusHours(2).plusMinutes(30), "IBD-2 Katselmointi", true)); // 2h30min
+        hourRecordList.add(new HourRecord(2, zeroDateTime.plusHours(2).plusMinutes(30), zeroDateTime.plusHours(4), "oaw Lounas", true)); // 4h
+        hourRecordList.add(new HourRecord(2, zeroDateTime.plusHours(4), zeroDateTime.plusHours(6).plusMinutes(23), "IBD-3 Suunnittelu", true)); // 6h23min
+        hourRecordList.add(new HourRecord(2, zeroDateTime.plusHours(6).plusMinutes(23), zeroDateTime.plusHours(8).plusMinutes(23), "IBD-4 Koodaus", true)); // 8h23min
     }
 
     @Test
     void givenTuntikirjausList_whenGetSumOfHoursFromTuntikirjausList_thenReturnSumOfHoursInMinutes(){
         // when
-        Long minutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(tuntiKirjausList);
+        Long minutes = ReportsViewService.getSumOfHoursFromTuntikirjausList(hourRecordList);
 
         // then
         assertEquals(503, minutes);

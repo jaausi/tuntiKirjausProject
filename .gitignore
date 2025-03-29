@@ -2,8 +2,11 @@
 target/
 out/
 
+reports
+.env
 database.sqlite
-database
+database/
+database/tuntikirjaus.db
 
 *.app/
 *.dmg
