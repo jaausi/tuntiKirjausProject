@@ -9,3 +9,6 @@ database
 *.dmg
 
 .DS_Store
+
+.env
+reports/
