@@ -9,3 +9,7 @@ database
 *.dmg
 
 .DS_Store
+
+.env
+reports/
+/local-setup/.env

@@ -6,24 +6,20 @@ The idea of this project came up of the headache to fill up worked hours to Tiim
 
 ## How to Run the Application
 
-Requires Java FX 17. For example install Zulu Java FX 17 with sdkman
-```
-sdk install java 17.0.4.fx-zulu
-```
-
-Clone the project to the current folder
-```
-git clone git@github.com:jaausi/tuntiKirjausProject.git
-```
-
-Go to the project folder
-```
-cd tuntiKirjausProject 
-```
+Requires Java 21.
 
 Run the project (if you don't want to lose fed data, leave out "clean")
 ```
 mvn clean javafx:run  
+```
+
+## How to run the dependency check
+
+Set you api key to environment variables to variable NVDAPIKEY.
+
+Then run:
+```
+mvn verify
 ```
 
 ## How to Install the application
@@ -36,6 +32,17 @@ mvn clean javafx:run
 #   4) copies built jar to tuntikirjaus folder and 
 #   5) gives alias to be saved in .bash_aliases file for easy use of application.
 make install
+```
+
+## How to build executable package for Mac OS
+
+```
+# This command:
+#   1) builds new jar from sources and includes jre in the package, 
+#   2) creates app bundle, 
+#   3) creates dmg-file from app bundle, 
+#   4) removes temporary resources used to build the dmg-file 
+make build-mac-dmg-with-clean
 ```
 
 ## How to Use the Application

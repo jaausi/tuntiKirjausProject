@@ -9,7 +9,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.14.0</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -39,7 +39,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -79,13 +79,33 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M8</version>
       </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>12.1.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <nvdApiKey>${env.NVDAPIKEY}</nvdApiKey>
+          <formats>
+            <format>XML</format>
+            <format>HTML</format>
+          </formats>
+          <outputDirectory>reports</outputDirectory>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.8.1</version>
+      <version>5.12.1</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -105,7 +125,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.8.1</version>
+      <version>5.12.1</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -120,9 +140,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.version>19</java.version>
+    <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.version>5.8.1</junit.version>
-    <logback.version>1.4.5</logback.version>
   </properties>
 </project>
