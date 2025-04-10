@@ -13,3 +13,5 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
       - run: mvn --batch-mode --update-snapshots verify
+        env: 
+          NVDAPIKEY: ${{ secrets.NVD_API_KEY }}
