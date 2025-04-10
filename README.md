@@ -15,8 +15,11 @@ mvn clean javafx:run
 
 ## How to run the dependency check
 
+Set you api key to environment variables to variable NVDAPIKEY.
+
+Then run:
 ```
-mvn verify -Dnvd.api-key=<insert_your_api_key_here>
+mvn verify
 ```
 
 ## How to Install the application
