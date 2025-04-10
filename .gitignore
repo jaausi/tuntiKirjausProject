@@ -12,3 +12,4 @@ database
 
 .env
 reports/
+/local-setup/.env
