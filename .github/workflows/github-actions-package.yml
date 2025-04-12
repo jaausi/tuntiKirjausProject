@@ -1,10 +1,10 @@
 
-name: Build Verify and Release
+name: Build Test and Package
 
 on: workflow_dispatch
 
 jobs:
-  Build-And-Package:
+  Build-Test-And-Package:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,21 +18,13 @@ jobs:
           cache: maven
 
       - name: Build and run tests
-        run: mvn clean verify
-        env:
-          NVDAPIKEY: ${{ secrets.NVD_API_KEY }}
-
-      - name: Upload Test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: Depcheck report
-          path: ${{github.workspace}}/reports
+        run: mvn clean test
 
       - name: Package JavaFx application with jlink
         run: mvn javafx:jlink
 
       - name: Create staging folder
-        run: mkdir staging && cp target/tuntiKirjaus-*.jar staging
+        run: mkdir staging && cp target/*.zip staging
 
       - name: Release artifact
         uses: actions/upload-artifact@v4
