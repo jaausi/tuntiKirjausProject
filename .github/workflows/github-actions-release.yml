@@ -1,21 +1,34 @@
 
-name: GitHub Actions To Build Verify and Release
-on:
-  release:
-    types: [created]
+name: Build Verify and Release
+
 jobs:
-  Build-Release:
+  Build-And-Package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java with maven cached
+      - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-      - run: mvn clean javafx:jlink
-      - run: mkdir staging && cp target/*.zip staging
-      - uses: actions/upload-artifact@v3
+
+      - name: Build and run tests
+        run: mvn clean verify
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+
+      - name: Package JavaFx application with jlink
+        run: mvn javafx:jlink
+
+      - name: Create staging folder
+      - run: mkdir staging && cp target/tuntiKirjaus-*.jar staging
+
+      - name: Release artifact
+      - uses: actions/upload-artifact@v4
         with:
           name: Tuntikirjaus-package-with-jre
           path: staging
