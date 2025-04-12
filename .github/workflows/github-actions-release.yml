@@ -22,8 +22,11 @@ jobs:
         env:
           NVDAPIKEY: ${{ secrets.NVD_API_KEY }}
 
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+      - name: Upload Test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Depcheck report
+          path: ${{github.workspace}}/reports
 
       - name: Package JavaFx application with jlink
         run: mvn javafx:jlink
