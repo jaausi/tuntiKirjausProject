@@ -1,6 +1,8 @@
 
 name: Build Verify and Release
 
+on: workflow_dispatch
+
 jobs:
   Build-And-Package:
     runs-on: ubuntu-latest
