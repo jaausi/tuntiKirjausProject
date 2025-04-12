@@ -19,6 +19,8 @@ jobs:
 
       - name: Build and run tests
         run: mvn clean verify
+        env:
+          NVDAPIKEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
