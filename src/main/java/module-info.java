@@ -18,4 +18,6 @@ module com.sirvja.tuntikirjaus {
     opens com.sirvja.tuntikirjaus.controller to javafx.fxml;
     exports com.sirvja.tuntikirjaus.customFields;
     opens com.sirvja.tuntikirjaus.customFields to javafx.fxml;
+    exports com.sirvja.tuntikirjaus.dao;
+    opens com.sirvja.tuntikirjaus.dao to javafx.fxml;
 }

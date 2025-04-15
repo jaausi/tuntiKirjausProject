@@ -1,8 +1,8 @@
 package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.utils.Dao;
-import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.dao.Dao;
+import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

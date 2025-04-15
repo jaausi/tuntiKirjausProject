@@ -1,6 +1,7 @@
-package com.sirvja.tuntikirjaus.utils;
+package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
