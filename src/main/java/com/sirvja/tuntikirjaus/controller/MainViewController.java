@@ -37,6 +37,8 @@ public class MainViewController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
 
+    private MainViewService mainViewService;
+
     @FXML
     private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
     @FXML
@@ -78,6 +80,10 @@ public class MainViewController implements Initializable {
     @FXML
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
+
+    public MainViewController() {
+        this.mainViewService = new MainViewService();
+    }
 
     @Override
     public void initialize (URL url, ResourceBundle rb){
@@ -263,7 +269,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaLeikepoydalleButtonClick(){
         LOGGER.debug("Save to clipboard button pushed!");
 
-        String yhteenvetoText = MainViewService.getYhteenvetoText();
+        String yhteenvetoText = mainViewService.getYhteenvetoText();
         ClipboardContent content = new ClipboardContent();
         content.putString(yhteenvetoText);
         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -294,7 +300,7 @@ public class MainViewController implements Initializable {
 
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
 
-        ObservableList<TuntiKirjaus> tuntidata = MainViewService.getTuntiDataForTable();
+        ObservableList<TuntiKirjaus> tuntidata = mainViewService.getTuntiDataForTable();
 
         if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
@@ -302,7 +308,7 @@ public class MainViewController implements Initializable {
             return;
         }
 
-        MainViewService.addTuntikirjaus(tuntiKirjaus);
+        mainViewService.addTuntikirjaus(tuntiKirjaus);
 
         aiheField.getEntries().add(tuntiKirjaus.getTopic());
 
@@ -344,10 +350,10 @@ public class MainViewController implements Initializable {
     }
 
     private void updateView(){
-        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+        tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
         tuntiTaulukko.refresh();
         daysListView.setItems(MainViewService.getPaivaDataForTable());
-        yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
+        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
         kellonAikaField.clear();
         aiheField.clear();
     }
