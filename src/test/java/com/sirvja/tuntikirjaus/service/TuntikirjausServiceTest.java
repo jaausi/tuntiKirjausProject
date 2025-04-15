@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -38,7 +40,7 @@ public class TuntikirjausServiceTest {
     void testFetchingAllTuntikirjausForToday() {
         log.info("Tuntikirjaus list: {}", mockTuntikirjausList.toString());
 
-        Mockito.when(mockTuntikirjausDao.getAllToList()).thenReturn(mockTuntikirjausList);
+        Mockito.when(mockTuntikirjausDao.getAllFromToList(any())).thenReturn(mockTuntikirjausList);
 
         List<TuntiKirjaus> kirjausListOfToday = tuntiKirjausService.getTuntiKirjausForDate(LocalDate.now());
 
@@ -46,7 +48,7 @@ public class TuntikirjausServiceTest {
         Assertions.assertEquals(mockTuntikirjausList.stream()
                 .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().toLocalDate().equals(LocalDate.now()))
                 .toList(), kirjausListOfToday);
-        verify(mockTuntikirjausDao).getAllToList();
+        verify(mockTuntikirjausDao).getAllFromToList(any());
     }
 
     /*********** HELPER FUNCTIONS ***********/
