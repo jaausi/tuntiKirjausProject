@@ -3,6 +3,7 @@ package com.sirvja.tuntikirjaus.service;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.dao.Dao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.utils.Constants;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.function.BiFunction;
 public class TuntiKirjausService {
     private final Dao<TuntiKirjaus> tuntikirjausDao;
     private List<TuntiKirjaus> tuntikirjausCache;
+
+    private final boolean cacheEnabled = true;
 
     TuntiKirjausService() {
         tuntikirjausDao = new TuntiKirjausDao();
@@ -24,17 +27,21 @@ public class TuntiKirjausService {
         BiFunction<TuntiKirjaus, LocalDate, Boolean> tuntiKirjausHasStartDate =
                 (tuntikirjaus, dateToCompare) -> tuntikirjaus.getStartTime().toLocalDate().equals(dateToCompare);
 
-        return getAllTuntikirjaus().stream()
+        return getAllTuntikirjausWithCache().stream()
                 .filter(tuntikirjaus -> tuntiKirjausHasStartDate.apply(tuntikirjaus, localDate))
                 .toList();
     }
 
-    private List<TuntiKirjaus> getAllTuntikirjaus() {
-        if(tuntikirjausCache==null) {
-            tuntikirjausCache = tuntikirjausDao.getAllToList();
+    public List<TuntiKirjaus> getAllTuntikirjausWithCache() {
+        if(tuntikirjausCache==null || !cacheEnabled) {
+            tuntikirjausCache = tuntikirjausDao.getAllFromToList(Constants.FETCH_DAYS_SINCE);
         }
 
         return tuntikirjausCache;
+    }
+
+    public List<TuntiKirjaus> getAllTuntikirjaus() {
+        return tuntikirjausDao.getAllToList();
     }
 
     public void clearTuntikirjausCache() {
