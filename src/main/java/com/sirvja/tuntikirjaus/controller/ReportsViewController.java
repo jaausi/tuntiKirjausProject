@@ -19,7 +19,7 @@ import java.util.ResourceBundle;
 
 public class ReportsViewController implements Initializable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportsViewController.class);
 
     @FXML
     private Button dateBackward;

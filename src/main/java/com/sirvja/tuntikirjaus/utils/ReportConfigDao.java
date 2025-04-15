@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
@@ -25,6 +26,17 @@ public class ReportConfigDao implements Dao<ReportConfig> {
     public Optional<ObservableList<ReportConfig>> getAllFrom(LocalDate localDate) {
         return getAllInternal(Optional.of(localDate));
     }
+
+    @Override
+    public List<ReportConfig> getAllToList() {
+        return List.of();
+    }
+
+    @Override
+    public List<ReportConfig> getAllFromToList(LocalDate localDate) {
+        return List.of();
+    }
+
 
     public Optional<ObservableList<ReportConfig>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";
