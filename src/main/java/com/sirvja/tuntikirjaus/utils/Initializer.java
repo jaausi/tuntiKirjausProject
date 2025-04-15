@@ -1,5 +1,7 @@
 package com.sirvja.tuntikirjaus.utils;
 
+import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
+import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

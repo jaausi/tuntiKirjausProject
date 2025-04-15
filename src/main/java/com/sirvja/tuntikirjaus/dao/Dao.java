@@ -1,6 +1,5 @@
-package com.sirvja.tuntikirjaus.utils;
+package com.sirvja.tuntikirjaus.dao;
 
-import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import javafx.collections.ObservableList;
 
 import java.time.LocalDate;

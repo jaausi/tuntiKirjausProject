@@ -2,8 +2,8 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.ReportConfig;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.utils.ReportConfigDao;
-import com.sirvja.tuntikirjaus.utils.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
+import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
