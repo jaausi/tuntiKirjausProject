@@ -14,9 +14,6 @@ public interface Dao<T> {
         // Use getAllToList instead
     Optional<ObservableList<T>> getAll();
 
-    @Deprecated(since = "1.0.2")
-        // Use getAllFromToList instead
-    Optional<ObservableList<T>> getAllFrom(LocalDate localDate);
     List<T> getAllToList();
     List<T> getAllFromToList(LocalDate localDate);
 

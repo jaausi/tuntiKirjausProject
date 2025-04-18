@@ -2,13 +2,9 @@ package com.sirvja.tuntikirjaus.utils;
 
 import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
-import com.sirvja.tuntikirjaus.domain.Paiva;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
-
-import static com.sirvja.tuntikirjaus.service.MainViewService.setCurrentDate;
 import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
 
 public class Initializer {
@@ -43,7 +39,7 @@ public class Initializer {
 
     private static boolean populateTestData(){
 
-        setCurrentDate(new Paiva(LocalDate.now().minusDays(2)));
+        // TODO: Set currentDate
         //TODO: Add tuntikirjausdata
         return true;
     }

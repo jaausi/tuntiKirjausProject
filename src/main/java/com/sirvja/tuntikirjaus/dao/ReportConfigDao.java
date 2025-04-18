@@ -24,11 +24,6 @@ public class ReportConfigDao implements Dao<ReportConfig> {
     }
 
     @Override
-    public Optional<ObservableList<ReportConfig>> getAllFrom(LocalDate localDate) {
-        return getAllInternal(Optional.of(localDate));
-    }
-
-    @Override
     public List<ReportConfig> getAllToList() {
         return List.of();
     }

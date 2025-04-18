@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -18,16 +20,16 @@ import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-@Slf4j
 public class TuntikirjausServiceTest {
 
     private static TuntiKirjausService tuntiKirjausService;
     private static final Dao<TuntiKirjaus> mockTuntikirjausDao = mock(TuntiKirjausDao.class);
     private static List<TuntiKirjaus> mockTuntikirjausList;
+
+    private static final Logger log = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
 
     @BeforeAll
