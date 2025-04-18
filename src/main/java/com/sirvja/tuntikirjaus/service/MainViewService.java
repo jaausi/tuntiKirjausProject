@@ -2,7 +2,6 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.dao.Dao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 
 public class MainViewService {
     private TuntiKirjausService tuntikirjausService;
-    private Dao<TuntiKirjaus> tuntiKirjausDao; // TODO: This should be used through TuntikirjausService
 
     private List<TuntiKirjaus> tuntiKirjausData; // TODO: SortedSet could be used here
     private List<Paiva> paivaData; // TODO: SortedSet could be used here
@@ -33,7 +31,6 @@ public class MainViewService {
 
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
-        this.tuntiKirjausDao = new TuntiKirjausDao();
         this.tuntiKirjausData = tuntikirjausService.getAllTuntikirjausWithCache();
         this.paivaData = getAllPaivas(tuntiKirjausData);
         this.currentDate = LocalDate.now();
@@ -49,14 +46,14 @@ public class MainViewService {
     }
 
     public void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausData.add(tuntiKirjausDao.save(tuntiKirjaus));
+        tuntiKirjausData.add(tuntikirjausService.save(tuntiKirjaus));
         paivaData = getAllPaivas(tuntiKirjausData);
         Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
-        previousKirjaus.ifPresent(tuntiKirjausDao::update);
+        previousKirjaus.ifPresent(tuntikirjausService::update);
     }
 
     public void removeTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausDao.delete(tuntiKirjaus); // TODO: should be done through TuntikirjausService
+        tuntikirjausService.delete(tuntiKirjaus);
         tuntiKirjausData.remove(tuntiKirjaus);
         handlePreviousKirjausAfterRemove(tuntiKirjaus);
     }
@@ -216,6 +213,6 @@ public class MainViewService {
     }
 
     public void update(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausDao.update(tuntiKirjaus);
+        tuntikirjausService.update(tuntiKirjaus);
     }
 }
