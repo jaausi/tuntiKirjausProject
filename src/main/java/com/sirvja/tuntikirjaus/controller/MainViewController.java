@@ -3,6 +3,9 @@ package com.sirvja.tuntikirjaus.controller;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
+import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
+import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
@@ -277,41 +280,24 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onTallennaTaulukkoonButtonClick() {
-        String time = kellonAikaField.getText();
-        String topic = aiheField.getText();
-        LOGGER.debug("Save to table button pushed!");
-
-        if(topic.isEmpty()){
+        try {
+            LOGGER.debug("Save to table button pushed!");
+            TuntiKirjaus tuntiKirjaus = mainViewService.addNewTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
+            aiheField.getEntries().add(tuntiKirjaus.getTopic());
+            updateView();
+        } catch (EmptyTopicException e) {
+            LOGGER.error(e.getMessage());
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showFieldNotFilledAlert();
-            return;
-        }
-
-        LocalDateTime localDateTime;
-        try {
-            localDateTime = mainViewService.parseTimeFromString(time);
-        } catch (DateTimeParseException e){
-            LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
+        } catch (MalformatedTimeException e) {
+            LOGGER.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showTimeInWrongFormatAlert(e.getMessage());
-            return;
-        }
-
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
-
-        ObservableList<TuntiKirjaus> tuntidata = mainViewService.getTuntiDataForTable();
-
-        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
+        } catch (StartTimeNotAfterLastTuntikirjausException e) {
+            LOGGER.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             showNotCorrectTimeAlert();
-            return;
         }
-
-        mainViewService.addTuntikirjaus(tuntiKirjaus);
-
-        aiheField.getEntries().add(tuntiKirjaus.getTopic());
-
-        updateView();
     }
 
     @FXML
