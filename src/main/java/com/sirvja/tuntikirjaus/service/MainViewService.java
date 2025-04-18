@@ -2,6 +2,9 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
+import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
+import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -53,7 +56,7 @@ public class MainViewService {
         handlePreviousKirjausAfterRemove(tuntiKirjaus);
     }
 
-    public LocalDateTime parseTimeFromString(String time) throws DateTimeParseException{
+    public LocalDateTime parseTimeFromString(String time) throws MalformatedTimeException {
         LocalDateTime localDateTime;
 
         log.debug("Received {} from time field. Trying to parse...", time);
@@ -69,7 +72,7 @@ public class MainViewService {
                 } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
                     localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
                 } else {
-                    throw new DateTimeParseException("Couldn't parse time from String", time, 5);
+                    throw new MalformatedTimeException("Couldn't parse time from String");
                 }
             }
         } else {
@@ -176,18 +179,6 @@ public class MainViewService {
         updateTuntikirjaus(previousKirjaus);
     }
 
-    public Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(){
-        List<TuntiKirjaus> allTuntikirjaus = tuntikirjausService.getAllTuntikirjausWithCache();
-
-        return allTuntikirjaus.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                TuntiKirjaus::getLocalDateOfStartTime,
-                                Collectors.toCollection(FXCollections::observableArrayList)
-                        )
-                );
-    }
-
     public Optional<Set<String>> getAiheEntries(){
         Set<String> alltopics = tuntikirjausService.getAllTuntikirjausWithCache().stream()
                 .map(TuntiKirjaus::getTopic)
@@ -200,5 +191,27 @@ public class MainViewService {
 
     public void updateTuntikirjaus(TuntiKirjaus tuntiKirjaus){
         tuntikirjausService.update(tuntiKirjaus);
+    }
+
+    public TuntiKirjaus addNewTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException {
+        if(topic.isEmpty()){
+            throw new EmptyTopicException("Topic was empty when tried to save new Tuntikirjaus");
+        }
+
+        LocalDateTime localDateTime = parseTimeFromString(time);
+
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+
+        ObservableList<TuntiKirjaus> tuntidata = getTuntiDataForTable();
+
+        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
+            throw new StartTimeNotAfterLastTuntikirjausException("Start time of the latest Tuntikirjaus was not before Tuntikirjaus to be saved");
+        }
+
+        tuntiKirjaus = tuntikirjausService.save(tuntiKirjaus);
+        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
+        previousKirjaus.ifPresent(tuntikirjausService::update);
+
+        return tuntiKirjaus;
     }
 }
