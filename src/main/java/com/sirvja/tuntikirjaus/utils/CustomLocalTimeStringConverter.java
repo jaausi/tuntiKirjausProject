@@ -8,10 +8,16 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 
 public class CustomLocalTimeStringConverter extends LocalTimeStringConverter {
+    private final MainViewService mainViewService;
+
+    public CustomLocalTimeStringConverter(MainViewService mainViewService) {
+        this.mainViewService = mainViewService;
+    }
+
     @Override
     public LocalTime fromString(String value) {
         try {
-            return MainViewService.parseTimeFromString(value).toLocalTime();
+            return mainViewService.parseTimeFromString(value).toLocalTime();
         } catch (DateTimeParseException e){
             MainViewController.showTimeInWrongFormatAlert(e.getMessage());
             return null;

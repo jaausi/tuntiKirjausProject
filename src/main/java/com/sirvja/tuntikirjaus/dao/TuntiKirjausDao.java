@@ -29,13 +29,6 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
         return getAllInternal(Optional.empty());
     }
 
-    @Deprecated(since = "1.0.2")
-    // Use getAllFromToList instead
-    @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAllFrom(LocalDate localDate) {
-        return getAllInternal(Optional.of(localDate));
-    }
-
     @Override
     public List<TuntiKirjaus> getAllToList() {
         String queryAll = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
