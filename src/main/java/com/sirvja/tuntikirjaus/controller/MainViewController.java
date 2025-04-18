@@ -99,7 +99,7 @@ public class MainViewController implements Initializable {
 
         setEditListenerToKellonaikaColumn();
 
-        setEditListenetToAiheColumn();
+        setEditListenerToAiheColumn();
 
         updateView();
 
@@ -133,13 +133,13 @@ public class MainViewController implements Initializable {
         });
     }
 
-    private void setEditListenetToAiheColumn() {
+    private void setEditListenerToAiheColumn() {
         aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         aiheColumn.setOnEditCommit(
                 t -> {
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     kirjausToEdit.setTopic(t.getNewValue());
-                    mainViewService.update(kirjausToEdit);
+                    mainViewService.updateTuntikirjaus(kirjausToEdit);
                 }
         );
     }
@@ -172,14 +172,14 @@ public class MainViewController implements Initializable {
                         }
                         if(!facedError){
                             previousKirjausToEdit.setEndTime(newValue);
-                            mainViewService.update(previousKirjausToEdit);
+                            mainViewService.updateTuntikirjaus(previousKirjausToEdit);
                         }
                     }
 
                     TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
                     if(!facedError){
                         kirjausToEdit.setStartTime(newValue);
-                        mainViewService.update(kirjausToEdit);
+                        mainViewService.updateTuntikirjaus(kirjausToEdit);
                     }
                     tuntiTaulukko.refresh();
                 }
@@ -204,7 +204,6 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onChangeUpdateDurationsMenuItemAction() {
         LOGGER.debug("Update durations clicked!");
-
     }
 
     @FXML

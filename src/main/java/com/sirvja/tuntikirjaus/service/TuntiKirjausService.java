@@ -49,14 +49,17 @@ public class TuntiKirjausService {
     }
 
     public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
+        clearTuntikirjausCache();
         return tuntikirjausDao.save(tuntiKirjaus);
     }
 
     public void update(TuntiKirjaus tuntiKirjaus) {
+        clearTuntikirjausCache();
         tuntikirjausDao.update(tuntiKirjaus);
     }
 
     public void delete(TuntiKirjaus tuntiKirjaus) {
+        clearTuntikirjausCache();
         tuntikirjausDao.delete(tuntiKirjaus);
     }
 }
