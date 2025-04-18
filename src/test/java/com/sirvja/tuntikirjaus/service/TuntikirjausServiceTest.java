@@ -3,7 +3,6 @@ package com.sirvja.tuntikirjaus.service;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.dao.Dao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

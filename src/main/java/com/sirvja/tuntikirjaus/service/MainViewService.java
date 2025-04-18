@@ -2,7 +2,6 @@ package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
-import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -21,40 +20,36 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MainViewService {
-    private TuntiKirjausService tuntikirjausService;
-
-    private List<TuntiKirjaus> tuntiKirjausData; // TODO: SortedSet could be used here
-    private List<Paiva> paivaData; // TODO: SortedSet could be used here
+    private final TuntiKirjausService tuntikirjausService;
     private LocalDate currentDate;
 
-    private final Logger log = LoggerFactory.getLogger(TuntiKirjausDao.class);
+    private final Logger log = LoggerFactory.getLogger(MainViewService.class);
 
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
-        this.tuntiKirjausData = tuntikirjausService.getAllTuntikirjausWithCache();
-        this.paivaData = getAllPaivas(tuntiKirjausData);
         this.currentDate = LocalDate.now();
     }
 
     public ObservableList<TuntiKirjaus> getTuntiDataForTable(){
-        return tuntikirjausService.getTuntiKirjausForDate(currentDate)
-                .stream()
-                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+        return FXCollections.observableArrayList(getTuntiKirjausDataForDate(currentDate));
     }
     public ObservableList<Paiva> getPaivaDataForTable(){
-        return getAllPaivas(tuntikirjausService.getAllTuntikirjausWithCache());
+        return tuntikirjausService.getAllTuntikirjausWithCache().stream()
+                .map(TuntiKirjaus::getLocalDateOfStartTime)
+                .distinct()
+                .map(Paiva::new)
+                .sorted()
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
     public void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntiKirjausData.add(tuntikirjausService.save(tuntiKirjaus));
-        paivaData = getAllPaivas(tuntiKirjausData);
+        tuntikirjausService.save(tuntiKirjaus);
         Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
         previousKirjaus.ifPresent(tuntikirjausService::update);
     }
 
     public void removeTuntikirjaus(TuntiKirjaus tuntiKirjaus){
         tuntikirjausService.delete(tuntiKirjaus);
-        tuntiKirjausData.remove(tuntiKirjaus);
         handlePreviousKirjausAfterRemove(tuntiKirjaus);
     }
 
@@ -85,11 +80,6 @@ public class MainViewService {
     }
 
     public void setCurrentDate(Paiva paiva){
-        boolean paivaExists = paivaData.stream()
-                .anyMatch(tempPaiva -> tempPaiva.getLocalDate().equals(paiva.getLocalDate()));
-        if(!paivaExists){
-            paivaData.add(paiva);
-        }
         currentDate = paiva.getLocalDate();
     }
 
@@ -126,8 +116,14 @@ public class MainViewService {
         return returnValue.toString();
     }
 
+    private List<TuntiKirjaus> getTuntiKirjausDataForDate(LocalDate localDate) {
+        return tuntikirjausService.getTuntiKirjausForDate(localDate)
+                .stream()
+                .toList();
+    }
+
     private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(){
-        ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
+        List<TuntiKirjaus> tuntiKirjausListForDay = getTuntiKirjausDataForDate(currentDate);
         log.debug("Adding endtime for previous kirjaus");
         int indexA = tuntiKirjausListForDay.size()-1;
         int indexB = tuntiKirjausListForDay.size()-2;
@@ -157,11 +153,11 @@ public class MainViewService {
                 .map(currentEndTime -> currentEndTime.equals(nextTk.getStartTime()))
                 .orElse(false);
 
-        Optional<TuntiKirjaus> previousKirjaus = tuntiKirjausData.stream()
+        Optional<TuntiKirjaus> previousKirjaus = tuntikirjausService.getTuntiKirjausForDate(currentDate).stream()
                 .filter(isPrevious)
                 .findAny();
 
-        Optional<TuntiKirjaus> nextKirjaus = tuntiKirjausData.stream()
+        Optional<TuntiKirjaus> nextKirjaus = tuntikirjausService.getTuntiKirjausForDate(currentDate).stream()
                 .filter(isNext)
                 .findAny();
 
@@ -172,22 +168,12 @@ public class MainViewService {
 
     private void handleRemovedInMiddle(TuntiKirjaus previousKirjaus, TuntiKirjaus nextKirjaus) {
         previousKirjaus.setEndTime(nextKirjaus.getStartTime());
-        update(previousKirjaus); // TODO: Should be done through TuntikirjausService
+        updateTuntikirjaus(previousKirjaus);
     }
 
     private void handleRemovedInEnd(TuntiKirjaus previousKirjaus) {
         previousKirjaus.setEndTime(null);
-        update(previousKirjaus); // TODO: Should be done through TuntikirjausService
-    }
-
-
-    private ObservableList<Paiva> getAllPaivas(List<TuntiKirjaus> tuntiKirjausList) {
-        return tuntiKirjausList.stream()
-                .map(TuntiKirjaus::getLocalDateOfStartTime)
-                .distinct()
-                .map(Paiva::new)
-                .sorted()
-                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+        updateTuntikirjaus(previousKirjaus);
     }
 
     public Map<LocalDate, ObservableList<TuntiKirjaus>> getDateToTuntikirjausMap(){
@@ -212,7 +198,7 @@ public class MainViewService {
         return Optional.of(alltopics);
     }
 
-    public void update(TuntiKirjaus tuntiKirjaus){
+    public void updateTuntikirjaus(TuntiKirjaus tuntiKirjaus){
         tuntikirjausService.update(tuntiKirjaus);
     }
 }
