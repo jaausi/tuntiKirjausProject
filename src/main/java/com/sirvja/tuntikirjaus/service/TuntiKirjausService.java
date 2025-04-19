@@ -13,26 +13,33 @@ public class TuntiKirjausService {
     private final Dao<TuntiKirjaus> tuntikirjausDao;
     private List<TuntiKirjaus> tuntikirjausCache;
 
-    private final boolean cacheEnabled = true;
+    private boolean cacheEnabled;
 
     TuntiKirjausService() {
-        tuntikirjausDao = new TuntiKirjausDao();
+        this.tuntikirjausDao = new TuntiKirjausDao();
+        this.cacheEnabled = true;
     }
 
-    TuntiKirjausService(Dao<TuntiKirjaus> tuntikirjausDao) {
+    TuntiKirjausService(boolean cacheEnabled) {
+        this.tuntikirjausDao = new TuntiKirjausDao();
+        this.cacheEnabled = cacheEnabled;
+    }
+
+    TuntiKirjausService(Dao<TuntiKirjaus> tuntikirjausDao, boolean cacheEnabled) {
         this.tuntikirjausDao = tuntikirjausDao;
+        this.cacheEnabled = cacheEnabled;
     }
 
     public List<TuntiKirjaus> getTuntiKirjausForDate(LocalDate localDate){
         BiFunction<TuntiKirjaus, LocalDate, Boolean> tuntiKirjausHasStartDate =
                 (tuntikirjaus, dateToCompare) -> tuntikirjaus.getStartTime().toLocalDate().equals(dateToCompare);
 
-        return getAllTuntikirjausWithCache().stream()
+        return getAllTuntikirjaus().stream()
                 .filter(tuntikirjaus -> tuntiKirjausHasStartDate.apply(tuntikirjaus, localDate))
                 .toList();
     }
 
-    public List<TuntiKirjaus> getAllTuntikirjausWithCache() {
+    public List<TuntiKirjaus> getAllTuntikirjaus() {
         if(tuntikirjausCache==null || !cacheEnabled) {
             tuntikirjausCache = tuntikirjausDao.getAllFromToList(Constants.FETCH_DAYS_SINCE);
         }
@@ -40,7 +47,7 @@ public class TuntiKirjausService {
         return tuntikirjausCache;
     }
 
-    public List<TuntiKirjaus> getAllTuntikirjaus() {
+    public List<TuntiKirjaus> getAllTuntikirjausWithoutLimit() {
         return tuntikirjausDao.getAllToList();
     }
 
