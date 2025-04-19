@@ -38,11 +38,17 @@ public class MainViewService {
         this.currentDate = LocalDate.now();
     }
 
+    public MainViewService(TuntiKirjausService tuntikirjausService, AlertService alertService) {
+        this.tuntikirjausService = tuntikirjausService;
+        this.alertService = alertService;
+        this.currentDate = LocalDate.now();
+    }
+
     public ObservableList<TuntiKirjaus> getTuntiDataForTable(){
         return FXCollections.observableArrayList(tuntikirjausService.getTuntiKirjausForDate(currentDate));
     }
     public ObservableList<Paiva> getPaivaDataForTable(){
-        return tuntikirjausService.getAllTuntikirjausWithCache().stream()
+        return tuntikirjausService.getAllTuntikirjaus().stream()
                 .map(TuntiKirjaus::getLocalDateOfStartTime)
                 .distinct()
                 .map(Paiva::new)
@@ -199,7 +205,7 @@ public class MainViewService {
     }
 
     public Optional<Set<String>> getAiheEntries(){
-        Set<String> alltopics = tuntikirjausService.getAllTuntikirjausWithCache().stream()
+        Set<String> alltopics = tuntikirjausService.getAllTuntikirjaus().stream()
                 .map(TuntiKirjaus::getTopic)
                 .collect(Collectors.toSet());
 
