@@ -10,6 +10,7 @@ import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -33,8 +34,8 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 public class MainViewController implements Initializable {
 
@@ -127,66 +128,22 @@ public class MainViewController implements Initializable {
     }
 
     private void setListenerForDayListView() {
-        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
-        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue != null){
-                mainViewService.setCurrentDate(newValue);
-                updateView();
-            }
-        });
+        daysListView.getSelectionModel().selectedItemProperty().addListener(mainViewService.getDayListChangeListener(this::updateView));
     }
 
     private void setEditListenerToAiheColumn() {
+        BiConsumer<String, String> updateAiheFieldEntry = (oldTopic, newTopic) -> {
+            aiheField.getEntries().remove(oldTopic);
+            aiheField.getEntries().add(newTopic);
+        };
+
         aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        aiheColumn.setOnEditCommit(
-                t -> {
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
-                    kirjausToEdit.setTopic(t.getNewValue());
-                    mainViewService.updateTuntikirjaus(kirjausToEdit);
-                }
-        );
+        aiheColumn.setOnEditCommit(mainViewService.getAiheColumnEditHandler(updateAiheFieldEntry));
     }
 
     private void setEditListenerToKellonaikaColumn() {
         kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter(mainViewService)));
-        kellonaikaColumn.setOnEditCommit(
-                t -> {
-                    int tablePosition = t.getTablePosition().getRow();
-                    int lastPosition = t.getTableView().getItems().size() - 1;
-                    LocalDateTime newValue = LocalDateTime.of(mainViewService.getCurrentDate(), t.getNewValue());
-                    boolean facedError = false;
-
-                    if(tablePosition < lastPosition){
-                        TuntiKirjaus followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
-                        // If edited time is after next kirjaus start time, abort.
-                        if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(true);
-                            facedError = true;
-                        }
-                    }
-
-                    // If not the first row of a day. Edit also the previous row end time.
-                    if(tablePosition > 0){
-                        TuntiKirjaus previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
-                        // If edited time is before previous kirjaus start time, abort.
-                        if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(false);
-                            facedError = true;
-                        }
-                        if(!facedError){
-                            previousKirjausToEdit.setEndTime(newValue);
-                            mainViewService.updateTuntikirjaus(previousKirjausToEdit);
-                        }
-                    }
-
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
-                    if(!facedError){
-                        kirjausToEdit.setStartTime(newValue);
-                        mainViewService.updateTuntikirjaus(kirjausToEdit);
-                    }
-                    tuntiTaulukko.refresh();
-                }
-        );
+        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh, this::showNotCorrectTimeAlert));
     }
 
     @FXML
@@ -282,7 +239,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaTaulukkoonButtonClick() {
         try {
             LOGGER.debug("Save to table button pushed!");
-            TuntiKirjaus tuntiKirjaus = mainViewService.addNewTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
+            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
             aiheField.getEntries().add(tuntiKirjaus.getTopic());
             updateView();
         } catch (EmptyTopicException e) {

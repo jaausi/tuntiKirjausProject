@@ -5,8 +5,12 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.scene.control.TableColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,11 +18,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -45,10 +50,30 @@ public class MainViewService {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
-    public void addTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntikirjausService.save(tuntiKirjaus);
+    public void updateTuntikirjaus(TuntiKirjaus tuntiKirjaus){
+        tuntikirjausService.update(tuntiKirjaus);
+    }
+
+    public TuntiKirjaus addTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException {
+        if(topic.isEmpty()){
+            throw new EmptyTopicException("Topic was empty when tried to save new Tuntikirjaus");
+        }
+
+        LocalDateTime localDateTime = parseTimeFromString(time);
+
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+
+        ObservableList<TuntiKirjaus> tuntidata = getTuntiDataForTable();
+
+        if(!tuntidata.isEmpty() && tuntidata.getLast().compareTo(tuntiKirjaus) > 0){
+            throw new StartTimeNotAfterLastTuntikirjausException("Start time of the latest Tuntikirjaus was not before Tuntikirjaus to be saved");
+        }
+
+        tuntiKirjaus = tuntikirjausService.save(tuntiKirjaus);
         Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
         previousKirjaus.ifPresent(tuntikirjausService::update);
+
+        return tuntiKirjaus;
     }
 
     public void removeTuntikirjaus(TuntiKirjaus tuntiKirjaus){
@@ -171,12 +196,12 @@ public class MainViewService {
 
     private void handleRemovedInMiddle(TuntiKirjaus previousKirjaus, TuntiKirjaus nextKirjaus) {
         previousKirjaus.setEndTime(nextKirjaus.getStartTime());
-        updateTuntikirjaus(previousKirjaus);
+        tuntikirjausService.update(previousKirjaus);
     }
 
     private void handleRemovedInEnd(TuntiKirjaus previousKirjaus) {
         previousKirjaus.setEndTime(null);
-        updateTuntikirjaus(previousKirjaus);
+        tuntikirjausService.update(previousKirjaus);
     }
 
     public Optional<Set<String>> getAiheEntries(){
@@ -189,29 +214,62 @@ public class MainViewService {
         return Optional.of(alltopics);
     }
 
-    public void updateTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntikirjausService.update(tuntiKirjaus);
+    public ChangeListener<Paiva> getDayListChangeListener(Runnable updateView) {
+        return (observableValue, oldValue, newValue) -> {
+            if(newValue != null){
+                setCurrentDate(newValue);
+                updateView.run();
+            }
+        };
     }
 
-    public TuntiKirjaus addNewTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException {
-        if(topic.isEmpty()){
-            throw new EmptyTopicException("Topic was empty when tried to save new Tuntikirjaus");
-        }
+    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, LocalTime>> getKellonaikaColumnEditHandler(Runnable refreshTuntitaulukko, Consumer<Boolean> showNotCorrectTimeAlert){
+        return editEvent -> {
+            int tablePosition = editEvent.getTablePosition().getRow();
+            int lastPosition = editEvent.getTableView().getItems().size() - 1;
+            LocalDateTime newValue = LocalDateTime.of(getCurrentDate(), editEvent.getNewValue());
+            boolean facedError = false;
 
-        LocalDateTime localDateTime = parseTimeFromString(time);
+            if(tablePosition < lastPosition){
+                TuntiKirjaus followingKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition + 1);
+                // If edited time is after next kirjaus start time, abort.
+                if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
+                    showNotCorrectTimeAlert.accept(true);
+                    facedError = true;
+                }
+            }
 
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+            // If not the first row of a day. Edit also the previous row end time.
+            if(tablePosition > 0){
+                TuntiKirjaus previousKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition - 1);
+                // If edited time is before previous kirjaus start time, abort.
+                if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
+                    showNotCorrectTimeAlert.accept(false);
+                    facedError = true;
+                }
+                if(!facedError){
+                    previousKirjausToEdit.setEndTime(newValue);
+                    updateTuntikirjaus(previousKirjausToEdit);
+                }
+            }
 
-        ObservableList<TuntiKirjaus> tuntidata = getTuntiDataForTable();
+            TuntiKirjaus kirjausToEdit = editEvent.getTableView().getItems().get(tablePosition);
+            if(!facedError){
+                kirjausToEdit.setStartTime(newValue);
+                updateTuntikirjaus(kirjausToEdit);
+            }
+            refreshTuntitaulukko.run();
+        };
+    }
 
-        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
-            throw new StartTimeNotAfterLastTuntikirjausException("Start time of the latest Tuntikirjaus was not before Tuntikirjaus to be saved");
-        }
-
-        tuntiKirjaus = tuntikirjausService.save(tuntiKirjaus);
-        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
-        previousKirjaus.ifPresent(tuntikirjausService::update);
-
-        return tuntiKirjaus;
+    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, String>> getAiheColumnEditHandler(BiConsumer<String, String> updateAiheFieldEntry) {
+        return editEvent -> {
+            int rowInTableToBeEdited = editEvent.getTablePosition().getRow();
+            TuntiKirjaus kirjausToBeEdited = editEvent.getTableView().getItems().get(rowInTableToBeEdited);
+            String oldTopic = kirjausToBeEdited.getTopic();
+            kirjausToBeEdited.setTopic(editEvent.getNewValue());
+            tuntikirjausService.update(kirjausToBeEdited);
+            updateAiheFieldEntry.accept(oldTopic, editEvent.getNewValue());
+        };
     }
 }
