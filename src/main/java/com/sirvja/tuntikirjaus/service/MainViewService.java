@@ -6,7 +6,6 @@ import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -23,23 +22,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MainViewService {
     private final TuntiKirjausService tuntikirjausService;
+    private final AlertService alertService;
     private LocalDate currentDate;
 
     private final Logger log = LoggerFactory.getLogger(MainViewService.class);
 
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
+        this.alertService = new AlertService();
         this.currentDate = LocalDate.now();
     }
 
     public ObservableList<TuntiKirjaus> getTuntiDataForTable(){
-        return FXCollections.observableArrayList(getTuntiKirjausDataForDate(currentDate));
+        return FXCollections.observableArrayList(tuntikirjausService.getTuntiKirjausForDate(currentDate));
     }
     public ObservableList<Paiva> getPaivaDataForTable(){
         return tuntikirjausService.getAllTuntikirjausWithCache().stream()
@@ -144,14 +144,8 @@ public class MainViewService {
         return returnValue.toString();
     }
 
-    private List<TuntiKirjaus> getTuntiKirjausDataForDate(LocalDate localDate) {
-        return tuntikirjausService.getTuntiKirjausForDate(localDate)
-                .stream()
-                .toList();
-    }
-
     private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(){
-        List<TuntiKirjaus> tuntiKirjausListForDay = getTuntiKirjausDataForDate(currentDate);
+        List<TuntiKirjaus> tuntiKirjausListForDay = tuntikirjausService.getTuntiKirjausForDate(currentDate);
         log.debug("Adding endtime for previous kirjaus");
         int indexA = tuntiKirjausListForDay.size()-1;
         int indexB = tuntiKirjausListForDay.size()-2;
@@ -223,7 +217,7 @@ public class MainViewService {
         };
     }
 
-    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, LocalTime>> getKellonaikaColumnEditHandler(Runnable refreshTuntitaulukko, Consumer<Boolean> showNotCorrectTimeAlert){
+    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, LocalTime>> getKellonaikaColumnEditHandler(Runnable refreshTuntitaulukko){
         return editEvent -> {
             int tablePosition = editEvent.getTablePosition().getRow();
             int lastPosition = editEvent.getTableView().getItems().size() - 1;
@@ -234,7 +228,7 @@ public class MainViewService {
                 TuntiKirjaus followingKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition + 1);
                 // If edited time is after next kirjaus start time, abort.
                 if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                    showNotCorrectTimeAlert.accept(true);
+                    alertService.showNotCorrectTimeAlert(true);
                     facedError = true;
                 }
             }
@@ -244,7 +238,7 @@ public class MainViewService {
                 TuntiKirjaus previousKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition - 1);
                 // If edited time is before previous kirjaus start time, abort.
                 if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                    showNotCorrectTimeAlert.accept(false);
+                    alertService.showNotCorrectTimeAlert(false);
                     facedError = true;
                 }
                 if(!facedError){

@@ -6,11 +6,11 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
+import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -40,8 +39,8 @@ import java.util.function.BiConsumer;
 public class MainViewController implements Initializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
-
     private MainViewService mainViewService;
+    private AlertService alertService;
 
     @FXML
     private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
@@ -87,6 +86,7 @@ public class MainViewController implements Initializable {
 
     public MainViewController() {
         this.mainViewService = new MainViewService();
+        this.alertService = new AlertService();
     }
 
     @Override
@@ -143,7 +143,7 @@ public class MainViewController implements Initializable {
 
     private void setEditListenerToKellonaikaColumn() {
         kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter(mainViewService)));
-        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh, this::showNotCorrectTimeAlert));
+        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh));
     }
 
     @FXML
@@ -245,15 +245,15 @@ public class MainViewController implements Initializable {
         } catch (EmptyTopicException e) {
             LOGGER.error(e.getMessage());
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showFieldNotFilledAlert();
+            alertService.showFieldNotFilledAlert();
         } catch (MalformatedTimeException e) {
             LOGGER.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showTimeInWrongFormatAlert(e.getMessage());
+            alertService.showTimeInWrongFormatAlert(e.getMessage());
         } catch (StartTimeNotAfterLastTuntikirjausException e) {
             LOGGER.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showNotCorrectTimeAlert();
+            alertService.showNotCorrectTimeAlert();
         }
     }
 
@@ -262,7 +262,7 @@ public class MainViewController implements Initializable {
         LOGGER.debug("Poista kirjaus painettu!");
         TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
         LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
-        if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
+        if(!alertService.showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
                         "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
                 "siirtämällä lopetusajan poistettavan kirjauksen lopetusaikaan.", selectedKirjaus))){
@@ -299,52 +299,4 @@ public class MainViewController implements Initializable {
         kellonAikaField.clear();
         aiheField.clear();
     }
-
-    private void showFieldNotFilledAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Pakollisia kenttiä täyttämättä");
-        alert.setContentText("Punaisella korostettuihin kenttiin tulee syöttää" +
-                " arvo ennen taulukkoon lisäämistä.");
-        alert.showAndWait();
-    }
-
-    private void showNotCorrectTimeAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Syötetty aika on pienempi kuin viimeisin aika");
-        alert.setContentText("Syötä aika, joka on listan viimeisimmän ajan jälkeen.");
-        alert.showAndWait();
-    }
-
-    private void showNotCorrectTimeAlert(boolean isTooLarge){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        if(isTooLarge){
-            alert.setHeaderText("Syötetty aika on suurempi kuin seuraava syötetty aika");
-            alert.setContentText("Syötä aika, joka on ennen ajanhetkeä joka on seuraavan listalla.");
-        } else {
-            alert.setHeaderText("Syötetty aika on pienempi kuin edellinen aika");
-            alert.setContentText("Syötä aika, joka on edellisen syötetyn ajanhetken jälkeen.");
-        }
-        alert.showAndWait();
-    }
-
-    public static void showTimeInWrongFormatAlert(String problem){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Syötetty aika on väärässä formaatissa");
-        alert.setContentText("Virhe: "+problem);
-        alert.showAndWait();
-    }
-
-    public static boolean showConfirmationAlert(String confirmationHeader, String confirmationText){
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, confirmationText, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-        alert.setTitle("Vahvista valinta!");
-        alert.setHeaderText(confirmationHeader);
-        alert.showAndWait();
-
-        return alert.getResult() == ButtonType.YES;
-    }
-
 }
