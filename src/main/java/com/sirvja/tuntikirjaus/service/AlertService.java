@@ -51,4 +51,12 @@ public class AlertService {
 
         return alert.getResult() == ButtonType.YES;
     }
+
+    public void showGeneralAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Varoitus!");
+        alert.setHeaderText("Yleinen virhe");
+        alert.setContentText("Virhe: "+message);
+        alert.showAndWait();
+    }
 }

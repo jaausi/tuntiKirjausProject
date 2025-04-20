@@ -5,6 +5,7 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
+import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -40,7 +42,7 @@ public class MainViewService {
     }
 
     public ObservableList<TuntiKirjaus> getTuntiDataForTable(){
-        return FXCollections.observableArrayList(tuntikirjausService.getTuntiKirjausForDate(currentDate));
+        return FXCollections.observableArrayList(tuntikirjausService.getTuntiKirjausForDate(currentDate)).sorted();
     }
     public ObservableList<Paiva> getPaivaDataForTable(){
         return tuntikirjausService.getAllTuntikirjaus().stream()
@@ -51,12 +53,8 @@ public class MainViewService {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
-    public void updateTuntikirjaus(TuntiKirjaus tuntiKirjaus){
-        tuntikirjausService.update(tuntiKirjaus);
-    }
-
-    public TuntiKirjaus addTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException {
-        if(topic.isEmpty()){
+    public TuntiKirjaus addTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException, TuntikirjausDatabaseInInconsistentStage {
+        if(topic == null || topic.isBlank()){
             throw new EmptyTopicException("Topic was empty when tried to save new Tuntikirjaus");
         }
 
@@ -70,8 +68,12 @@ public class MainViewService {
             throw new StartTimeNotAfterLastTuntikirjausException("Start time of the latest Tuntikirjaus was not before Tuntikirjaus to be saved");
         }
 
+        Optional<TuntiKirjaus> previousKirjaus = Optional.empty();
+        if(!tuntidata.isEmpty()) {
+            previousKirjaus = addEndTimeToSecondLatestTuntikirjaus(tuntidata.getLast(), tuntiKirjaus);
+        }
+
         tuntiKirjaus = tuntikirjausService.save(tuntiKirjaus);
-        Optional<TuntiKirjaus> previousKirjaus = addEndTimeToSecondLatestTuntikirjaus();
         previousKirjaus.ifPresent(tuntikirjausService::update);
 
         return tuntiKirjaus;
@@ -87,22 +89,26 @@ public class MainViewService {
 
         log.debug("Received {} from time field. Trying to parse...", time);
 
-        if(!time.isEmpty()){
-            if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
-                localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
-            } else if (time.contains(".")) {
-                localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H.mm")));
-            } else {
-                if (time.length() <= 2){ // Parse only hours '9' or '12'
-                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
-                } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
-                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
+        try {
+            if(!time.isEmpty()){
+                if(time.contains(":")){ // Parse hours and minutes '9:00' or '12:00'
+                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H:mm")));
+                } else if (time.contains(".")) {
+                    localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H.mm")));
                 } else {
-                    throw new MalformatedTimeException("Couldn't parse time from String");
+                    if (time.length() <= 2){ // Parse only hours '9' or '12'
+                        localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("H")));
+                    } else if(time.length() <= 4){ // Parse hours and minutes '922' -> 9:22 or '1222' -> '12:22'
+                        localDateTime = LocalDateTime.of(currentDate, LocalTime.parse(time, DateTimeFormatter.ofPattern("Hmm")));
+                    } else {
+                        throw new MalformatedTimeException(String.format("Couldn't parse time from String: %s", time));
+                    }
                 }
+            } else {
+                localDateTime = LocalDateTime.of(currentDate, LocalTime.now());
             }
-        } else {
-            localDateTime = LocalDateTime.of(currentDate, LocalTime.now());
+        } catch (DateTimeParseException e) {
+            throw new MalformatedTimeException(String.format("Couldn't parse time from String: %s", time));
         }
 
         return localDateTime;
@@ -147,27 +153,17 @@ public class MainViewService {
         return returnValue.toString();
     }
 
-    private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(){
-        List<TuntiKirjaus> tuntiKirjausListForDay = tuntikirjausService.getTuntiKirjausForDate(currentDate);
-        log.debug("Adding endtime for previous kirjaus");
-        int indexA = tuntiKirjausListForDay.size()-1;
-        int indexB = tuntiKirjausListForDay.size()-2;
-        if(indexA < 0 || indexB < 0){
-            log.debug("Indexes are out of bounds returning");
-            return Optional.empty();
-        }
-
-        TuntiKirjaus currentKirjaus = tuntiKirjausListForDay.get(indexA);
-        TuntiKirjaus previousKirjaus = tuntiKirjausListForDay.get(indexB);
+    private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(TuntiKirjaus previousKirjaus, TuntiKirjaus currentKirjaus) throws TuntikirjausDatabaseInInconsistentStage {
         log.debug("Current kirjaus: {}", currentKirjaus);
         log.debug("Previous kirjaus: {}", previousKirjaus);
 
         if(previousKirjaus.isEndTimeNull()){
             log.debug("Allowed to add endtime.");
             previousKirjaus.setEndTime(currentKirjaus.getStartTime());
+            return Optional.of(previousKirjaus);
+        } else {
+            throw new TuntikirjausDatabaseInInconsistentStage(String.format("Not able to set endTime (%s) for previous kirjaus, because it already contained endtime: %s", currentKirjaus.getStartTime(), previousKirjaus.getEndTime()));
         }
-
-        return Optional.of(previousKirjaus);
     }
 
     private void handlePreviousKirjausAfterRemove(TuntiKirjaus tuntiKirjaus){
@@ -246,14 +242,14 @@ public class MainViewService {
                 }
                 if(!facedError){
                     previousKirjausToEdit.setEndTime(newValue);
-                    updateTuntikirjaus(previousKirjausToEdit);
+                    tuntikirjausService.update(previousKirjausToEdit);
                 }
             }
 
             TuntiKirjaus kirjausToEdit = editEvent.getTableView().getItems().get(tablePosition);
             if(!facedError){
                 kirjausToEdit.setStartTime(newValue);
-                updateTuntikirjaus(kirjausToEdit);
+                tuntikirjausService.update(kirjausToEdit);
             }
             refreshTuntitaulukko.run();
         };

@@ -6,6 +6,7 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
+import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
@@ -257,6 +258,9 @@ public class MainViewController implements Initializable {
             log.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showNotCorrectTimeAlert();
+        } catch (TuntikirjausDatabaseInInconsistentStage e) {
+            log.error(e.getMessage());
+            alertService.showGeneralAlert(e.getMessage());
         }
     }
 
