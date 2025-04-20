@@ -1,6 +1,5 @@
 package com.sirvja.tuntikirjaus.service;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;

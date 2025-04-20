@@ -26,8 +26,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,9 +35,9 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BiConsumer;
 
+@Slf4j
 public class MainViewController implements Initializable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
     private MainViewService mainViewService;
     private AlertService alertService;
 
@@ -105,7 +104,8 @@ public class MainViewController implements Initializable {
 
         setEditListenerToAiheColumn();
 
-        updateView();
+        initializeView();
+        daysListView.setItems(mainViewService.getPaivaDataForTable());
 
         setListenerForDayListView();
 
@@ -128,7 +128,10 @@ public class MainViewController implements Initializable {
     }
 
     private void setListenerForDayListView() {
-        daysListView.getSelectionModel().selectedItemProperty().addListener(mainViewService.getDayListChangeListener(this::updateView));
+        daysListView.getSelectionModel().selectedItemProperty().addListener(mainViewService.getDayListChangeListener(() -> {
+            updateTuntiTaulukko();
+            updateYhteenveto();
+        }));
     }
 
     private void setEditListenerToAiheColumn() {
@@ -163,14 +166,14 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onChangeUpdateDurationsMenuItemAction() {
-        LOGGER.debug("Update durations clicked!");
+        log.debug("Update durations clicked!");
     }
 
     @FXML
     protected void onKeyPressedToAiheField(){
         aiheField.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER){
-                LOGGER.debug("Enter was pressed");
+                log.debug("Enter was pressed");
                 onTallennaTaulukkoonButtonClick();
             }
         });
@@ -180,7 +183,7 @@ public class MainViewController implements Initializable {
     protected void onKeyPressedToKellonaikaField(){
         kellonAikaField.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER){
-                LOGGER.debug("Enter was pressed");
+                log.debug("Enter was pressed");
                 onTallennaTaulukkoonButtonClick();
             }
         });
@@ -188,7 +191,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onChangeThemeMenuItemAction(){
-        LOGGER.debug("Change theme clicked!");
+        log.debug("Change theme clicked!");
 
         ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
         String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
@@ -201,7 +204,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onOpenReportsMenuItem(){
-        LOGGER.debug("Open reports clicked!");
+        log.debug("Open reports clicked!");
 
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml"));
@@ -226,7 +229,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onTallennaLeikepoydalleButtonClick(){
-        LOGGER.debug("Save to clipboard button pushed!");
+        log.debug("Save to clipboard button pushed!");
 
         String yhteenvetoText = mainViewService.getYhteenvetoText();
         ClipboardContent content = new ClipboardContent();
@@ -238,20 +241,20 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onTallennaTaulukkoonButtonClick() {
         try {
-            LOGGER.debug("Save to table button pushed!");
+            log.debug("Save to table button pushed!");
             TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
             aiheField.getEntries().add(tuntiKirjaus.getTopic());
-            updateView();
+            initializeView();
         } catch (EmptyTopicException e) {
-            LOGGER.error(e.getMessage());
+            log.error(e.getMessage());
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showFieldNotFilledAlert();
         } catch (MalformatedTimeException e) {
-            LOGGER.error(e.getMessage());
+            log.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showTimeInWrongFormatAlert(e.getMessage());
         } catch (StartTimeNotAfterLastTuntikirjausException e) {
-            LOGGER.error(e.getMessage());
+            log.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showNotCorrectTimeAlert();
         }
@@ -259,9 +262,9 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onPoistaKirjausButtonClick() {
-        LOGGER.debug("Poista kirjaus painettu!");
+        log.debug("Poista kirjaus painettu!");
         TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
-        LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
+        log.debug("Following kirjaus selected: {}", selectedKirjaus);
         if(!alertService.showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
                         "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
@@ -269,34 +272,51 @@ public class MainViewController implements Initializable {
             return;
         }
         mainViewService.removeTuntikirjaus(selectedKirjaus);
-        updateView();
+        initializeView();
     }
 
     @FXML
     protected void onUusiPaivaButtonClick() {
-        LOGGER.debug("Uusi päivä painettu!");
+        log.debug("Uusi päivä painettu!");
         mainViewService.setCurrentDate(new Paiva(LocalDate.now()));
-        updateView();
+        initializeView();
     }
 
     @FXML
     protected void onKellonaikaFieldClick(){
-        LOGGER.debug("Kellonaika field clicked!");
+        log.debug("Kellonaika field clicked!");
         kellonAikaField.setStyle("-fx-border-color: none ; -fx-border-width: 0px ;");
     }
 
     @FXML
     protected void onAiheFieldClick(){
-        LOGGER.debug("Aihe field clicked!");
+        log.debug("Aihe field clicked!");
         aiheField.setStyle("-fx-border-color: none ; -fx-border-width: 0px ;");
     }
 
-    private void updateView(){
+    private void initializeView(){
+        updateTuntiTaulukko();
+        updateDayList();
+        updateYhteenveto();
+        clearInputFields();
+    }
+
+    private void updateTuntiTaulukko() {
         tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
         tuntiTaulukko.refresh();
-        daysListView.setItems(mainViewService.getPaivaDataForTable());
+    }
+
+    private void updateYhteenveto() {
         yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
+    }
+
+    private void clearInputFields() {
         kellonAikaField.clear();
         aiheField.clear();
+    }
+
+    private void updateDayList() {
+        daysListView.setItems(mainViewService.getPaivaDataForTable());
+        daysListView.refresh();
     }
 }
