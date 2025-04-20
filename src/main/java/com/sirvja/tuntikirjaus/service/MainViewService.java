@@ -10,27 +10,22 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.control.TableColumn;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class MainViewService {
     private final TuntiKirjausService tuntikirjausService;
     private final AlertService alertService;
     private LocalDate currentDate;
-
-    private final Logger log = LoggerFactory.getLogger(MainViewService.class);
 
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
@@ -114,6 +109,7 @@ public class MainViewService {
     }
 
     public void setCurrentDate(Paiva paiva){
+        log.debug("Setting currentDate to: {}", paiva);
         currentDate = paiva.getLocalDate();
     }
 
@@ -122,7 +118,7 @@ public class MainViewService {
     }
 
     public String getYhteenvetoText(){
-        ObservableList<TuntiKirjaus> tuntiKirjausListForDay = getTuntiDataForTable();
+        List<TuntiKirjaus> tuntiKirjausListForDay = tuntikirjausService.getTuntiKirjausForDate(currentDate);
 
         if(tuntiKirjausListForDay == null || tuntiKirjausListForDay.isEmpty()){
             return "";
@@ -132,6 +128,7 @@ public class MainViewService {
 
         Map<String, String> topicToDuration = tuntiKirjausListForDay.stream()
                 .filter(predicate)
+                .sorted(Comparator.comparing(TuntiKirjaus::getTopic))
                 .collect(
                         Collectors.groupingBy(
                                 TuntiKirjaus::getClassification,
