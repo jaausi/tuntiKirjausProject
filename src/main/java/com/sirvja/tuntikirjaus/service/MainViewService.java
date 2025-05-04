@@ -11,7 +11,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.control.TableColumn;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,11 +24,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class MainViewService {
     private final TuntiKirjausService tuntikirjausService;
     private final AlertService alertService;
     private LocalDate currentDate;
+
+    private static final Logger log = LoggerFactory.getLogger(MainViewService.class);
 
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
@@ -153,6 +155,16 @@ public class MainViewService {
         return returnValue.toString();
     }
 
+    public Optional<Set<String>> getAiheEntries(){
+        Set<String> alltopics = tuntikirjausService.getAllTuntikirjaus().stream()
+                .map(TuntiKirjaus::getTopic)
+                .collect(Collectors.toSet());
+
+        log.debug(String.format("Got all topics from db: %s", alltopics));
+
+        return Optional.of(alltopics);
+    }
+
     private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(TuntiKirjaus previousKirjaus, TuntiKirjaus currentKirjaus) throws TuntikirjausDatabaseInInconsistentStage {
         log.debug("Current kirjaus: {}", currentKirjaus);
         log.debug("Previous kirjaus: {}", previousKirjaus);
@@ -190,21 +202,12 @@ public class MainViewService {
     private void handleRemovedInMiddle(TuntiKirjaus previousKirjaus, TuntiKirjaus nextKirjaus) {
         previousKirjaus.setEndTime(nextKirjaus.getStartTime());
         tuntikirjausService.update(previousKirjaus);
+        tuntikirjausService.update(nextKirjaus);
     }
 
     private void handleRemovedInEnd(TuntiKirjaus previousKirjaus) {
         previousKirjaus.setEndTime(null);
         tuntikirjausService.update(previousKirjaus);
-    }
-
-    public Optional<Set<String>> getAiheEntries(){
-        Set<String> alltopics = tuntikirjausService.getAllTuntikirjaus().stream()
-                .map(TuntiKirjaus::getTopic)
-                .collect(Collectors.toSet());
-
-        log.debug(String.format("Got all topics from db: %s", alltopics));
-
-        return Optional.of(alltopics);
     }
 
     public ChangeListener<Paiva> getDayListChangeListener(Runnable updateView) {

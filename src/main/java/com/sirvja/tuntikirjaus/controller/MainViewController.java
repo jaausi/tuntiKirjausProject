@@ -27,7 +27,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,11 +37,12 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-@Slf4j
 public class MainViewController implements Initializable {
 
     private MainViewService mainViewService;
     private AlertService alertService;
+
+    private static final Logger log = LoggerFactory.getLogger(MainViewController.class);
 
     @FXML
     private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
