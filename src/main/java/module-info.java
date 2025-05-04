@@ -7,7 +7,6 @@ module com.sirvja.tuntikirjaus {
     requires ch.qos.logback.classic;
     requires javafx.graphics;
     requires javafx.controls;
-    requires static lombok;
 
     opens com.sirvja.tuntikirjaus to javafx.fxml;
     exports com.sirvja.tuntikirjaus;

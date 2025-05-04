@@ -120,17 +120,26 @@ public class MainViewServiceTest {
         }
     }
 
-    @Test
-    @DisplayName("Test adding of Tuntikirjaus items, should save Tuntikirjaus and update the previous one")
-    void testAddingTuntikirjaus() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
-        List<TuntiKirjaus> tuntiKirjausList = List.of(
+    private LocalDateTime getInitTime() {
+        return LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
+    }
+
+    private List<TuntiKirjaus> getTuntikirjausList(LocalDateTime time) {
+        return List.of(
                 new TuntiKirjaus(1, time, time.plusHours(1), "Topic 1", true),
                 new TuntiKirjaus(2, time.plusHours(1), time.plusHours(1).plusMinutes(30), "Topic 1", true),
                 new TuntiKirjaus(3, time.plusHours(1).plusMinutes(30), time.plusHours(3), "Topic 1", true),
                 new TuntiKirjaus(4, time.plusHours(3), time.plusHours(4), "Topic 1", true),
                 new TuntiKirjaus(5, time.plusHours(4), null, "Topic 1", true)
         );
+    }
+
+
+    @Test
+    @DisplayName("Test adding of Tuntikirjaus items, should save Tuntikirjaus and update the previous one")
+    void testAddingTuntikirjaus() {
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
         verify(tuntiKirjausService, times(1)).save(any());
@@ -140,7 +149,7 @@ public class MainViewServiceTest {
     @Test
     @DisplayName("Test adding of Tuntikirjaus item when no existing tuntikirjaus for date")
     void testAddingTuntikirjaus_noData() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
+        LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = List.of();
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
@@ -151,14 +160,9 @@ public class MainViewServiceTest {
     @Test
     @DisplayName("Test adding of Tuntikirjaus item when endTime exists in second last kirjaus, should throw exception")
     void testAddingTuntikirjaus_endTimeExists() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
-        List<TuntiKirjaus> tuntiKirjausList = List.of(
-                new TuntiKirjaus(1, time, time.plusHours(1), "Topic 1", true),
-                new TuntiKirjaus(2, time.plusHours(1), time.plusHours(1).plusMinutes(30), "Topic 1", true),
-                new TuntiKirjaus(3, time.plusHours(1).plusMinutes(30), time.plusHours(3), "Topic 1", true),
-                new TuntiKirjaus(4, time.plusHours(3), time.plusHours(4), "Topic 1", true),
-                new TuntiKirjaus(5, time.plusHours(4), time.plusHours(5), "Topic 1", true)
-        );
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
+        tuntiKirjausList.getLast().setEndTime(time.plusHours(5));
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertThrows(TuntikirjausDatabaseInInconsistentStage.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
         verify(tuntiKirjausService, times(0)).save(any());
@@ -168,14 +172,8 @@ public class MainViewServiceTest {
     @Test
     @DisplayName("Test adding of Tuntikirjaus item when startTime is before previous kirjaus, should throw exception")
     void testAddingTuntikirjaus_startTimeBeforePrevious() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
-        List<TuntiKirjaus> tuntiKirjausList = List.of(
-                new TuntiKirjaus(1, time, time.plusHours(1), "Topic 1", true),
-                new TuntiKirjaus(2, time.plusHours(1), time.plusHours(1).plusMinutes(30), "Topic 1", true),
-                new TuntiKirjaus(3, time.plusHours(1).plusMinutes(30), time.plusHours(3), "Topic 1", true),
-                new TuntiKirjaus(4, time.plusHours(3), time.plusHours(4), "Topic 1", true),
-                new TuntiKirjaus(5, time.plusHours(4), null, "Topic 1", true)
-        );
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertThrows(StartTimeNotAfterLastTuntikirjausException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(3).getHour()), "Test topic"));
         verify(tuntiKirjausService, times(0)).save(any());
@@ -183,16 +181,10 @@ public class MainViewServiceTest {
     }
 
     @Test
-    @DisplayName("Test adding of Tuntikirjaus item when topic is empty")
+    @DisplayName("Test adding of Tuntikirjaus item when topic is empty, should throw EmptyTopicException")
     void testAddingTuntikirjaus_topicEmpty() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
-        List<TuntiKirjaus> tuntiKirjausList = List.of(
-                new TuntiKirjaus(1, time, time.plusHours(1), "Topic 1", true),
-                new TuntiKirjaus(2, time.plusHours(1), time.plusHours(1).plusMinutes(30), "Topic 1", true),
-                new TuntiKirjaus(3, time.plusHours(1).plusMinutes(30), time.plusHours(3), "Topic 1", true),
-                new TuntiKirjaus(4, time.plusHours(3), time.plusHours(4), "Topic 1", true),
-                new TuntiKirjaus(5, time.plusHours(4), null, "Topic 1", true)
-        );
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), ""));
         assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "  "));
@@ -201,21 +193,67 @@ public class MainViewServiceTest {
         verify(tuntiKirjausService, times(0)).update(any());
     }
 
+    private List<TuntiKirjaus> getTuntikirjausList() {
+        LocalDateTime time = getInitTime();
+        return getTuntikirjausList(time);
+    }
+
     @Test
     @DisplayName("Test adding of Tuntikirjaus item when time is malformed")
     void testAddingTuntikirjaus_timeInWrongFormat() {
-        LocalDateTime time = LocalDateTime.now().getHour() > 16 ? LocalDateTime.now().minusHours(10) : LocalDateTime.now();
-        List<TuntiKirjaus> tuntiKirjausList = List.of(
-                new TuntiKirjaus(1, time, time.plusHours(1), "Topic 1", true),
-                new TuntiKirjaus(2, time.plusHours(1), time.plusHours(1).plusMinutes(30), "Topic 1", true),
-                new TuntiKirjaus(3, time.plusHours(1).plusMinutes(30), time.plusHours(3), "Topic 1", true),
-                new TuntiKirjaus(4, time.plusHours(3), time.plusHours(4), "Topic 1", true),
-                new TuntiKirjaus(5, time.plusHours(4), null, "Topic 1", true)
-        );
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList();
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
         assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("999", "Test topic"));
         assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("123242", "Test topic"));
         verify(tuntiKirjausService, times(0)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
+    }
+
+    @Test
+    @DisplayName("Test removing of Tuntikirjaus item from the end, check that the second last Tuntikirjaus is updated")
+    void testRemovingTuntikirjaus_end() {
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
+        when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
+        mainViewService.removeTuntikirjaus(tuntiKirjausList.getLast());
+        verify(tuntiKirjausService, times(1)).delete(eq(tuntiKirjausList.getLast()));
+        verify(tuntiKirjausService, times(1)).update(eq(tuntiKirjausList.get(tuntiKirjausList.size()-2)));
+    }
+
+    @Test
+    @DisplayName("Test removing of Tuntikirjaus item from the middle, check that the previous and next Tuntikirjaus is updated")
+    void testRemovingTuntikirjaus_middle() {
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
+        when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
+        mainViewService.removeTuntikirjaus(tuntiKirjausList.get(tuntiKirjausList.size()-2));
+        verify(tuntiKirjausService, times(1)).delete(eq(tuntiKirjausList.get(tuntiKirjausList.size()-2)));
+        verify(tuntiKirjausService, times(2)).update(any());
+        verify(tuntiKirjausService, times(1)).update(eq(tuntiKirjausList.getLast()));
+        verify(tuntiKirjausService, times(1)).update(eq(tuntiKirjausList.get(tuntiKirjausList.size()-3)));
+    }
+
+    @Test
+    @DisplayName("Test removing of Tuntikirjaus item from the middle")
+    void testRemovingTuntikirjaus_first() {
+
+    }
+
+    @Test
+    @DisplayName("Test parse time from string method with different inputs")
+    void testParseTimeFromStringMethod() {
+
+    }
+
+    @Test
+    @DisplayName("Test getting the summary from TuntikirjausData")
+    void testGetYhteenvetoText() {
+
+    }
+
+    @Test
+    @DisplayName("Test getting the topic entries from TuntikirjausData")
+    void testGetAiheEntries() {
+
     }
 }
