@@ -4,7 +4,6 @@ import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.dao.Dao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import org.junit.jupiter.api.*;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

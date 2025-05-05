@@ -21,7 +21,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class MainViewService {
@@ -132,37 +134,48 @@ public class MainViewService {
             return "";
         }
 
-        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+        SortedMap<String, String> projectToDuration = groupTuntikirjausListBasedOnClassification(tuntiKirjausListForDay);
 
-        Map<String, String> topicToDuration = tuntiKirjausListForDay.stream()
-                .filter(predicate)
-                .sorted(Comparator.comparing(TuntiKirjaus::getTopic))
+        return topicToHoursMapIntoStringFormat(projectToDuration);
+    }
+
+    private SortedMap<String, String> groupTuntikirjausListBasedOnClassification(List<TuntiKirjaus> tuntiKirjausList) {
+        Predicate<TuntiKirjaus> endTimeNotNull = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+
+        Collector<TuntiKirjaus, ?, Long> sumDurations = Collectors.summingLong(t -> t.getDurationInDuration().toMinutes());
+
+        Function<Long, String> fullHoursFromMinutes = minutes -> String.valueOf(minutes/60);
+        Function<Long, String> remainderMinutesWithPrecedingZero = minutes -> String.valueOf(minutes%60 < 10 ? "0"+minutes%60 : minutes%60);
+        Function<Long, String> minutesToHoursAndMinutes = minutes -> String.format("%s:%s", fullHoursFromMinutes.apply(minutes), remainderMinutesWithPrecedingZero.apply(minutes));
+
+
+        return tuntiKirjausList.stream()
+                .filter(endTimeNotNull)
                 .collect(
                         Collectors.groupingBy(
                                 TuntiKirjaus::getClassification,
+                                TreeMap::new,
                                 Collectors.collectingAndThen(
-                                        Collectors.summingLong(t -> t.getDurationInDuration().toMinutes()),
-                                        minutes -> String.format("%s:%s", minutes/60, (minutes%60 < 10 ? "0"+minutes%60 : minutes%60))
+                                        sumDurations,
+                                        minutesToHoursAndMinutes
                                 )
                         )
                 );
+    }
 
+    private String topicToHoursMapIntoStringFormat(SortedMap<String, String> topicToDuration) {
         StringBuilder returnValue = new StringBuilder();
         for(Map.Entry<String, String> entry: topicToDuration.entrySet()){
-            returnValue.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+            returnValue.append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
         }
 
         return returnValue.toString();
     }
 
-    public Optional<Set<String>> getAiheEntries(){
-        Set<String> alltopics = tuntikirjausService.getAllTuntikirjaus().stream()
+    public SortedSet<String> getAiheEntries(){
+        return tuntikirjausService.getAllTuntikirjaus().stream()
                 .map(TuntiKirjaus::getTopic)
-                .collect(Collectors.toSet());
-
-        log.debug(String.format("Got all topics from db: %s", alltopics));
-
-        return Optional.of(alltopics);
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 
     private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(TuntiKirjaus previousKirjaus, TuntiKirjaus currentKirjaus) throws TuntikirjausDatabaseInInconsistentStage {
