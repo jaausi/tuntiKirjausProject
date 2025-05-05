@@ -13,7 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.LocalTime;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +26,11 @@ public class MainViewServiceTest {
     TuntiKirjausService tuntiKirjausService = mock(TuntiKirjausService.class);
     AlertService alertService = mock(AlertService.class);
     MainViewService mainViewService = new MainViewService(tuntiKirjausService, alertService);
+
+    static final LocalDateTime zeroDateTime = LocalDateTime.of(
+            LocalDate.of(2023, 1, 1),
+            LocalTime.of(0,0,0)
+    );
 
     @Test
     @DisplayName("Test that the Tuntikirjaus list is wrapped as ObservableArrayList and sorted by startTime")
@@ -221,7 +227,7 @@ public class MainViewServiceTest {
     }
 
     @Test
-    @DisplayName("Test removing of Tuntikirjaus item from the middle, check that the previous and next Tuntikirjaus is updated")
+    @DisplayName("Test removing of Tuntikirjaus item from the middle, check that the previous and following Tuntikirjaus is updated")
     void testRemovingTuntikirjaus_middle() {
         LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
@@ -234,26 +240,99 @@ public class MainViewServiceTest {
     }
 
     @Test
-    @DisplayName("Test removing of Tuntikirjaus item from the middle")
+    @DisplayName("Test removing of Tuntikirjaus item from the middle, check that previous or following Tuntikirjaus is not updated")
     void testRemovingTuntikirjaus_first() {
-
+        LocalDateTime time = getInitTime();
+        List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
+        when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
+        mainViewService.removeTuntikirjaus(tuntiKirjausList.getFirst());
+        verify(tuntiKirjausService, times(1)).delete(eq(tuntiKirjausList.getFirst()));
+        verify(tuntiKirjausService, times(0)).update(any());
     }
 
     @Test
     @DisplayName("Test parse time from string method with different inputs")
-    void testParseTimeFromStringMethod() {
+    void testParseTimeFromStringMethod() throws MalformatedTimeException {
+        mainViewService.setCurrentDate(new Paiva(zeroDateTime.toLocalDate()));
 
+        LocalDateTime expectedTime = zeroDateTime.plusHours(9);
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("9:00"), "failed to parse 9:00");
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("9.00"), "failed to parse 9.00");
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("9"), "failed to parse 9");
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("900"), "failed to parse 900");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("90"), "parsing of 90 should throw exception");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("90:00"), "parsing of 90:00 should throw exception");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("90.00"), "parsing of 90.00 should throw exception");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("9:000"), "parsing of 9:000 should throw exception");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("9.000"), "parsing of 9.000 should throw exception");
+
+        expectedTime = zeroDateTime.plusHours(14).plusMinutes(23);
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("14:23"), "failed to parse 14:23");
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("1423"), "failed to parse 1423");
+        assertEquals(expectedTime, mainViewService.parseTimeFromString("14.23"), "failed to parse 14.23");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("14.230"), "parsing of 14.230 should throw exception");
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("14:230"), "parsing of 14:230 should throw exception");
     }
 
     @Test
-    @DisplayName("Test getting the summary from TuntikirjausData")
+    @DisplayName("Test getting the summary from TuntikirjausData, should check that summary contains projects in alphabetical order and hours for each project correctly")
     void testGetYhteenvetoText() {
+        List<TuntiKirjaus> tuntiKirjausList = List.of(
+                new TuntiKirjaus(1, zeroDateTime, zeroDateTime.plusHours(1), "PROJECT1-001 Tehtävä 001", true),
+                new TuntiKirjaus(2, zeroDateTime.plusHours(1), zeroDateTime.plusHours(1).plusMinutes(30), "PROJECT1-002 Tehtävä 002", true),
+                new TuntiKirjaus(3, zeroDateTime.plusHours(1).plusMinutes(30), zeroDateTime.plusHours(3), "PROJECT2-003 Tehtävä 003", true),
+                new TuntiKirjaus(4, zeroDateTime.plusHours(3), zeroDateTime.plusHours(4), "PROJECT3-004 Tehtävä 004", true),
+                new TuntiKirjaus(4, zeroDateTime.plusHours(4), zeroDateTime.plusHours(4).plusMinutes(30), "AAPROJECT3-004 Tehtävä 004", true),
+                new TuntiKirjaus(5, zeroDateTime.plusHours(4).plusMinutes(30), null, "PROJECT2-005 Tehtävä 005", true)
+        );
 
+        when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
+
+        String expectedSummary = """
+                AAPROJECT3: 0:30
+                PROJECT1: 1:30
+                PROJECT2: 1:30
+                PROJECT3: 1:00
+                """;
+
+        assertEquals(expectedSummary, mainViewService.getYhteenvetoText(), "Processed summary is not matching with the expected summary");
     }
 
     @Test
-    @DisplayName("Test getting the topic entries from TuntikirjausData")
+    @DisplayName("Test getting the topic entries from TuntikirjausData, check that list is in alphabethical order")
     void testGetAiheEntries() {
+        List<TuntiKirjaus> tuntiKirjausList = List.of(
+                new TuntiKirjaus(1, zeroDateTime, zeroDateTime.plusHours(1), "PROJECT1-001 Tehtävä 001", true),
+                new TuntiKirjaus(2, zeroDateTime.plusHours(1), zeroDateTime.plusHours(1).plusMinutes(30), "PROJECT1-002 Tehtävä 002", true),
+                new TuntiKirjaus(3, zeroDateTime.plusHours(1).plusMinutes(30), zeroDateTime.plusHours(3), "PROJECT2-003 Tehtävä 003", true),
+                new TuntiKirjaus(4, zeroDateTime.plusHours(3), zeroDateTime.plusHours(4), "PROJECT3-004 Tehtävä 004", true),
+                new TuntiKirjaus(4, zeroDateTime.plusHours(4), zeroDateTime.plusHours(4).plusMinutes(30), "AAPROJECT3-004 Tehtävä 004", true),
+                new TuntiKirjaus(5, zeroDateTime.plusHours(4).plusMinutes(30), null, "PROJECT2-005 Tehtävä 005", true)
+        );
 
+        when(tuntiKirjausService.getAllTuntikirjaus()).thenReturn(tuntiKirjausList);
+
+        List<String> expectedList = List.of(
+                "AAPROJECT3-004 Tehtävä 004",
+                "PROJECT1-001 Tehtävä 001",
+                "PROJECT1-002 Tehtävä 002",
+                "PROJECT2-003 Tehtävä 003",
+                "PROJECT2-005 Tehtävä 005",
+                "PROJECT3-004 Tehtävä 004"
+        );
+
+        SortedSet<String> actualList = mainViewService.getAiheEntries();
+
+        for (int i = 0; i < expectedList.size(); i++) {
+            assertEquals(expectedList.get(i), actualList.removeFirst(), "Expected element should match the actual element");
+        }
+    }
+
+    @Test
+    @DisplayName("Test getting the topic entries from TuntikirjausData, check that empty list works as should")
+    void testGetAiheEntries_empty() {
+        when(tuntiKirjausService.getAllTuntikirjaus()).thenReturn(List.of());
+
+        assertEquals(new TreeSet<>(Set.of()), mainViewService.getAiheEntries());
     }
 }

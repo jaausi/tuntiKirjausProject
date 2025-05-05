@@ -120,7 +120,7 @@ public class MainViewController implements Initializable {
     }
 
     private void initializeAutoCompleteAiheField() {
-        aiheField.getEntries().addAll(mainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getEntries().addAll(mainViewService.getAiheEntries());
         aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
                 aiheField.setText(newValue);
