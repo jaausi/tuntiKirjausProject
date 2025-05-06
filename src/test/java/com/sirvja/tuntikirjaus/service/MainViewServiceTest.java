@@ -253,7 +253,7 @@ public class MainViewServiceTest {
     @Test
     @DisplayName("Test parse time from string method with different inputs")
     void testParseTimeFromStringMethod() throws MalformatedTimeException {
-        mainViewService.setCurrentDate(new Paiva(zeroDateTime.toLocalDate()));
+        mainViewService.setCurrentDate(zeroDateTime.toLocalDate());
 
         LocalDateTime expectedTime = zeroDateTime.plusHours(9);
         assertEquals(expectedTime, mainViewService.parseTimeFromString("9:00"), "failed to parse 9:00");

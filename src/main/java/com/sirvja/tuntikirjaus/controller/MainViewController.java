@@ -107,14 +107,11 @@ public class MainViewController implements Initializable {
 
         setEditListenerToAiheColumn();
 
-        initializeView();
-        daysListView.setItems(mainViewService.getPaivaDataForTable());
-
         setListenerForDayListView();
 
-        daysListView.getSelectionModel().selectFirst();
+        updateDayList();
 
-        mainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+        daysListView.getSelectionModel().selectFirst();
 
         initializeAutoCompleteAiheField();
     }
@@ -283,9 +280,9 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onUusiPaivaButtonClick() {
-        log.debug("Uusi päivä painettu!");
-        mainViewService.setCurrentDate(new Paiva(LocalDate.now()));
-        initializeView();
+        log.debug("Uusi päivä clicked!");
+        daysListView.getItems().addFirst(new Paiva(LocalDate.now()));
+        daysListView.getSelectionModel().selectFirst();
     }
 
     @FXML

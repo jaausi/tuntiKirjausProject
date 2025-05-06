@@ -118,9 +118,9 @@ public class MainViewService {
         return localDateTime;
     }
 
-    public void setCurrentDate(Paiva paiva){
-        log.debug("Setting currentDate to: {}", paiva);
-        currentDate = paiva.getLocalDate();
+    public void setCurrentDate(LocalDate localDate){
+        log.debug("Setting currentDate to: {}", localDate);
+        currentDate = localDate;
     }
 
     public LocalDate getCurrentDate(){
@@ -226,7 +226,7 @@ public class MainViewService {
     public ChangeListener<Paiva> getDayListChangeListener(Runnable updateView) {
         return (observableValue, oldValue, newValue) -> {
             if(newValue != null){
-                setCurrentDate(newValue);
+                setCurrentDate(newValue.getLocalDate());
                 updateView.run();
             }
         };
