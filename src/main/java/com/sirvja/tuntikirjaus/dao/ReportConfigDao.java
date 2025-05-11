@@ -1,6 +1,7 @@
-package com.sirvja.tuntikirjaus.utils;
+package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.ReportConfig;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
@@ -22,9 +24,15 @@ public class ReportConfigDao implements Dao<ReportConfig> {
     }
 
     @Override
-    public Optional<ObservableList<ReportConfig>> getAllFrom(LocalDate localDate) {
-        return getAllInternal(Optional.of(localDate));
+    public List<ReportConfig> getAllToList() {
+        return List.of();
     }
+
+    @Override
+    public List<ReportConfig> getAllFromToList(LocalDate localDate) {
+        return List.of();
+    }
+
 
     public Optional<ObservableList<ReportConfig>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";

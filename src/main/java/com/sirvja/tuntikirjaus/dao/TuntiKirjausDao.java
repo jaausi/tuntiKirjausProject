@@ -1,6 +1,7 @@
-package com.sirvja.tuntikirjaus.utils;
+package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.utils.DBUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -9,8 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
@@ -18,15 +22,69 @@ import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
 public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
+    @Deprecated(since = "1.0.2")
+    // Use getAllToList instead
     @Override
     public Optional<ObservableList<TuntiKirjaus>> getAll() {
         return getAllInternal(Optional.empty());
     }
 
     @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAllFrom(LocalDate localDate) {
-        return getAllInternal(Optional.of(localDate));
+    public List<TuntiKirjaus> getAllToList() {
+        String queryAll = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
+
+        return executeTuntikirjausFetchQuery(queryAll);
     }
+
+    @Override
+    public List<TuntiKirjaus> getAllFromToList(LocalDate localDate) {
+        String queryAllFromDate = String.format("""
+                SELECT * FROM Tuntikirjaus
+                WHERE CAST(strftime('%%s', START_TIME)  AS  integer) > CAST(strftime('%%s', '%s')  AS  integer)
+                ORDER BY START_TIME ASC;
+                """, localDate.format(dateFormatter));
+
+        return executeTuntikirjausFetchQuery(queryAllFromDate);
+    }
+
+    private List<TuntiKirjaus> executeTuntikirjausFetchQuery(String query) {
+        List<TuntiKirjaus> tuntiKirjausList = new ArrayList<>();
+        try {
+            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
+
+            while (resultSet.next()) {
+                mapToTuntikirjaus.apply(resultSet).map(tuntiKirjausList::add);
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.error("Couldn't get Tuntikirjaus' from database, reason: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+
+        return tuntiKirjausList;
+    }
+
+    private Function<ResultSet, Optional<TuntiKirjaus>> mapToTuntikirjaus = resultSet -> {
+        Function<String, LocalDateTime> parseEndTime = endTimeString -> {
+            if(endTimeString == null || endTimeString.isEmpty() || endTimeString.equals("null")) {
+                return null;
+            }
+            return LocalDateTime.parse(endTimeString, dateTimeFormatter);
+        };
+
+        try {
+            return Optional.of(new TuntiKirjaus(
+                    resultSet.getInt("ROWID"),
+                    LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
+                    parseEndTime.apply(resultSet.getString("END_TIME")),
+                    resultSet.getString("TOPIC"),
+                    Boolean.parseBoolean(resultSet.getString("DURATION_ENABLED"))
+            ));
+        } catch (SQLException e) {
+            LOGGER.error("Couldn't map fields from TuntiKirjaus, reason: {}", e.getMessage());
+            return Optional.empty();
+        }
+    };
+
 
     public Optional<ObservableList<TuntiKirjaus>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
         String query = optionalLocalDate

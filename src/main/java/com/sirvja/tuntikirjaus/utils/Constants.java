@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Constants {
     // CONFIGURATIONS
+    public static final boolean USE_CACHE_IN_DB_QUERIES = true;
     public static final boolean DROP_TABLE_ON_START = false;
     public static final int AMOUNT_OF_DAYS_TO_FETCH = 30;
 

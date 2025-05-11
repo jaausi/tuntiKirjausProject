@@ -3,6 +3,11 @@ package com.sirvja.tuntikirjaus.controller;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
+import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
+import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausException;
+import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage;
+import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
@@ -28,14 +33,16 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 public class MainViewController implements Initializable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MainViewController.class);
+    private MainViewService mainViewService;
+    private AlertService alertService;
+
+    private static final Logger log = LoggerFactory.getLogger(MainViewController.class);
 
     @FXML
     private TableView<TuntiKirjaus> tuntiTaulukko = new TableView<>();
@@ -79,6 +86,11 @@ public class MainViewController implements Initializable {
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
 
+    public MainViewController() {
+        this.mainViewService = new MainViewService();
+        this.alertService = new AlertService();
+    }
+
     @Override
     public void initialize (URL url, ResourceBundle rb){
         tuntiTaulukko.setEditable(true);
@@ -93,21 +105,19 @@ public class MainViewController implements Initializable {
 
         setEditListenerToKellonaikaColumn();
 
-        setEditListenetToAiheColumn();
-
-        updateView();
+        setEditListenerToAiheColumn();
 
         setListenerForDayListView();
 
-        daysListView.getSelectionModel().selectFirst();
+        updateDayList();
 
-        MainViewService.setCurrentDate(Optional.ofNullable(daysListView.getSelectionModel().getSelectedItem()).orElse(new Paiva(LocalDate.now())));
+        daysListView.getSelectionModel().selectFirst();
 
         initializeAutoCompleteAiheField();
     }
 
     private void initializeAutoCompleteAiheField() {
-        aiheField.getEntries().addAll(MainViewService.getAiheEntries().orElse(new TreeSet<>()));
+        aiheField.getEntries().addAll(mainViewService.getAiheEntries());
         aiheField.getLastSelectedObject().addListener((observableValue, oldValue, newValue) -> {
             if(newValue != null){
                 aiheField.setText(newValue);
@@ -118,66 +128,25 @@ public class MainViewController implements Initializable {
     }
 
     private void setListenerForDayListView() {
-        // Add listener for ListView changes: https://stackoverflow.com/questions/12459086/how-to-perform-an-action-by-selecting-an-item-from-listview-in-javafx-2
-        daysListView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue != null){
-                MainViewService.setCurrentDate(newValue);
-                updateView();
-            }
-        });
+        daysListView.getSelectionModel().selectedItemProperty().addListener(mainViewService.getDayListChangeListener(() -> {
+            updateTuntiTaulukko();
+            updateYhteenveto();
+        }));
     }
 
-    private void setEditListenetToAiheColumn() {
+    private void setEditListenerToAiheColumn() {
+        BiConsumer<String, String> updateAiheFieldEntry = (oldTopic, newTopic) -> {
+            aiheField.getEntries().remove(oldTopic);
+            aiheField.getEntries().add(newTopic);
+        };
+
         aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        aiheColumn.setOnEditCommit(
-                t -> {
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(t.getTablePosition().getRow());
-                    kirjausToEdit.setTopic(t.getNewValue());
-                    MainViewService.update(kirjausToEdit);
-                }
-        );
+        aiheColumn.setOnEditCommit(mainViewService.getAiheColumnEditHandler(updateAiheFieldEntry));
     }
 
     private void setEditListenerToKellonaikaColumn() {
-        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter()));
-        kellonaikaColumn.setOnEditCommit(
-                t -> {
-                    int tablePosition = t.getTablePosition().getRow();
-                    int lastPosition = t.getTableView().getItems().size() - 1;
-                    LocalDateTime newValue = LocalDateTime.of(MainViewService.getCurrentDate(), t.getNewValue());
-                    boolean facedError = false;
-
-                    if(tablePosition < lastPosition){
-                        TuntiKirjaus followingKirjausToEdit = t.getTableView().getItems().get(tablePosition + 1);
-                        // If edited time is after next kirjaus start time, abort.
-                        if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(true);
-                            facedError = true;
-                        }
-                    }
-
-                    // If not the first row of a day. Edit also the previous row end time.
-                    if(tablePosition > 0){
-                        TuntiKirjaus previousKirjausToEdit = t.getTableView().getItems().get(tablePosition - 1);
-                        // If edited time is before previous kirjaus start time, abort.
-                        if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                            showNotCorrectTimeAlert(false);
-                            facedError = true;
-                        }
-                        if(!facedError){
-                            previousKirjausToEdit.setEndTime(newValue);
-                            MainViewService.update(previousKirjausToEdit);
-                        }
-                    }
-
-                    TuntiKirjaus kirjausToEdit = t.getTableView().getItems().get(tablePosition);
-                    if(!facedError){
-                        kirjausToEdit.setStartTime(newValue);
-                        MainViewService.update(kirjausToEdit);
-                    }
-                    tuntiTaulukko.refresh();
-                }
-        );
+        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter(mainViewService)));
+        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh));
     }
 
     @FXML
@@ -197,15 +166,14 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onChangeUpdateDurationsMenuItemAction() {
-        LOGGER.debug("Update durations clicked!");
-
+        log.debug("Update durations clicked!");
     }
 
     @FXML
     protected void onKeyPressedToAiheField(){
         aiheField.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER){
-                LOGGER.debug("Enter was pressed");
+                log.debug("Enter was pressed");
                 onTallennaTaulukkoonButtonClick();
             }
         });
@@ -215,7 +183,7 @@ public class MainViewController implements Initializable {
     protected void onKeyPressedToKellonaikaField(){
         kellonAikaField.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER){
-                LOGGER.debug("Enter was pressed");
+                log.debug("Enter was pressed");
                 onTallennaTaulukkoonButtonClick();
             }
         });
@@ -223,7 +191,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onChangeThemeMenuItemAction(){
-        LOGGER.debug("Change theme clicked!");
+        log.debug("Change theme clicked!");
 
         ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
         String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
@@ -236,7 +204,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onOpenReportsMenuItem(){
-        LOGGER.debug("Open reports clicked!");
+        log.debug("Open reports clicked!");
 
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml"));
@@ -261,9 +229,9 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onTallennaLeikepoydalleButtonClick(){
-        LOGGER.debug("Save to clipboard button pushed!");
+        log.debug("Save to clipboard button pushed!");
 
-        String yhteenvetoText = MainViewService.getYhteenvetoText();
+        String yhteenvetoText = mainViewService.getYhteenvetoText();
         ClipboardContent content = new ClipboardContent();
         content.putString(yhteenvetoText);
         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -272,131 +240,86 @@ public class MainViewController implements Initializable {
 
     @FXML
     protected void onTallennaTaulukkoonButtonClick() {
-        String time = kellonAikaField.getText();
-        String topic = aiheField.getText();
-        LOGGER.debug("Save to table button pushed!");
-
-        if(topic.isEmpty()){
-            aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showFieldNotFilledAlert();
-            return;
-        }
-
-        LocalDateTime localDateTime;
         try {
-            localDateTime = MainViewService.parseTimeFromString(time);
-        } catch (DateTimeParseException e){
-            LOGGER.error("Error in parsing time from String: {}. Exception message: {}", time, e.getMessage());
+            log.debug("Save to table button pushed!");
+            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
+            aiheField.getEntries().add(tuntiKirjaus.getTopic());
+            initializeView();
+        } catch (EmptyTopicException e) {
+            log.error(e.getMessage());
+            aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
+            alertService.showFieldNotFilledAlert();
+        } catch (MalformatedTimeException e) {
+            log.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showTimeInWrongFormatAlert(e.getMessage());
-            return;
-        }
-
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
-
-        ObservableList<TuntiKirjaus> tuntidata = MainViewService.getTuntiDataForTable();
-
-        if(!tuntidata.isEmpty() && tuntidata.get(tuntidata.size()-1).compareTo(tuntiKirjaus) > 0){
+            alertService.showTimeInWrongFormatAlert(e.getMessage());
+        } catch (StartTimeNotAfterLastTuntikirjausException e) {
+            log.error(e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
-            showNotCorrectTimeAlert();
-            return;
+            alertService.showNotCorrectTimeAlert();
+        } catch (TuntikirjausDatabaseInInconsistentStage e) {
+            log.error(e.getMessage());
+            alertService.showGeneralAlert(e.getMessage());
         }
-
-        MainViewService.addTuntikirjaus(tuntiKirjaus);
-
-        aiheField.getEntries().add(tuntiKirjaus.getTopic());
-
-        updateView();
     }
 
     @FXML
     protected void onPoistaKirjausButtonClick() {
-        LOGGER.debug("Poista kirjaus painettu!");
+        log.debug("Poista kirjaus painettu!");
         TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
-        LOGGER.debug("Following kirjaus selected: {}", selectedKirjaus);
-        if(!showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
+        log.debug("Following kirjaus selected: {}", selectedKirjaus);
+        if(!alertService.showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
                         "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
                 "siirtämällä lopetusajan poistettavan kirjauksen lopetusaikaan.", selectedKirjaus))){
             return;
         }
-        MainViewService.removeTuntikirjaus(selectedKirjaus);
-        updateView();
+        mainViewService.removeTuntikirjaus(selectedKirjaus);
+        initializeView();
     }
 
     @FXML
     protected void onUusiPaivaButtonClick() {
-        LOGGER.debug("Uusi päivä painettu!");
-        MainViewService.setCurrentDate(new Paiva(LocalDate.now()));
-        updateView();
+        log.debug("Uusi päivä clicked!");
+        daysListView.getItems().addFirst(new Paiva(LocalDate.now()));
+        daysListView.getSelectionModel().selectFirst();
     }
 
     @FXML
     protected void onKellonaikaFieldClick(){
-        LOGGER.debug("Kellonaika field clicked!");
+        log.debug("Kellonaika field clicked!");
         kellonAikaField.setStyle("-fx-border-color: none ; -fx-border-width: 0px ;");
     }
 
     @FXML
     protected void onAiheFieldClick(){
-        LOGGER.debug("Aihe field clicked!");
+        log.debug("Aihe field clicked!");
         aiheField.setStyle("-fx-border-color: none ; -fx-border-width: 0px ;");
     }
 
-    private void updateView(){
-        tuntiTaulukko.setItems(MainViewService.getTuntiDataForTable());
+    private void initializeView(){
+        updateTuntiTaulukko();
+        updateDayList();
+        updateYhteenveto();
+        clearInputFields();
+    }
+
+    private void updateTuntiTaulukko() {
+        tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
         tuntiTaulukko.refresh();
-        daysListView.setItems(MainViewService.getPaivaDataForTable());
-        yhteenvetoTextArea.setText(MainViewService.getYhteenvetoText());
+    }
+
+    private void updateYhteenveto() {
+        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
+    }
+
+    private void clearInputFields() {
         kellonAikaField.clear();
         aiheField.clear();
     }
 
-    private void showFieldNotFilledAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Pakollisia kenttiä täyttämättä");
-        alert.setContentText("Punaisella korostettuihin kenttiin tulee syöttää" +
-                " arvo ennen taulukkoon lisäämistä.");
-        alert.showAndWait();
+    private void updateDayList() {
+        daysListView.setItems(mainViewService.getPaivaDataForTable());
+        daysListView.refresh();
     }
-
-    private void showNotCorrectTimeAlert(){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Syötetty aika on pienempi kuin viimeisin aika");
-        alert.setContentText("Syötä aika, joka on listan viimeisimmän ajan jälkeen.");
-        alert.showAndWait();
-    }
-
-    private void showNotCorrectTimeAlert(boolean isTooLarge){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        if(isTooLarge){
-            alert.setHeaderText("Syötetty aika on suurempi kuin seuraava syötetty aika");
-            alert.setContentText("Syötä aika, joka on ennen ajanhetkeä joka on seuraavan listalla.");
-        } else {
-            alert.setHeaderText("Syötetty aika on pienempi kuin edellinen aika");
-            alert.setContentText("Syötä aika, joka on edellisen syötetyn ajanhetken jälkeen.");
-        }
-        alert.showAndWait();
-    }
-
-    public static void showTimeInWrongFormatAlert(String problem){
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Varoitus!");
-        alert.setHeaderText("Syötetty aika on väärässä formaatissa");
-        alert.setContentText("Virhe: "+problem);
-        alert.showAndWait();
-    }
-
-    public static boolean showConfirmationAlert(String confirmationHeader, String confirmationText){
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, confirmationText, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-        alert.setTitle("Vahvista valinta!");
-        alert.setHeaderText(confirmationHeader);
-        alert.showAndWait();
-
-        return alert.getResult() == ButtonType.YES;
-    }
-
 }
