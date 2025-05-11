@@ -31,16 +31,14 @@ jobs:
         run: NEXTVERSION=$(echo ${VERSION} | awk -F. -v OFS=. '{$NF += 1 ; print}')
 
       - name: Update new version to project
-        run: mvn versions:set -DnewVersion=${NEXTVERSION}
+        run: echo ${NEXTVERSION} && mvn versions:set -DnewVersion=${NEXTVERSION}
 
       - name: Commit version change
         uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
-          # The arguments for the `git add` command (see the paragraph below for more info)
-          # Default: '.'
           add: 'pom.xml'
           author_name: Github actions
-          message: 'Upgrade version number to ${NEXTVERSION} (by Github actions)'
+          message: "Upgrade version number to ${NEXTVERSION} (by Github actions)"
           push: true
 
 
