@@ -1,0 +1,45 @@
+
+name: Upgrade version number
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+    types:
+      - closed
+
+jobs:
+  Upgrade-version-number:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'dev'
+
+      - name: Setup java with maven cached
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Get version
+        run: VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+      - name: Get upgraded version
+        run: NEXTVERSION=$(echo ${VERSION} | awk -F. -v OFS=. '{$NF += 1 ; print}')
+
+      - name: Update new version to project
+        run: mvn versions:set -DnewVersion=${NEXTVERSION}
+
+      - name: Commit version change
+      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        with:
+          # The arguments for the `git add` command (see the paragraph below for more info)
+          # Default: '.'
+          add: 'pom.xml'
+          author_name: Github actions
+          message: 'Upgrade version number to ${NEXTVERSION} (by Github actions)'
+
+
