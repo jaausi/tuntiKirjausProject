@@ -6,8 +6,10 @@ import com.sirvja.tuntikirjaus.service.ReportsViewService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.StackPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,8 @@ public class ReportsViewController implements Initializable {
     private Button avaaRaporttiButton;
     @FXML
     private Button haeButton;
+    @FXML
+    private Button daySummaryButton;
     @FXML
     private TextField hakusanaField;
     @FXML
@@ -151,6 +155,11 @@ public class ReportsViewController implements Initializable {
         raportitTuntiTaulukko.setItems(tuntiKirjausList);
         reportsYhteenvetoTextArea.setText(yhteenvetoText);
         tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
+    }
+
+    @FXML
+    protected void onNaytaPaivakohtainenYhteenveto() {
+        // TODO implement functionality to open month view
     }
 
     @FXML
