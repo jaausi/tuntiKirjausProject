@@ -1,12 +1,7 @@
 
 name: Upgrade version number
 
-on:
-  pull_request:
-    branches:
-      - 'master'
-    types:
-      - closed
+on: workflow_dispatch
 
 jobs:
   Upgrade-version-number:
@@ -15,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: 'dev'
+          ref: 'master'
 
       - name: Setup java with maven cached
         uses: actions/setup-java@v4
@@ -36,7 +31,7 @@ jobs:
       - name: Commit version change
         uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
-          add: 'pom.xml'
+          add: 'pom.xml dependency-reduced-pom.xml'
           author_name: Github actions
           message: "Upgrade version number to ${NEXTVERSION} (by Github actions)"
           push: true
