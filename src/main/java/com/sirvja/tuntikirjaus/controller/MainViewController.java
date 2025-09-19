@@ -228,6 +228,31 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
+    protected void onOpenWeeklyReportMenuItem() {
+        log.debug("Open day summary clicked!");
+
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"));
+            Parent root1 = fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Tuntikirjaus day view summary");
+            Scene scene = new Scene(root1);
+
+            ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
+            String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
+            if(styleSheets.contains(darkThemeFile)){
+                scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
+            }
+
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     protected void onTallennaLeikepoydalleButtonClick(){
         log.debug("Save to clipboard button pushed!");
 
