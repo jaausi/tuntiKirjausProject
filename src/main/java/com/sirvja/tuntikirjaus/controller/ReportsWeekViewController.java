@@ -9,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.time.DayOfWeek;
@@ -26,6 +28,7 @@ import java.util.stream.IntStream;
 public class ReportsWeekViewController implements Initializable {
 
     private final static int NUM_OF_WEEKS = 15;
+    private static final Logger log = LoggerFactory.getLogger(ReportsWeekViewController.class);
 
     @FXML
     private TableView<WeeklyProjectHours> weekTable;
@@ -90,6 +93,8 @@ public class ReportsWeekViewController implements Initializable {
             ObservableList<WeeklyProjectHours> weeklyProjectHours = mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausList, observable.getValue());
             weekTable.setItems(weeklyProjectHours);
         }));
+
+        weekSelector.getSelectionModel().select(0);
     }
 
     private ObservableList<WeeklyProjectHours> mapTuntikirjausListToWeeklyProjectHours(ObservableList<TuntiKirjaus> tuntiKirjausList, WeekSelectorItem value) {
@@ -218,17 +223,27 @@ public class ReportsWeekViewController implements Initializable {
 
     @FXML
     void onDateBackwardClick(ActionEvent event) {
-        LocalDate.now().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
+        int selectedIndex = weekSelector.getSelectionModel().getSelectedIndex();
+        if(selectedIndex >= weekSelector.getItems().size()) {
+            log.info("Last element selected, can't go backward");
+        } else {
+            weekSelector.getSelectionModel().select(selectedIndex + 1);
+        }
     }
 
     @FXML
     void onDateForwardClick(ActionEvent event) {
-
+        int selectedIndex = weekSelector.getSelectionModel().getSelectedIndex();
+        if(selectedIndex <= 0) {
+            log.info("Current week selected, can't go forward");
+        } else {
+            weekSelector.getSelectionModel().select(selectedIndex - 1);
+        }
     }
 
     @FXML
     void onDateNowClick(ActionEvent event) {
-
+        weekSelector.getSelectionModel().select(0);
     }
 
     @FXML
