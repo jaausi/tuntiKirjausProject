@@ -102,7 +102,7 @@
                   </TableView>
                   <TableView fx:id="weekTable1" layoutX="10.0" layoutY="70.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="390.0" prefWidth="848.0">
                      <columns>
-                        <TableColumn fx:id="incidentColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Projekti" />
+                        <TableColumn fx:id="incidentColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Tapahtuma" />
                         <TableColumn fx:id="mondayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ma" />
                         <TableColumn fx:id="tuesdayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ti" />
                         <TableColumn fx:id="wednesdayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ke" />
@@ -123,12 +123,12 @@
                                  </VBox.margin>
                                  <children>
                                     <Label maxWidth="57.5" minWidth="57.5" prefWidth="57.5" text="Yhteensä: " />
-                                    <TextField fx:id="weekHoursSumField" disable="true" editable="false" focusTraversable="false" layoutX="15.0" layoutY="17.0" maxHeight="26.0" maxWidth="110.0" minHeight="26.0" minWidth="110.0" prefHeight="26.0" prefWidth="110.0">
+                                    <TextField fx:id="weekHoursSumField" disable="true" editable="false" focusTraversable="false" layoutX="15.0" layoutY="17.0" maxHeight="26.0" maxWidth="197.0" minHeight="26.0" minWidth="110.0" prefHeight="26.0" prefWidth="197.0">
                                        <HBox.margin>
                                           <Insets />
                                        </HBox.margin>
                                     </TextField>
-                                    <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                                    <Region prefHeight="36.0" prefWidth="598.0" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                            </children>

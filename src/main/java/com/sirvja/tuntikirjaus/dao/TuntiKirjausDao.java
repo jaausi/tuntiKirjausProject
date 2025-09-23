@@ -92,15 +92,14 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
                         "SELECT * FROM Tuntikirjaus WHERE CAST(strftime('%s', START_TIME)  AS  integer) > CAST(strftime('%s', '" +
                                 localDate.format(dateFormatter) + "')  AS  integer) ORDER BY START_TIME ASC;")
                 .orElse("SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC");
-        //String query = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
-        LOGGER.debug("Query: {}", query);
+        LOGGER.info("Query: {}", query);
 
         ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
         try {
             ResultSet resultSet = DBUtil.dbExecuteQuery(query);
 
             while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
+                //LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
                 String endTimeString = resultSet.getString("END_TIME");
                 Optional<String> endTime = Optional.ofNullable(endTimeString.isEmpty() || endTimeString.equals("null") ? null : endTimeString);
                 LocalDateTime localEndDateTime = endTime.map(s -> LocalDateTime.parse(s, dateTimeFormatter)).orElse(null);
@@ -118,6 +117,8 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
             LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
             return Optional.empty();
         }
+
+        LOGGER.info("Found {} objects", returnObject.size());
 
         return Optional.of(returnObject);
     }

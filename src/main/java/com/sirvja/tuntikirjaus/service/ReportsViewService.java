@@ -52,6 +52,20 @@ public class ReportsViewService {
         }
     }
 
+    public static List<TuntiKirjaus> getAllTuntikirjausAsList(Optional<LocalDate> optionalAlkuPaiva, Optional<LocalDate> optionalLoppupaiva, Optional<String> optionalSearchQuery) {
+        Optional<ObservableList<TuntiKirjaus>> allTuntikirjaus = tuntiKirjausDao.getAll();
+
+        if(allTuntikirjaus.isPresent()){
+            return tuntiKirjausDao.getAll().get().stream()
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().isAfter(optionalAlkuPaiva.orElse(LocalDate.MIN).atStartOfDay()))
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().isBefore(optionalLoppupaiva.orElse(LocalDate.MAX).atTime(23, 59)))
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getTopic().toLowerCase().contains(optionalSearchQuery.orElse("").toLowerCase()))
+                    .toList();
+        } else {
+            return List.of();
+        }
+    }
+
     public static long getSumOfHoursFromTuntikirjausList(ObservableList<TuntiKirjaus> tuntikirjausList){
         return tuntikirjausList.stream()
                 .map(TuntiKirjaus::getDurationInDuration)

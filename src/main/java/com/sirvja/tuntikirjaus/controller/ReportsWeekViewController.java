@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.WeekFields;
@@ -29,6 +31,7 @@ public class ReportsWeekViewController implements Initializable {
 
     private final static int NUM_OF_WEEKS = 15;
     private static final Logger log = LoggerFactory.getLogger(ReportsWeekViewController.class);
+    private static final String LUNCH_TOPIC = "lounas";
 
     @FXML
     private TableView<WeeklyProjectHours> weekTable;
@@ -46,6 +49,22 @@ public class ReportsWeekViewController implements Initializable {
     private TableColumn<WeeklyProjectHours, String> fridayColumn;
 
     @FXML
+    private TableView<WeeklyIncidents> weekTable1;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> incidentColumn;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> mondayColumn1;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> tuesdayColumn1;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> wednesdayColumn1;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> thursdayColumn1;
+    @FXML
+    private TableColumn<WeeklyIncidents, String> fridayColumn1;
+
+
+    @FXML
     private Button backButton;
     @FXML
     private Button dateBackward;
@@ -60,14 +79,22 @@ public class ReportsWeekViewController implements Initializable {
 
     private List<LocalDate> weekList;
     private final WeekFields weekFields = WeekFields.of(Locale.getDefault());
+    private final int thisYear = LocalDate.now().getYear();
+    private List<TuntiKirjaus> tuntiKirjausListAll;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        initTable();
+        initTuntikirjausList();
+        initProjectTable();
+        initIncidentTable();
         initWeekSelector();
     }
 
-    private void initTable() {
+    private void initTuntikirjausList() {
+        tuntiKirjausListAll = ReportsViewService.getAllTuntikirjausAsList(Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+    private void initProjectTable() {
         projectColumn.setCellValueFactory(new PropertyValueFactory<>("projectName"));
         mondayColumn.setCellValueFactory(new PropertyValueFactory<>("moHours"));
         tuesdayColumn.setCellValueFactory(new PropertyValueFactory<>("tuHours"));
@@ -76,10 +103,20 @@ public class ReportsWeekViewController implements Initializable {
         fridayColumn.setCellValueFactory(new PropertyValueFactory<>("frHours"));
     }
 
+    private void initIncidentTable() {
+        incidentColumn.setCellValueFactory(new PropertyValueFactory<>("incident"));
+        mondayColumn1.setCellValueFactory(new PropertyValueFactory<>("moTime"));
+        tuesdayColumn1.setCellValueFactory(new PropertyValueFactory<>("tuTime"));
+        wednesdayColumn1.setCellValueFactory(new PropertyValueFactory<>("weTime"));
+        thursdayColumn1.setCellValueFactory(new PropertyValueFactory<>("thTime"));
+        fridayColumn1.setCellValueFactory(new PropertyValueFactory<>("frTime"));
+    }
+
     private void initWeekSelector() {
-        weekList = IntStream.iterate(0, i -> i+1)
-                .mapToObj(i -> LocalDate.now().minusDays(i))
-                .limit(NUM_OF_WEEKS * 7)
+        weekList = tuntiKirjausListAll.stream()
+                .map(TuntiKirjaus::getStartTime)
+                .map(LocalDateTime::toLocalDate)
+                .distinct()
                 .toList();
 
         SortedMap<Integer, List<LocalDate>> weekNumToDate = groupLocalDateBasedOnWeekNumber(weekList);
@@ -89,18 +126,41 @@ public class ReportsWeekViewController implements Initializable {
         weekSelector.setItems(FXCollections.observableArrayList(weekAndFirstAndLastDate));
 
         weekSelector.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
-            ObservableList<TuntiKirjaus> tuntiKirjausList = ReportsViewService.getAllTuntikirjaus(Optional.empty(), Optional.empty(), Optional.empty());
-            ObservableList<WeeklyProjectHours> weeklyProjectHours = mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausList, observable.getValue());
+            List<TuntiKirjaus> tuntiKirjausListForWeek = tuntiKirjausListAll.stream()
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().getYear() == thisYear)
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().get(ChronoField.ALIGNED_WEEK_OF_YEAR) == observable.getValue().getWeekNum())
+                    .toList();
+
+            ObservableList<WeeklyProjectHours> weeklyProjectHours = mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausListForWeek);
+            ObservableList<WeeklyIncidents> weeklyIncidents = mapTuntikirjausListToWeeklyIncidents(tuntiKirjausListForWeek);
+            String summaryString = getSummaryString(tuntiKirjausListForWeek);
+
             weekTable.setItems(weeklyProjectHours);
+            weekTable1.setItems(weeklyIncidents);
+            weekHoursSumField.setText(summaryString);
         }));
 
         weekSelector.getSelectionModel().select(0);
     }
 
-    private ObservableList<WeeklyProjectHours> mapTuntikirjausListToWeeklyProjectHours(ObservableList<TuntiKirjaus> tuntiKirjausList, WeekSelectorItem value) {
-        Map<String, List<TuntiKirjaus>> projectToTuntikirjausList = tuntiKirjausList.stream()
+    private String getSummaryString(List<TuntiKirjaus> tuntiKirjausListForWeek) {
+        long sumOfHoursInMinutes = tuntiKirjausListForWeek.stream()
+                .filter(tk -> !tk.getTopic().toLowerCase().contains(LUNCH_TOPIC))
+                .map(TuntiKirjaus::getDurationInDuration)
+                .mapToLong(Duration::toMinutes)
+                .sum();
+
+        String hours = ReportsViewService.getHoursStringFromMinutes(sumOfHoursInMinutes);
+        String minutes = ReportsViewService.getMinutesStringFromMinutes(sumOfHoursInMinutes);
+        String htps = ReportsViewService.getHtpsStringFromMinutes(sumOfHoursInMinutes);
+
+        return String.format("%sh %sm (%s htp)", hours, minutes, htps);
+    }
+
+    private ObservableList<WeeklyProjectHours> mapTuntikirjausListToWeeklyProjectHours(List<TuntiKirjaus> tuntiKirjausListForWeek) {
+        Map<String, List<TuntiKirjaus>> projectToTuntikirjausList = tuntiKirjausListForWeek.stream()
                 .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
-                .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().map(tk -> tk.get(ChronoField.ALIGNED_WEEK_OF_YEAR) == value.weekNum).orElse(false))
                 .collect(Collectors.groupingBy(
                         TuntiKirjaus::getClassification,
                         HashMap::new,
@@ -113,6 +173,56 @@ public class ReportsWeekViewController implements Initializable {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
+    private ObservableList<WeeklyIncidents> mapTuntikirjausListToWeeklyIncidents(List<TuntiKirjaus> tuntiKirjausListForWeek) {
+        Map<Incident, List<LocalDateTime>> incidentToTimeMap = new HashMap<>();
+
+        parseStartTimeIncidents(tuntiKirjausListForWeek, incidentToTimeMap);
+
+        parseLunchTimeIncidents(tuntiKirjausListForWeek, incidentToTimeMap);
+
+        parseEntTimeIncident(tuntiKirjausListForWeek, incidentToTimeMap);
+
+        return incidentToTimeMap.entrySet().stream()
+                .map(entry -> new WeeklyIncidents(entry.getKey(), entry.getValue()))
+                .sorted()
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+    }
+
+    private static void parseEntTimeIncident(List<TuntiKirjaus> currentWeekTuntikirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
+        List<LocalDateTime> endTimesForWeek = currentWeekTuntikirjausList.stream()
+                .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
+                .collect(Collectors.groupingBy(tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
+                        HashMap::new,
+                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().max(Comparator.naturalOrder()).map(tk -> tk.getEndTime().orElseThrow()).orElseThrow())
+                )).values().stream().toList();
+
+        incidentToTimeMap.put(Incident.END_OF_DAY, endTimesForWeek);
+    }
+
+    private static void parseLunchTimeIncidents(List<TuntiKirjaus> currentWeekTuntikirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
+        List<TuntiKirjaus> lunchTimesForWeek = currentWeekTuntikirjausList.stream()
+                .filter(tuntiKirjaus -> tuntiKirjaus.getTopic().toLowerCase().contains(LUNCH_TOPIC))
+                .collect(Collectors.groupingBy(
+                        tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
+                        HashMap::new,
+                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().sorted().findFirst().orElse(null))
+                )).values().stream().toList();
+
+        incidentToTimeMap.put(Incident.START_OF_LUNCH, lunchTimesForWeek.stream().map(TuntiKirjaus::getStartTime).toList());
+        incidentToTimeMap.put(Incident.END_OF_LUNCH, lunchTimesForWeek.stream().map(TuntiKirjaus::getEndTime).filter(Optional::isPresent).map(Optional::get).toList());
+    }
+
+    private void parseStartTimeIncidents(List<TuntiKirjaus> tuntiKirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
+        List<LocalDateTime> startTimesForWeek = tuntiKirjausList.stream()
+                .collect(Collectors.groupingBy(
+                        tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
+                        HashMap::new,
+                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().sorted().findFirst().map(TuntiKirjaus::getStartTime).orElse(null))
+                )).values().stream().toList();
+
+        incidentToTimeMap.put(Incident.START_OF_DAY, startTimesForWeek);
+    }
+
     private List<WeekSelectorItem> createWeekOptionsList(SortedMap<Integer, List<LocalDate>> weekNumToDate) {
         return weekNumToDate.entrySet().stream()
                 .map(entry -> new WeekSelectorItem(entry.getKey(), entry.getValue()))
@@ -120,12 +230,94 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private SortedMap<Integer, List<LocalDate>> groupLocalDateBasedOnWeekNumber(List<LocalDate> dateList) {
+        // TODO: There is an issue here, where dates from last year don't work correctly...
         return dateList.stream()
                 .collect(Collectors.groupingBy(
                         localDate -> localDate.get(weekFields.weekOfWeekBasedYear()),
                         () -> new TreeMap<Integer, List<LocalDate>>(Comparator.reverseOrder()),
                         Collectors.toList()
                 ));
+    }
+
+    public static class WeeklyIncidents implements Comparable<WeeklyIncidents> {
+        Incident incident;
+        LocalDateTime moTime;
+        LocalDateTime tuTime;
+        LocalDateTime weTime;
+        LocalDateTime thTime;
+        LocalDateTime frTime;
+
+        public WeeklyIncidents(Incident incident, List<LocalDateTime> incidentTimes) {
+            this.incident = incident;
+
+            BiFunction<List<LocalDateTime>, DayOfWeek, LocalDateTime> filterWithDay =  (ldtList, dayOfWeek) -> ldtList.stream()
+                    .filter(ldt -> ldt.getDayOfWeek().equals(dayOfWeek))
+                    .findFirst().orElse(null);
+
+            moTime = filterWithDay.apply(incidentTimes, DayOfWeek.MONDAY);
+            tuTime = filterWithDay.apply(incidentTimes, DayOfWeek.TUESDAY);
+            weTime = filterWithDay.apply(incidentTimes, DayOfWeek.WEDNESDAY);
+            thTime = filterWithDay.apply(incidentTimes, DayOfWeek.THURSDAY);
+            frTime = filterWithDay.apply(incidentTimes, DayOfWeek.FRIDAY);
+        }
+
+        private final Function<LocalDateTime, String> dateToStringTime = localDateTime -> {
+            if(localDateTime!= null) {
+                return localDateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+            }
+            return "";
+        };
+
+        public String getIncident() {
+            return incident.toString();
+        }
+
+        public String getMoTime() {
+            return dateToStringTime.apply(moTime);
+        }
+
+        public String getTuTime() {
+            return dateToStringTime.apply(tuTime);
+        }
+
+        public String getWeTime() {
+            return dateToStringTime.apply(weTime);
+        }
+
+        public String getThTime() {
+            return dateToStringTime.apply(thTime);
+        }
+
+        public String getFrTime() {
+            return dateToStringTime.apply(frTime);
+        }
+
+        private final BiFunction<LocalDateTime, LocalDateTime, Optional<Integer>> nullCheckAndCompare = (ldt1, ldt2) -> {
+            if(ldt1 == null || ldt2 == null) {
+                return Optional.empty();
+            }
+            return Optional.of(ldt1.compareTo(ldt2));
+        };
+
+        @Override
+        public int compareTo(WeeklyIncidents o) {
+            // Compare based on first time that is found from both objects, if non is found, then based on incident name
+            return nullCheckAndCompare.apply(moTime, o.moTime)
+                    .or(() -> nullCheckAndCompare.apply(tuTime, o.tuTime))
+                    .or(() -> nullCheckAndCompare.apply(weTime, o.weTime))
+                    .or(() -> nullCheckAndCompare.apply(thTime, o.thTime))
+                    .or(() -> nullCheckAndCompare.apply(frTime, o.frTime))
+                    .orElse(incident.compareTo(o.incident));
+        }
+    }
+
+    public enum Incident {
+        START_OF_DAY,
+        END_OF_DAY,
+        START_OF_LUNCH,
+        END_OF_LUNCH,
+        START_OF_BREAK,
+        END_OF_BREAK
     }
 
     public static class WeeklyProjectHours implements Comparable<WeeklyProjectHours> {
@@ -217,6 +409,10 @@ public class ReportsWeekViewController implements Initializable {
 
         @Override
         public int compareTo(WeekSelectorItem o) {
+            int compareYear = Integer.compare(o.getDates().getFirst().getYear(), dates.getFirst().getYear());
+            if(compareYear != 0) {
+                return compareYear;
+            }
             return Integer.compare(o.weekNum, weekNum);
         }
     }
@@ -244,11 +440,6 @@ public class ReportsWeekViewController implements Initializable {
     @FXML
     void onDateNowClick(ActionEvent event) {
         weekSelector.getSelectionModel().select(0);
-    }
-
-    @FXML
-    void onNaytaPaivakohtainenYhteenveto(ActionEvent event) {
-
     }
 
 
