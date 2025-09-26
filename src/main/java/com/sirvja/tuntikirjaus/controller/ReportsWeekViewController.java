@@ -25,11 +25,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ReportsWeekViewController implements Initializable {
 
-    private final static int NUM_OF_WEEKS = 15;
     private static final Logger log = LoggerFactory.getLogger(ReportsWeekViewController.class);
     private static final String LUNCH_TOPIC = "lounas";
 
@@ -77,7 +75,7 @@ public class ReportsWeekViewController implements Initializable {
     @FXML
     private ComboBox<WeekSelectorItem> weekSelector;
 
-    private List<LocalDate> weekList;
+    private List<LocalDate> dateList;
     private final WeekFields weekFields = WeekFields.of(Locale.getDefault());
     private final int thisYear = LocalDate.now().getYear();
     private List<TuntiKirjaus> tuntiKirjausListAll;
@@ -113,17 +111,15 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private void initWeekSelector() {
-        weekList = tuntiKirjausListAll.stream()
+        dateList = tuntiKirjausListAll.stream()
                 .map(TuntiKirjaus::getStartTime)
                 .map(LocalDateTime::toLocalDate)
                 .distinct()
                 .toList();
 
-        SortedMap<Integer, List<LocalDate>> weekNumToDate = groupLocalDateBasedOnWeekNumber(weekList);
+        List<WeekSelectorItem> weekSelectorList = createWeekSelectorList(dateList);
 
-        List<WeekSelectorItem> weekAndFirstAndLastDate = createWeekOptionsList(weekNumToDate);
-
-        weekSelector.setItems(FXCollections.observableArrayList(weekAndFirstAndLastDate));
+        weekSelector.setItems(FXCollections.observableArrayList(weekSelectorList));
 
         weekSelector.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
             List<TuntiKirjaus> tuntiKirjausListForWeek = tuntiKirjausListAll.stream()
@@ -142,6 +138,20 @@ public class ReportsWeekViewController implements Initializable {
         }));
 
         weekSelector.getSelectionModel().select(0);
+    }
+
+    private List<WeekSelectorItem> createWeekSelectorList(List<LocalDate> dateList) {
+        Map<WeekSelectorItem.YearWeekNum, List<LocalDate>> yearAndWeekToDateList = dateList.stream()
+                .collect(Collectors.groupingBy(
+                        localDate -> new WeekSelectorItem.YearWeekNum(localDate.getYear(), localDate.get(ChronoField.ALIGNED_WEEK_OF_YEAR)),
+                        HashMap::new,
+                        Collectors.toList()
+                ));
+
+        return yearAndWeekToDateList.entrySet().stream()
+                .map(entry -> new WeekSelectorItem(entry.getKey().year, entry.getKey().weekNum, entry.getValue()))
+                .sorted(Comparator.reverseOrder())
+                .toList();
     }
 
     private String getSummaryString(List<TuntiKirjaus> tuntiKirjausListForWeek) {
@@ -221,22 +231,6 @@ public class ReportsWeekViewController implements Initializable {
                 )).values().stream().toList();
 
         incidentToTimeMap.put(Incident.START_OF_DAY, startTimesForWeek);
-    }
-
-    private List<WeekSelectorItem> createWeekOptionsList(SortedMap<Integer, List<LocalDate>> weekNumToDate) {
-        return weekNumToDate.entrySet().stream()
-                .map(entry -> new WeekSelectorItem(entry.getKey(), entry.getValue()))
-                .toList();
-    }
-
-    private SortedMap<Integer, List<LocalDate>> groupLocalDateBasedOnWeekNumber(List<LocalDate> dateList) {
-        // TODO: There is an issue here, where dates from last year don't work correctly...
-        return dateList.stream()
-                .collect(Collectors.groupingBy(
-                        localDate -> localDate.get(weekFields.weekOfWeekBasedYear()),
-                        () -> new TreeMap<Integer, List<LocalDate>>(Comparator.reverseOrder()),
-                        Collectors.toList()
-                ));
     }
 
     public static class WeeklyIncidents implements Comparable<WeeklyIncidents> {
@@ -382,13 +376,19 @@ public class ReportsWeekViewController implements Initializable {
         }
     }
 
-    public static class WeekSelectorItem implements Comparable<WeekSelectorItem>{
+    public static class WeekSelectorItem implements Comparable<WeekSelectorItem> {
+        int year;
         int weekNum;
         List<LocalDate> dates;
 
-        public WeekSelectorItem(int weekNum, List<LocalDate> dates) {
+        public WeekSelectorItem(int year, int weekNum, List<LocalDate> dates) {
+            this.year = year;
             this.weekNum = weekNum;
             this.dates = dates;
+        }
+
+        public int getYear() {
+            return year;
         }
 
         public int getWeekNum() {
@@ -404,17 +404,37 @@ public class ReportsWeekViewController implements Initializable {
             Function<LocalDate, String> dateToString = localDate -> localDate.format(DateTimeFormatter.ofPattern("dd.MM"));
             dates = dates.stream().sorted().toList();
 
-            return String.format("week %s (%s-%s)", weekNum, dateToString.apply(dates.getFirst()), dateToString.apply(dates.getLast()));
+            if (year == LocalDate.now().getYear()) {
+                return String.format("week %s (%s-%s)", weekNum, dateToString.apply(dates.getFirst()), dateToString.apply(dates.getLast()));
+            }
+            return String.format("%s week %s (%s-%s)", year, weekNum, dateToString.apply(dates.getFirst()), dateToString.apply(dates.getLast()));
         }
 
         @Override
         public int compareTo(WeekSelectorItem o) {
-            int compareYear = Integer.compare(o.getDates().getFirst().getYear(), dates.getFirst().getYear());
-            if(compareYear != 0) {
-                return compareYear;
+            if(year != o.year) {
+                return Integer.compare(year, o.year);
             }
-            return Integer.compare(o.weekNum, weekNum);
+            return Integer.compare(weekNum, o.weekNum);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            WeekSelectorItem that = (WeekSelectorItem) o;
+            return year == that.year && weekNum == that.weekNum && dates.equals(that.dates);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = year;
+            result = 31 * result + weekNum;
+            result = 31 * result + dates.hashCode();
+            return result;
+        }
+
+        record YearWeekNum(int year, int weekNum) {}
     }
 
     @FXML
