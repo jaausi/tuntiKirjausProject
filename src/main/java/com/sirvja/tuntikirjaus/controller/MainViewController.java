@@ -232,7 +232,7 @@ public class MainViewController implements Initializable {
         log.debug("Open day summary clicked!");
 
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n"));
             Parent root1 = fxmlLoader.load();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);

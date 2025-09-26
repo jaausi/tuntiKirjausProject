@@ -71,7 +71,7 @@
                                        <HBox.margin>
                                           <Insets left="10.0" right="10.0" />
                                        </HBox.margin></Button>
-                                    <Button fx:id="dateNow" maxHeight="26.0" maxWidth="100.0" minHeight="26.0" minWidth="50.0" mnemonicParsing="false" onAction="#onDateNowClick" prefHeight="26.0" prefWidth="100.0" text="Nyt">
+                                    <Button fx:id="dateNow" maxHeight="26.0" maxWidth="100.0" minHeight="26.0" minWidth="50.0" mnemonicParsing="false" onAction="#onDateNowClick" prefHeight="26.0" prefWidth="100.0" text="%now">
                                        <HBox.margin>
                                           <Insets left="10.0" right="10.0" />
                                        </HBox.margin>
@@ -87,27 +87,27 @@
                         </VBox>
                      </children>
                   </AnchorPane>
-                  <TableView fx:id="weekTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="390.0" prefWidth="848.0">
+                  <TableView fx:id="weeklyProjectHoursTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="390.0" prefWidth="848.0">
                      <columns>
-                        <TableColumn fx:id="projectColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Projekti" />
-                        <TableColumn fx:id="mondayColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ma" />
-                        <TableColumn fx:id="tuesdayColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ti" />
-                        <TableColumn fx:id="wednesdayColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ke" />
-                        <TableColumn fx:id="thursdayColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="To" />
-                        <TableColumn fx:id="fridayColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Pe" />
+                        <TableColumn fx:id="projectColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="%project" />
+                        <TableColumn fx:id="projectMoColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%monday" />
+                        <TableColumn fx:id="projectTuColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%tuesday" />
+                        <TableColumn fx:id="projectWeColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%wednesday" />
+                        <TableColumn fx:id="projectThColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%thursday" />
+                        <TableColumn fx:id="projectFrColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%friday" />
                      </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                      </columnResizePolicy>
                   </TableView>
-                  <TableView fx:id="weekTable1" layoutX="10.0" layoutY="70.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="390.0" prefWidth="848.0">
+                  <TableView fx:id="weeklyIncidentsTable" layoutX="10.0" layoutY="70.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="390.0" prefWidth="848.0">
                      <columns>
-                        <TableColumn fx:id="incidentColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Tapahtuma" />
-                        <TableColumn fx:id="mondayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ma" />
-                        <TableColumn fx:id="tuesdayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ti" />
-                        <TableColumn fx:id="wednesdayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Ke" />
-                        <TableColumn fx:id="thursdayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="To" />
-                        <TableColumn fx:id="fridayColumn1" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="Pe" />
+                        <TableColumn fx:id="incidentColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="%incident" />
+                        <TableColumn fx:id="incidentMoColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%monday" />
+                        <TableColumn fx:id="incidentTuColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%tuesday" />
+                        <TableColumn fx:id="incidentWeColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%wednesday" />
+                        <TableColumn fx:id="incidentThColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%thursday" />
+                        <TableColumn fx:id="incidentFrColumn" maxWidth="150.0" minWidth="40.0" prefWidth="70.0" text="%friday" />
                      </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

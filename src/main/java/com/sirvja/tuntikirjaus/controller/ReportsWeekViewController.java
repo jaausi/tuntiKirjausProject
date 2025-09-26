@@ -32,34 +32,34 @@ public class ReportsWeekViewController implements Initializable {
     private static final String LUNCH_TOPIC = "lounas";
 
     @FXML
-    private TableView<WeeklyProjectHours> weekTable;
+    private TableView<WeeklyProjectHours> weeklyProjectHoursTable;
     @FXML
     private TableColumn<WeeklyProjectHours, String> projectColumn;
     @FXML
-    private TableColumn<WeeklyProjectHours, String> mondayColumn;
+    private TableColumn<WeeklyProjectHours, String> projectMoColumn;
     @FXML
-    private TableColumn<WeeklyProjectHours, String> tuesdayColumn;
+    private TableColumn<WeeklyProjectHours, String> projectTuColumn;
     @FXML
-    private TableColumn<WeeklyProjectHours, String> wednesdayColumn;
+    private TableColumn<WeeklyProjectHours, String> projectWeColumn;
     @FXML
-    private TableColumn<WeeklyProjectHours, String> thursdayColumn;
+    private TableColumn<WeeklyProjectHours, String> projectThColumn;
     @FXML
-    private TableColumn<WeeklyProjectHours, String> fridayColumn;
+    private TableColumn<WeeklyProjectHours, String> projectFrColumn;
 
     @FXML
-    private TableView<WeeklyIncidents> weekTable1;
+    private TableView<WeeklyIncidents> weeklyIncidentsTable;
     @FXML
     private TableColumn<WeeklyIncidents, String> incidentColumn;
     @FXML
-    private TableColumn<WeeklyIncidents, String> mondayColumn1;
+    private TableColumn<WeeklyIncidents, String> incidentMoColumn;
     @FXML
-    private TableColumn<WeeklyIncidents, String> tuesdayColumn1;
+    private TableColumn<WeeklyIncidents, String> incidentTuColumn;
     @FXML
-    private TableColumn<WeeklyIncidents, String> wednesdayColumn1;
+    private TableColumn<WeeklyIncidents, String> incidentWeColumn;
     @FXML
-    private TableColumn<WeeklyIncidents, String> thursdayColumn1;
+    private TableColumn<WeeklyIncidents, String> incidentThColumn;
     @FXML
-    private TableColumn<WeeklyIncidents, String> fridayColumn1;
+    private TableColumn<WeeklyIncidents, String> incidentFrColumn;
 
 
     @FXML
@@ -94,20 +94,20 @@ public class ReportsWeekViewController implements Initializable {
 
     private void initProjectTable() {
         projectColumn.setCellValueFactory(new PropertyValueFactory<>("projectName"));
-        mondayColumn.setCellValueFactory(new PropertyValueFactory<>("moHours"));
-        tuesdayColumn.setCellValueFactory(new PropertyValueFactory<>("tuHours"));
-        wednesdayColumn.setCellValueFactory(new PropertyValueFactory<>("weHours"));
-        thursdayColumn.setCellValueFactory(new PropertyValueFactory<>("thHours"));
-        fridayColumn.setCellValueFactory(new PropertyValueFactory<>("frHours"));
+        projectMoColumn.setCellValueFactory(new PropertyValueFactory<>("moHours"));
+        projectTuColumn.setCellValueFactory(new PropertyValueFactory<>("tuHours"));
+        projectWeColumn.setCellValueFactory(new PropertyValueFactory<>("weHours"));
+        projectThColumn.setCellValueFactory(new PropertyValueFactory<>("thHours"));
+        projectFrColumn.setCellValueFactory(new PropertyValueFactory<>("frHours"));
     }
 
     private void initIncidentTable() {
         incidentColumn.setCellValueFactory(new PropertyValueFactory<>("incident"));
-        mondayColumn1.setCellValueFactory(new PropertyValueFactory<>("moTime"));
-        tuesdayColumn1.setCellValueFactory(new PropertyValueFactory<>("tuTime"));
-        wednesdayColumn1.setCellValueFactory(new PropertyValueFactory<>("weTime"));
-        thursdayColumn1.setCellValueFactory(new PropertyValueFactory<>("thTime"));
-        fridayColumn1.setCellValueFactory(new PropertyValueFactory<>("frTime"));
+        incidentMoColumn.setCellValueFactory(new PropertyValueFactory<>("moTime"));
+        incidentTuColumn.setCellValueFactory(new PropertyValueFactory<>("tuTime"));
+        incidentWeColumn.setCellValueFactory(new PropertyValueFactory<>("weTime"));
+        incidentThColumn.setCellValueFactory(new PropertyValueFactory<>("thTime"));
+        incidentFrColumn.setCellValueFactory(new PropertyValueFactory<>("frTime"));
     }
 
     private void initWeekSelector() {
@@ -132,8 +132,8 @@ public class ReportsWeekViewController implements Initializable {
             ObservableList<WeeklyIncidents> weeklyIncidents = mapTuntikirjausListToWeeklyIncidents(tuntiKirjausListForWeek);
             String summaryString = getSummaryString(tuntiKirjausListForWeek);
 
-            weekTable.setItems(weeklyProjectHours);
-            weekTable1.setItems(weeklyIncidents);
+            weeklyProjectHoursTable.setItems(weeklyProjectHours);
+            weeklyIncidentsTable.setItems(weeklyIncidents);
             weekHoursSumField.setText(summaryString);
         }));
 
