@@ -19,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
-import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -75,8 +74,6 @@ public class ReportsWeekViewController implements Initializable {
     @FXML
     private ComboBox<WeekSelectorItem> weekSelector;
 
-    private List<LocalDate> dateList;
-    private final WeekFields weekFields = WeekFields.of(Locale.getDefault());
     private final int thisYear = LocalDate.now().getYear();
     private List<TuntiKirjaus> tuntiKirjausListAll;
 
@@ -93,7 +90,7 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private void initProjectTable() {
-        projectColumn.setCellValueFactory(new PropertyValueFactory<>("projectName"));
+        projectColumn.setCellValueFactory(new PropertyValueFactory<>("project"));
         projectMoColumn.setCellValueFactory(new PropertyValueFactory<>("moHours"));
         projectTuColumn.setCellValueFactory(new PropertyValueFactory<>("tuHours"));
         projectWeColumn.setCellValueFactory(new PropertyValueFactory<>("weHours"));
@@ -111,7 +108,7 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private void initWeekSelector() {
-        dateList = tuntiKirjausListAll.stream()
+        List<LocalDate> dateList = tuntiKirjausListAll.stream()
                 .map(TuntiKirjaus::getStartTime)
                 .map(LocalDateTime::toLocalDate)
                 .distinct()
@@ -315,7 +312,7 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     public static class WeeklyProjectHours implements Comparable<WeeklyProjectHours> {
-        String projectName;
+        String project;
         List<TuntiKirjaus> moHours;
         List<TuntiKirjaus> tuHours;
         List<TuntiKirjaus> weHours;
@@ -323,7 +320,7 @@ public class ReportsWeekViewController implements Initializable {
         List<TuntiKirjaus> frHours;
 
         public WeeklyProjectHours(String projectName, List<TuntiKirjaus> tuntiKirjausList) {
-            this.projectName = projectName;
+            this.project = projectName;
 
             BiFunction<List<TuntiKirjaus>, DayOfWeek, List<TuntiKirjaus>> filterWithDay = (tkList, dayOfWeek) -> tkList.stream()
                     .filter(tk -> tk.getEndTime().map(tk2 -> tk2.getDayOfWeek().equals(dayOfWeek)).orElseThrow())
@@ -346,8 +343,8 @@ public class ReportsWeekViewController implements Initializable {
                         minutesToHoursAndMinutes
                 ));
 
-        public String getProjectName() {
-            return projectName;
+        public String getProject() {
+            return project;
         }
 
         public String getMoHours() {
@@ -372,7 +369,7 @@ public class ReportsWeekViewController implements Initializable {
 
         @Override
         public int compareTo(WeeklyProjectHours o) {
-            return projectName.compareTo(o.projectName);
+            return project.compareTo(o.project);
         }
     }
 
