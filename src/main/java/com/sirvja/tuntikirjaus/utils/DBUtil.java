@@ -8,6 +8,7 @@ import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,11 +22,11 @@ public class DBUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
 
     public static void checkOrCreateDatabaseFile(){
-        Optional<String> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db").toExternalForm());
+        Optional<URL> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db"));
 
         // Don't use database in resource folder, if running from jar file
-        if(optionalLocation.isPresent() && !optionalLocation.get().contains(".jar") && false){
-            location = optionalLocation.get();
+        if(optionalLocation.isPresent() && !optionalLocation.get().toExternalForm().contains(".jar") && false){
+            location = optionalLocation.get().toExternalForm();
             System.out.println(String.format("Current dir: %s", location));
         } else {
             Path rootPath = Paths.get(System.getProperty("user.home")+"/tuntikirjaus/database");
