@@ -49,13 +49,13 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="550.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.ReportsViewController">
+<VBox prefHeight="550.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sirvja.tuntikirjaus.controller.ReportsViewController">
    <children>
       <SplitPane dividerPositions="0.5">
          <items>
             <VBox>
                <children>
-                  <AnchorPane maxHeight="100.0" minHeight="100.0" prefHeight="100.0" prefWidth="442.0">
+                  <AnchorPane maxHeight="120.0" minHeight="100.0" prefHeight="110.0" prefWidth="591.0">
                      <children>
                         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="100.0" prefWidth="442.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
@@ -100,11 +100,24 @@
                                     </Button>
                                  </children>
                               </HBox>
+                              <HBox alignment="CENTER_RIGHT" layoutX="15.0" layoutY="65.0" prefHeight="27.0" prefWidth="581.0" VBox.vgrow="ALWAYS">
+                                 <children>
+                                    <Pane maxWidth="1.7976931348623157E308" minWidth="20.0" prefHeight="26.0" prefWidth="272.0" />
+                                    <Button fx:id="daySummaryButton" layoutX="397.0" layoutY="17.0" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onDaySummaryButtonClick" prefHeight="26.0" prefWidth="301.0" text="Näytä päiväkohtainen yhteenveto" HBox.hgrow="ALWAYS">
+                                       <HBox.margin>
+                                          <Insets left="5.0" right="5.0" />
+                                       </HBox.margin>
+                                    </Button>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </VBox.margin>
+                              </HBox>
                            </children>
                         </VBox>
                      </children>
                   </AnchorPane>
-                  <TableView fx:id="raportitTuntiTaulukko" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="551.0" prefWidth="442.0">
+                  <TableView fx:id="raportitTuntiTaulukko" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="338.0" prefWidth="591.0">
                      <columns>
                         <TableColumn fx:id="raportitKellonaikaColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" text="Ajankohta" />
                         <TableColumn fx:id="raportitAiheColumn" minWidth="100.0" prefWidth="290.0" text="Aihe" />

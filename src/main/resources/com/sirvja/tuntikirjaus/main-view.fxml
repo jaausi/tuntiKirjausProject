@@ -62,6 +62,7 @@
             <MenuItem fx:id="updateDurationsMenuItem" mnemonicParsing="false" onAction="#onChangeUpdateDurationsMenuItemAction" text="Päivitä kestot" />
             <MenuItem id="changeTheme" fx:id="changeThemeMenuItem" mnemonicParsing="false" onAction="#onChangeThemeMenuItemAction" text="Vaihda teema" />
             <MenuItem fx:id="reportsMenuItem" mnemonicParsing="false" onAction="#onOpenReportsMenuItem" text="Open reports" />
+                  <MenuItem fx:id="weeklyReportMenuItem" mnemonicParsing="false" onAction="#onOpenWeeklyReportMenuItem" text="Open weekly report" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">

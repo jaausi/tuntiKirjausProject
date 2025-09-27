@@ -1,16 +1,24 @@
 package com.sirvja.tuntikirjaus.controller;
 
+import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.ReportConfig;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.service.ReportsViewService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +41,8 @@ public class ReportsViewController implements Initializable {
     private Button avaaRaporttiButton;
     @FXML
     private Button haeButton;
+    @FXML
+    private Button daySummaryButton;
     @FXML
     private TextField hakusanaField;
     @FXML
@@ -151,6 +161,31 @@ public class ReportsViewController implements Initializable {
         raportitTuntiTaulukko.setItems(tuntiKirjausList);
         reportsYhteenvetoTextArea.setText(yhteenvetoText);
         tunnitYhteensaField.setText(String.format("%sh %sm (%s htp)", hours, minutes, htps));
+    }
+
+    @FXML
+    protected void onDaySummaryButtonClick() {
+        LOGGER.debug("Open day summary clicked!");
+
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"));
+            Parent root1 = fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Tuntikirjaus day view summary");
+            Scene scene = new Scene(root1);
+
+            ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
+            String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
+            if(styleSheets.contains(darkThemeFile)){
+                scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
+            }
+
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML
