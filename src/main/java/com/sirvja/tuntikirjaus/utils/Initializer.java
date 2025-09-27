@@ -5,6 +5,8 @@ import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
+
 import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
 
 public class Initializer {
@@ -17,6 +19,7 @@ public class Initializer {
         assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();
         initializeTestData();
+        Locale.setDefault(Locale.of("fi", "FI"));
     }
 
     private static void createDbTablesIfNotExisting(){
