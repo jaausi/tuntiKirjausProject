@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: 'dev'
+          ref: 'master'
 
       - name: Setup java with maven cached
         uses: actions/setup-java@v4
