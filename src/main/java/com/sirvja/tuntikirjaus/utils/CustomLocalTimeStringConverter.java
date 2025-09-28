@@ -1,6 +1,5 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.controller.MainViewController;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
@@ -9,12 +8,20 @@ import javafx.util.converter.LocalTimeStringConverter;
 import java.time.LocalTime;
 
 public class CustomLocalTimeStringConverter extends LocalTimeStringConverter {
+    private static CustomLocalTimeStringConverter INSTANCE;
     private final MainViewService mainViewService;
     private final AlertService alertService;
 
-    public CustomLocalTimeStringConverter(MainViewService mainViewService) {
-        this.mainViewService = mainViewService;
-        this.alertService = new AlertService();
+    public static CustomLocalTimeStringConverter getInstance(){
+        if (INSTANCE==null){
+            INSTANCE = new CustomLocalTimeStringConverter();
+        }
+        return INSTANCE;
+    }
+
+    private CustomLocalTimeStringConverter() {
+        this.mainViewService = MainViewService.getInstance();
+        this.alertService = AlertService.getInstance();
     }
 
     @Override

@@ -20,7 +20,21 @@ import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
 
 public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
+    private static TuntiKirjausDao INSTANCE;
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
+
+    public static TuntiKirjausDao getInstance(){
+        if(INSTANCE==null){
+            INSTANCE = new TuntiKirjausDao();
+        }
+        return INSTANCE;
+    }
+
+    public static void setInstance(TuntiKirjausDao tuntiKirjausDao) {
+        INSTANCE = tuntiKirjausDao;
+    }
+
+    private TuntiKirjausDao() {}
 
     @Deprecated(since = "1.0.2")
     // Use getAllToList instead

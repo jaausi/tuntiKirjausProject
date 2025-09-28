@@ -22,7 +22,7 @@ public class ReportsViewService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportsViewService.class);
     private static final ReportConfigDao reportConfigDao = new ReportConfigDao();
-    private static final TuntiKirjausDao tuntiKirjausDao = new TuntiKirjausDao();
+    private static final TuntiKirjausDao tuntiKirjausDao = TuntiKirjausDao.getInstance();
 
     private static final LocalDate currentDate = LocalDate.now();
     private static final ObservableList<ReportConfig> reportConfigList = FXCollections.observableArrayList();

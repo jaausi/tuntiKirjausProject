@@ -5,6 +5,16 @@ import javafx.scene.control.ButtonType;
 
 public class AlertService {
 
+    private static AlertService INSTANCE;
+    public static AlertService getInstance(){
+        if(INSTANCE==null){
+            INSTANCE = new AlertService();
+        }
+        return INSTANCE;
+    }
+
+    private AlertService(){}
+
     public void showFieldNotFilledAlert(){
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Varoitus!");

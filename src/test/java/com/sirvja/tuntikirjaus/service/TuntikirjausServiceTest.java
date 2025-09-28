@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 public class TuntikirjausServiceTest {
 
-    private final Dao<TuntiKirjaus> tuntikirjausDao = mock(TuntiKirjausDao.class);
+    private final TuntiKirjausDao tuntikirjausDao = mock(TuntiKirjausDao.class);
     private TuntiKirjausService tuntiKirjausService;
     private List<TuntiKirjaus> tuntikirjausList;
 
@@ -33,7 +33,8 @@ public class TuntikirjausServiceTest {
         tuntikirjausList = generateTuntikirjausList(5, LocalTime.of(8, 0), LocalTime.of(16, 0), Duration.ofHours(4));
         when(tuntikirjausDao.getAllFromToList(any())).thenReturn(tuntikirjausList);
         when(tuntikirjausDao.getAllToList()).thenReturn(tuntikirjausList);
-        tuntiKirjausService = new TuntiKirjausService(tuntikirjausDao, true);
+        tuntiKirjausService = new TuntiKirjausService(tuntikirjausDao);
+        tuntiKirjausService.enableCache();
     }
 
     @Test
@@ -60,7 +61,7 @@ public class TuntikirjausServiceTest {
     @Test
     @DisplayName("Test to fetch all tuntikirjaus without cache, should call database everytime")
     void testFetchingAllTuntikirjausWithoutCache() {
-        tuntiKirjausService = new TuntiKirjausService(tuntikirjausDao, false);
+        tuntiKirjausService.disableCache();
         assertEquals(tuntikirjausList, tuntiKirjausService.getAllTuntikirjaus(), "Tuntikirjaus list should match the whole list");
         verify(tuntikirjausDao, times(1)).getAllFromToList(any());
         tuntiKirjausService.getAllTuntikirjaus();

@@ -87,8 +87,8 @@ public class MainViewController implements Initializable {
     private Object valueBeforeEdit;
 
     public MainViewController() {
-        this.mainViewService = new MainViewService();
-        this.alertService = new AlertService();
+        this.mainViewService = MainViewService.getInstance();
+        this.alertService = AlertService.getInstance();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class MainViewController implements Initializable {
     }
 
     private void setEditListenerToKellonaikaColumn() {
-        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter(mainViewService)));
+        kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(CustomLocalTimeStringConverter.getInstance()));
         kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh));
     }
 

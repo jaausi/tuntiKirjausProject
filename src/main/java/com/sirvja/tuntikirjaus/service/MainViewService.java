@@ -27,15 +27,23 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class MainViewService {
+    private static MainViewService INSTANCE;
     private final TuntiKirjausService tuntikirjausService;
     private final AlertService alertService;
     private LocalDate currentDate;
 
     private static final Logger log = LoggerFactory.getLogger(MainViewService.class);
 
-    public MainViewService() {
-        this.tuntikirjausService = new TuntiKirjausService();
-        this.alertService = new AlertService();
+    public static MainViewService getInstance() {
+        if(INSTANCE==null) {
+            INSTANCE = new MainViewService();
+        }
+        return INSTANCE;
+    }
+
+    private MainViewService() {
+        this.tuntikirjausService = TuntiKirjausService.getInstance();
+        this.alertService = AlertService.getInstance();
         this.currentDate = LocalDate.now();
     }
 
