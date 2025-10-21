@@ -16,7 +16,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,7 +117,7 @@ public class ReportsWeekViewController implements Initializable {
             List<TuntiKirjaus> tuntiKirjausListForWeek = tuntiKirjausListAll.stream()
                     .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().getYear() == thisYear)
-                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().get(ChronoField.ALIGNED_WEEK_OF_YEAR) == observable.getValue().getWeekNum())
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().get(WeekFields.ISO.weekOfWeekBasedYear()) == observable.getValue().getWeekNum())
                     .toList();
 
             ObservableList<WeeklyProjectHours> weeklyProjectHours = mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausListForWeek);
@@ -135,7 +135,7 @@ public class ReportsWeekViewController implements Initializable {
     private List<WeekSelectorItem> createWeekSelectorList(List<LocalDate> dateList) {
         Map<WeekSelectorItem.YearWeekNum, List<LocalDate>> yearAndWeekToDateList = dateList.stream()
                 .collect(Collectors.groupingBy(
-                        localDate -> new WeekSelectorItem.YearWeekNum(localDate.getYear(), localDate.get(ChronoField.ALIGNED_WEEK_OF_YEAR)),
+                        localDate -> new WeekSelectorItem.YearWeekNum(localDate.getYear(), localDate.get(WeekFields.ISO.weekOfWeekBasedYear())),
                         HashMap::new,
                         Collectors.toList()
                 ));
