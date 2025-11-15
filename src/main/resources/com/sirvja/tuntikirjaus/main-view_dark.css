@@ -9,6 +9,11 @@
     -fx-text-fill: #B5B5B5;
 }
 
+#configuration.label {
+    -fx-background-color: #2B2B2B;
+    -fx-text-fill: #FF4D00;
+}
+
 .table-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #B5B5B5;
@@ -56,6 +61,7 @@
 
 .table-view .column-header {
     -fx-background-color: transparent;
+    -fx-border-color: #272121;
 }
 
 .table-view .column-header .label {
@@ -126,6 +132,11 @@
     -fx-background-color: linear-gradient(to bottom, #2B2B2B, #272121);
     -fx-border-color: #272121;
     -fx-text-fill: #FF4D00;
+}
+
+.button:hover {
+    -fx-background-color: #272121;
+    -fx-border-color: #2B2B2B;
 }
 
 .arrow {
