@@ -13,13 +13,15 @@ public class IncidentService {
     private static final String BREAK_TOPIC = "tauko";
 
 
-    public List<TuntikirjausIncident> getTuntikirjausIncidents(List<TuntiKirjaus> tuntiKirjausList) {
+    public List<TuntikirjausIncident> parseTuntikirjausIncidents(List<TuntiKirjaus> tuntiKirjausList) {
         List<TuntikirjausIncident> tuntikirjausIncidents = new ArrayList<>();
 
         tuntikirjausIncidents.addAll(parseStartTimeIncidents(tuntiKirjausList));
         tuntikirjausIncidents.addAll(parseEndTimeIncidents(tuntiKirjausList));
         tuntikirjausIncidents.addAll(parseLunchIncidents(tuntiKirjausList));
         tuntikirjausIncidents.addAll(parseBreakIncidents(tuntiKirjausList));
+
+        tuntikirjausIncidents.sort(Comparator.comparing(TuntikirjausIncident::localDateTime));
 
         return tuntikirjausIncidents;
     }

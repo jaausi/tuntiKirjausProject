@@ -1,5 +1,6 @@
 package com.sirvja.tuntikirjaus.utils;
 
+import com.sirvja.tuntikirjaus.dao.ConfigurationDao;
 import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
 import org.slf4j.Logger;
@@ -29,12 +30,16 @@ public class Initializer {
         LOGGER.debug("Initializing ReportConfig table...");
         ReportConfigDao.initializeTableIfNotExisting();
         LOGGER.debug("ReportConfig table initialized.");
+        LOGGER.debug("Initializing Configuration table...");
+        ConfigurationDao.initializeTableIfNotExisting();
+        LOGGER.debug("Configuration table initialized.");
     }
 
     private static void initializeTestData(){
         if(DROP_TABLE_ON_START){
             TuntiKirjausDao.dropTable();
             ReportConfigDao.dropTable();
+            ConfigurationDao.dropTable();
 
             Initializer.populateTestData();
         }
