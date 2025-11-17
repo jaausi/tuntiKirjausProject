@@ -81,7 +81,7 @@ public class ExportViewController implements Initializable {
         }
 
         initializeKiekuExporter();
-        alertService.showGeneralAlert("Kirjaudu sisään ja valitse sen jälkeen ok");
+        alertService.showConfirmationAlert("Kirjaudu sisään", "Kirjaudu sisään ja valitse sen jälkeen jatka");
 
         List<KiekuItem> kiekuItems = selectedItems.stream()
                         .map(this::tuntikirjausIncidentToKiekuItem)

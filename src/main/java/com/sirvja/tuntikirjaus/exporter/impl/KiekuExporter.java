@@ -1,10 +1,8 @@
 package com.sirvja.tuntikirjaus.exporter.impl;
 
 import com.sirvja.tuntikirjaus.exporter.Exporter;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import com.sirvja.tuntikirjaus.service.AlertService;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -22,6 +20,11 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
     private KiekuConfiguration configuration;
     private WebDriver driver;
+    private AlertService alertService;
+
+    public KiekuExporter() {
+        this.alertService = new AlertService();
+    }
 
     @Override
     public void setConfiguration(KiekuConfiguration configuration) {
@@ -57,9 +60,9 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     private void loginToPortal() {
         driver.get(configuration.loginPortalUrl());
         driver.manage().window().setSize(WINDOW_DIMENSION);
-        driver.findElement(By.cssSelector(configuration.loginButtonCssSelector())).click();
-        driver.findElement(By.cssSelector(configuration.loginToOrganizationOptionCssSelector())).click();
-        driver.findElement(By.name(configuration.loginButtonName())).click();
+        safelyFindElement(By.cssSelector(configuration.loginButtonCssSelector())).click();
+        safelyFindElement(By.cssSelector(configuration.loginToOrganizationOptionCssSelector())).click();
+        safelyFindElement(By.name(configuration.loginButtonName())).click();
     }
 
     private void navigateToPageAndSetSize() {
@@ -83,23 +86,23 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     }
 
     private void clickAddHours() {
-        driver.findElement(By.id(configuration.addWorkHoursButtonId())).click();
+        safelyFindElement(By.id(configuration.addWorkHoursButtonId())).click();
     }
 
     private void fillInDate(KiekuItem kiekuItem) {
         String date = kiekuItem.time().format(KIEKU_DATE_FORMATTER);
-        driver.findElement(By.id(configuration.dateFieldId())).click();
-        driver.findElement(By.id(configuration.dateFieldId())).sendKeys(date);
+        safelyFindElement(By.id(configuration.dateFieldId())).click();
+        safelyFindElement(By.id(configuration.dateFieldId())).sendKeys(date);
     }
 
     private void fillInTime(KiekuItem kiekuItem) {
         String time = kiekuItem.time().format(KIEKU_TIME_FORMATTER);
-        driver.findElement(By.id(configuration.timeFieldId())).click();
-        driver.findElement(By.id(configuration.timeFieldId())).sendKeys(time);
+        safelyFindElement(By.id(configuration.timeFieldId())).click();
+        safelyFindElement(By.id(configuration.timeFieldId())).sendKeys(time);
     }
 
     private void fillInEvent(KiekuItem kiekuItem) {
-        driver.findElement(By.id(configuration.eventDropdownId())).click();
+        safelyFindElement(By.id(configuration.eventDropdownId())).click();
         switch (kiekuItem.event()) {
             case IN -> selectFromDropdown(configuration.eventDropdownId(), By.xpath(configuration.toihinTuloOptionXpath()));
             case REMOTE_IN -> {
@@ -115,16 +118,34 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     }
 
     private void selectFromDropdown(String dropdownId, By dropdownItemSelector) {
-        driver.findElement(By.id(dropdownId)).click();
+        safelyFindElement(By.id(dropdownId)).click();
         WebElement dropdown = driver.findElement(By.id(dropdownId));
         dropdown.findElement(dropdownItemSelector).click();
     }
 
     private void clickSave() {
-        driver.findElement(By.id(configuration.saveButtonId()));
+        safelyFindElement(By.id(configuration.saveButtonId())).click();
     }
 
     private void clickClose() {
-        driver.findElement(By.id(configuration.closeButtonId()));
+        safelyFindElement(By.id(configuration.closeButtonId())).click();
+    }
+
+    private WebElement safelyFindElement(By by) {
+        WebElement element;
+        try {
+            element = driver.findElement(by);
+        } catch (NoSuchElementException e) {
+            boolean tryAgain = alertService.showConfirmationAlert(
+                    "Elementtiä ei löytynyt",
+                    String.format("Elementtiä (%s), jota selenium yritti hakea ei löytynyt. Haluatko yrittää uudestaan?", by.toString())
+            );
+            if(tryAgain) {
+                element = safelyFindElement(by);
+            } else {
+                throw e;
+            }
+        }
+        return element;
     }
 }
