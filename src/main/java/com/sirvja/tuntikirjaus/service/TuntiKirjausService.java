@@ -39,13 +39,6 @@ public class TuntiKirjausService {
                 .toList();
     }
 
-    public List<TuntiKirjaus> getTuntikirjausForDateRange(LocalDate start, LocalDate end) {
-        return getAllTuntikirjaus().stream()
-                .filter(tk -> tk.getStartTime().isAfter(start.atStartOfDay()))
-                .filter(tk -> tk.getStartTime().isBefore(end.atTime(23, 59)))
-                .toList();
-    }
-
     public List<TuntiKirjaus> getAllTuntikirjaus() {
         if(tuntikirjausCache==null || !cacheEnabled) {
             tuntikirjausCache = tuntikirjausDao.getAllFromToList(Constants.FETCH_DAYS_SINCE);
