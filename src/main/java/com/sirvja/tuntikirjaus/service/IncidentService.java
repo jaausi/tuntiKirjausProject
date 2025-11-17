@@ -21,7 +21,7 @@ public class IncidentService {
         tuntikirjausIncidents.addAll(parseLunchIncidents(tuntiKirjausList));
         tuntikirjausIncidents.addAll(parseBreakIncidents(tuntiKirjausList));
 
-        tuntikirjausIncidents.sort(Comparator.comparing(TuntikirjausIncident::localDateTime));
+        tuntikirjausIncidents.sort(Comparator.comparing(TuntikirjausIncident::time));
 
         return tuntikirjausIncidents;
     }
