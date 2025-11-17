@@ -6,7 +6,7 @@
 
     <groupId>com.sirvja</groupId>
     <artifactId>tuntiKirjaus</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.0-beta</version>
     <name>tuntiKirjaus</name>
 
     <properties>
