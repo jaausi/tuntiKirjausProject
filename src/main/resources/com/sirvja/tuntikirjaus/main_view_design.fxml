@@ -60,8 +60,10 @@
           <items>
             <MenuItem fx:id="updateDurationsMenuItem" mnemonicParsing="false" onAction="#onChangeUpdateDurationsMenuItemAction" text="Päivitä kestot" />
             <MenuItem id="changeTheme" fx:id="changeThemeMenuItem" mnemonicParsing="false" onAction="#onChangeThemeMenuItemAction" text="Vaihda teema" />
-            <MenuItem fx:id="reportsMenuItem" mnemonicParsing="false" onAction="#onOpenReportsMenuItem" text="Open reports" />
-                  <MenuItem fx:id="weeklyReportMenuItem" mnemonicParsing="false" onAction="#onOpenWeeklyReportMenuItem" text="Open weekly report" />
+            <MenuItem fx:id="reportsMenuItem" mnemonicParsing="false" onAction="#onOpenReportsMenuItem" text="Raportointi" />
+            <MenuItem fx:id="weeklyReportMenuItem" mnemonicParsing="false" onAction="#onOpenWeeklyReportMenuItem" text="Viikkoraportti" />
+            <MenuItem fx:id="exporterMenuItem" mnemonicParsing="false" onAction="#onOpenExporter" text="Exporter" />
+            <MenuItem fx:id="configurationMenuItem" mnemonicParsing="false" onAction="#onOpenConfiguration" text="Konfiguraatio" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">

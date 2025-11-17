@@ -62,6 +62,12 @@ public class MainViewController implements Initializable {
     private MenuItem updateDurationsMenuItem;
     @FXML
     private MenuItem reportsMenuItem;
+     @FXML
+    private MenuItem weeklyReportMenuItem;
+    @FXML
+    private MenuItem exporterMenuItem;
+    @FXML
+    private MenuItem configurationMenuItem;
     @FXML
     private MenuItem undoMenuItem;
     @FXML
@@ -206,42 +212,38 @@ public class MainViewController implements Initializable {
     protected void onOpenReportsMenuItem(){
         log.debug("Open reports clicked!");
 
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml"));
-            Parent root1 = fxmlLoader.load();
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Tuntikirjaus reporting");
-            Scene scene = new Scene(root1);
-
-            ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
-            String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
-            if(styleSheets.contains(darkThemeFile)){
-                scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
-            }
-
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml")), "Tuntikirjaus reporting");
     }
 
     @FXML
     protected void onOpenWeeklyReportMenuItem() {
         log.debug("Open day summary clicked!");
+        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Tuntikirjaus day view summary");
+    }
 
+    @FXML
+    protected void onOpenExporter() {
+        log.debug("Open exporter clicked!");
+        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("export-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Kieku exporter");
+    }
+
+    @FXML
+    protected void onOpenConfiguration() {
+        log.debug("Open configuration clicked!");
+        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("configuration-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Kieku exporter");
+    }
+
+    private static void openModalView(FXMLLoader fxmlLoader, String viewTitle) {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n"));
             Parent root1 = fxmlLoader.load();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Tuntikirjaus day view summary");
+            stage.setTitle(viewTitle);
             Scene scene = new Scene(root1);
 
             ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
             String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
-            if(styleSheets.contains(darkThemeFile)){
+            if (styleSheets.contains(darkThemeFile)) {
                 scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
             }
 

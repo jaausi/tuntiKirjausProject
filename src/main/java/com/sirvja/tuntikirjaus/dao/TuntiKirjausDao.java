@@ -19,7 +19,7 @@ import java.util.function.Function;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
 
-public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
+public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
     @Deprecated(since = "1.0.2")
@@ -172,7 +172,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus> {
     }
 
     @Override
-    public Optional<TuntiKirjaus> get(int id) {
+    public Optional<TuntiKirjaus> get(Integer id) {
         String query = String.format("SELECT * FROM Tuntikirjaus WHERE ROWID=%s LIMIT 1", id);
         LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
 

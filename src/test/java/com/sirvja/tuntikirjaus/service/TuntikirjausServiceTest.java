@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 public class TuntikirjausServiceTest {
 
-    private final Dao<TuntiKirjaus> tuntikirjausDao = mock(TuntiKirjausDao.class);
+    private final Dao<TuntiKirjaus, Integer> tuntikirjausDao = mock(TuntiKirjausDao.class);
     private TuntiKirjausService tuntiKirjausService;
     private List<TuntiKirjaus> tuntikirjausList;
 

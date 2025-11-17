@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 
-public class ReportConfigDao implements Dao<ReportConfig> {
+public class ReportConfigDao implements Dao<ReportConfig, Integer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportConfigDao.class);
 
     @Override
@@ -111,7 +111,7 @@ public class ReportConfigDao implements Dao<ReportConfig> {
     }
 
     @Override
-    public Optional<ReportConfig> get(int id) {
+    public Optional<ReportConfig> get(Integer id) {
         String query = String.format("SELECT * FROM ReportConfig WHERE ROWID=%s LIMIT 1", id);
         LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
 

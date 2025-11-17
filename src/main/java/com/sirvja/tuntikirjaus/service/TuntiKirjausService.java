@@ -10,22 +10,22 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 public class TuntiKirjausService {
-    private final Dao<TuntiKirjaus> tuntikirjausDao;
+    private final Dao<TuntiKirjaus, Integer> tuntikirjausDao;
     private List<TuntiKirjaus> tuntikirjausCache;
 
     private boolean cacheEnabled;
 
-    TuntiKirjausService() {
+    public TuntiKirjausService() {
         this.tuntikirjausDao = new TuntiKirjausDao();
         this.cacheEnabled = true;
     }
 
-    TuntiKirjausService(boolean cacheEnabled) {
+    public TuntiKirjausService(boolean cacheEnabled) {
         this.tuntikirjausDao = new TuntiKirjausDao();
         this.cacheEnabled = cacheEnabled;
     }
 
-    TuntiKirjausService(Dao<TuntiKirjaus> tuntikirjausDao, boolean cacheEnabled) {
+    public TuntiKirjausService(Dao<TuntiKirjaus, Integer> tuntikirjausDao, boolean cacheEnabled) {
         this.tuntikirjausDao = tuntikirjausDao;
         this.cacheEnabled = cacheEnabled;
     }
