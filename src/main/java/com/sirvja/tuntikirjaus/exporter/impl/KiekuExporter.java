@@ -119,7 +119,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
     private void selectFromDropdown(String dropdownId, By dropdownItemSelector) {
         safelyFindElement(By.id(dropdownId)).click();
-        WebElement dropdown = driver.findElement(By.id(dropdownId));
+        WebElement dropdown = safelyFindElement(By.id(dropdownId));
         dropdown.findElement(dropdownItemSelector).click();
     }
 
