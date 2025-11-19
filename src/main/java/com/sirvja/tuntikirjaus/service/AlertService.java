@@ -59,4 +59,12 @@ public class AlertService {
         alert.setContentText("Virhe: "+message);
         alert.showAndWait();
     }
+
+    public void showNotificationAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Ilmoitus!");
+        alert.setHeaderText("Yleinen ilmoitus");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }

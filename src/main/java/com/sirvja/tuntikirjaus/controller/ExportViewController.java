@@ -80,16 +80,21 @@ public class ExportViewController implements Initializable {
             return;
         }
 
-        initializeKiekuExporter();
-        alertService.showGeneralAlert("Kirjaudu sisään ja valitse sen jälkeen ok");
+        try {
+            initializeKiekuExporter();
+            alertService.showConfirmationAlert("Kirjaudu sisään", "Kirjaudu sisään ja valitse sen jälkeen jatka");
 
-        List<KiekuItem> kiekuItems = selectedItems.stream()
-                        .map(this::tuntikirjausIncidentToKiekuItem)
-                        .filter(Objects::nonNull)
-                        .toList();
+            List<KiekuItem> kiekuItems = selectedItems.stream()
+                    .map(this::tuntikirjausIncidentToKiekuItem)
+                    .filter(Objects::nonNull)
+                    .toList();
 
-        exporter.exportItems(kiekuItems);
-        destroyKiekuExporter();
+            exporter.exportItems(kiekuItems);
+            destroyKiekuExporter();
+            alertService.showNotificationAlert("Tuntien exportointi onnistui!");
+        } catch (Exception e) {
+            alertService.showGeneralAlert("Kohdattiin virhe kun yritettiin exportoida tunteja: " + e.getMessage());
+        }
     }
 
     private KiekuItem tuntikirjausIncidentToKiekuItem(TuntikirjausIncident tuntikirjausIncident) {
