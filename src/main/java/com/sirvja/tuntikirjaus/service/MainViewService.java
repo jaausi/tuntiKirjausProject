@@ -109,7 +109,7 @@ public class MainViewService {
                     }
                 }
             } else {
-                localDateTime = LocalDateTime.of(currentDate, LocalTime.now());
+                localDateTime = LocalDateTime.of(currentDate, LocalTime.now().withSecond(0).withNano(0));
             }
         } catch (DateTimeParseException e) {
             throw new MalformatedTimeException(String.format("Couldn't parse time from String: %s", time));
