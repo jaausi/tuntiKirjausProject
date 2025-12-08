@@ -272,6 +272,9 @@ public class MainViewServiceTest {
         assertEquals(expectedTime, mainViewService.parseTimeFromString("14.23"), "failed to parse 14.23");
         assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("14.230"), "parsing of 14.230 should throw exception");
         assertThrows(MalformatedTimeException.class, () -> mainViewService.parseTimeFromString("14:230"), "parsing of 14:230 should throw exception");
+
+        assertEquals(0, mainViewService.parseTimeFromString("").getSecond(), "parsing empty string should return 0 seconds");
+        assertEquals(0, mainViewService.parseTimeFromString("").getNano(), "parsing empty string should return 0 nanoseconds");
     }
 
     @Test
