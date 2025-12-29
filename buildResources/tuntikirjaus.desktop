@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Tuntikirjaus Sovellus
+Icon=/opt/tuntikirjaus/tuntikirjausResized.png
+Exec="/opt/tuntikirjaus/run.sh" %f
+Comment=Vaivattomaan tuntien kirjaamiseen
+Categories=HourRecording;Office;Tuntikirjaus;
+Terminal=false
+StartupWMClass=tuntikirjaus-app
+StartupNotify=true
