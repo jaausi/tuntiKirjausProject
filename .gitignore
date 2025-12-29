@@ -13,3 +13,5 @@ database
 .env
 reports/
 /local-setup/.env
+/tuntikirjaus-app/
+/tuntikirjaus.tar.gz

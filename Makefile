@@ -59,4 +59,21 @@ remove-built-resources:
 # Create linux compatible application bundle
 ################################
 
-# TODO
+build-linux-tar-package: build-jar create-linux-app-folder copy-stuff-to-linux-app-folder package-folder-into-tar-file
+build-linux-tar-package-with-clean: build-linux-tar-package remove-app-folder remove-built-resources
+
+create-linux-app-folder:
+	mkdir ./tuntikirjaus-app
+
+copy-stuff-to-linux-app-folder:
+	cp target/tuntiKirjaus-*.jar ./tuntikirjaus-app/tuntikirjaus.jar
+	cp buildResources/Makefile ./tuntikirjaus-app/Makefile
+	cp buildResources/run.sh ./tuntikirjaus-app/run.sh
+	cp buildResources/tuntikirjaus.desktop ./tuntikirjaus-app/tuntikirjaus.desktop
+	cp buildResources/tuntikirjausResized.png ./tuntikirjaus-app/tuntikirjausResized.png
+
+package-folder-into-tar-file:
+	tar -czvf tuntikirjaus.tar.gz ./tuntikirjaus-app
+
+remove-app-folder:
+	rm -rf ./tuntikirjaus-app
