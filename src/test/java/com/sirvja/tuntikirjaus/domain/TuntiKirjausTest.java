@@ -14,7 +14,7 @@ public class TuntiKirjausTest {
 
     @Test
     public void testGetDurationString(){
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(2), LocalDateTime.now().minusHours(6).minusDays(2), "IBD-1220 Koodaus", true, true);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(LocalDateTime.now().minusHours(5).minusDays(2), LocalDateTime.now().minusHours(6).minusDays(2), "IBD-1220 Koodaus", true);
         String durationString = tuntiKirjaus.getDurationString();
 
         assertEquals("0:59", durationString);
@@ -70,12 +70,10 @@ public class TuntiKirjausTest {
             zeroDateTime,
             zeroDateTime.plusHours(hours).plusMinutes(minutes),
             "IBD-1221 Koodaus",
-            true,
             true);
     final Function<String, TuntiKirjaus> tuntiKirjausOfTopic = topic -> new TuntiKirjaus(
             zeroDateTime,
             zeroDateTime.plusHours(1).plusMinutes(1),
             topic,
-            true,
             true);
 }

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 public record Migration (String name, String checkSql, String migrationSql) {
     private static final Logger LOGGER = LoggerFactory.getLogger(Migration.class);
+
     public void run() {
         LOGGER.info("Running migration '{}'", name);
         try {
@@ -17,7 +18,12 @@ public record Migration (String name, String checkSql, String migrationSql) {
             resultSet.next();
             if(resultSet.getInt("is_run") == 0) {
                 LOGGER.debug("Migration was not applied to the database, applying now...");
-                DBUtil.dbExecuteUpdate(migrationSql());
+                for (String statement : migrationSql().split(";")) {
+                    String trimmedStatement = statement.trim();
+                    if (!trimmedStatement.isEmpty()) {
+                        DBUtil.dbExecuteUpdate(trimmedStatement);
+                    }
+                }
             } else {
                 LOGGER.debug("Migration was already applied to the database, skipping...");
             }
