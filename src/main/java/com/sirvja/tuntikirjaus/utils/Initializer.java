@@ -3,6 +3,7 @@ package com.sirvja.tuntikirjaus.utils;
 import com.sirvja.tuntikirjaus.dao.ConfigurationDao;
 import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.migration.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public class Initializer {
         assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();
         initializeTestData();
+        runDbMigrations();
         Locale.setDefault(Locale.of("fi", "FI"));
     }
 
@@ -50,5 +52,14 @@ public class Initializer {
         // TODO: Set currentDate
         //TODO: Add tuntikirjausdata
         return true;
+    }
+
+    private static void runDbMigrations() {
+        LOGGER.info("Applying database migrations. Only pending migrations will be applied, so it's safe to add new migrations and run this on every application start.");
+        new Migration(
+                "Add IS_REMOTE column to Tuntikirjaus table",
+                "SELECT EXISTS (SELECT 1 FROM pragma_table_info('Tuntikirjaus') WHERE name = 'IS_REMOTE') AS is_run;",
+                "ALTER TABLE Tuntikirjaus ADD COLUMN IS_REMOTE INTEGER NOT NULL DEFAULT 0"
+        ).run();
     }
 }

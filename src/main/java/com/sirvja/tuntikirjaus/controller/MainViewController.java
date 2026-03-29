@@ -55,6 +55,8 @@ public class MainViewController implements Initializable {
     @FXML
     private AutoCompleteTextField<String> aiheField;
     @FXML
+    private CheckBox etatyoCheckbox;
+    @FXML
     private ListView<Paiva> daysListView = new ListView<>();
     @FXML
     private MenuItem changeThemeMenuItem;
@@ -269,7 +271,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaTaulukkoonButtonClick() {
         try {
             log.debug("Save to table button pushed!");
-            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText());
+            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText(), etatyoCheckbox.isSelected());
             aiheField.getEntries().add(tuntiKirjaus.getTopic());
             initializeView();
         } catch (EmptyTopicException e) {

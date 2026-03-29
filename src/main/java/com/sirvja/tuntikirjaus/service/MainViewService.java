@@ -57,14 +57,14 @@ public class MainViewService {
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
     }
 
-    public TuntiKirjaus addTuntikirjaus(String time, String topic) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException, TuntikirjausDatabaseInInconsistentStage {
+    public TuntiKirjaus addTuntikirjaus(String time, String topic, boolean isRemote) throws EmptyTopicException, MalformatedTimeException, StartTimeNotAfterLastTuntikirjausException, TuntikirjausDatabaseInInconsistentStage {
         if(topic == null || topic.isBlank()){
             throw new EmptyTopicException("Topic was empty when tried to save new Tuntikirjaus");
         }
 
         LocalDateTime localDateTime = parseTimeFromString(time);
 
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true, isRemote);
 
         ObservableList<TuntiKirjaus> tuntidata = getTuntiDataForTable();
 

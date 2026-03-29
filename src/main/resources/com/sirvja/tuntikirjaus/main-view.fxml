@@ -34,6 +34,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
@@ -93,19 +94,13 @@
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0">
                <children>
-                  <AnchorPane maxHeight="100.0" minHeight="100.0" prefHeight="100.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
+                  <AnchorPane maxHeight="110.0" minHeight="110.0" prefHeight="110.0" prefWidth="442.0" VBox.vgrow="ALWAYS">
                      <children>
                         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="100.0" prefWidth="442.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
                               <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-                                 <VBox.margin>
-                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                 </VBox.margin>
                                  <children>
                                     <TextField fx:id="kellonAikaField" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" onKeyPressed="#onKeyPressedToKellonaikaField" onMouseClicked="#onKellonaikaFieldClick" prefHeight="26.0" prefWidth="90.0" promptText="Kellonaika">
-                                       <HBox.margin>
-                                          <Insets left="5.0" right="5.0" />
-                                       </HBox.margin>
                                        <tooltip>
                                           <Tooltip text="Syötä työn aloituskellonaika jossakin&#10;seuraavista muodoista:&#10;&lt;h&gt;&#10;&lt;hh&gt;&#10;&lt;hmm&gt;&#10;&lt;hhmm&gt;&#10;&lt;h:m&gt;&#10;&lt;h:mm&gt;&#10;&lt;hh:mm&gt;&#10;&#10;Jos kellonaika kentän jättää tyhjäksi&#10;tulkitaan syötetyn työn aloitusajaksi&#10;nykyhetki." />
                                        </tooltip>
@@ -119,14 +114,25 @@
                                        </tooltip>
                                     </AutoCompleteTextField>
                                  </children>
+                                 <padding>
+                                    <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+                                 </padding>
                               </HBox>
-                              <HBox alignment="CENTER_RIGHT" layoutX="15.0" layoutY="15.0" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-                                 <VBox.margin>
-                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                 </VBox.margin>
+                              <HBox alignment="CENTER_LEFT" layoutX="15.0" layoutY="15.0" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                                  <children>
-                                    <Button fx:id="tallennaTaulukkoonButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaTaulukkoonButtonClick" prefHeight="26.0" prefWidth="432.0" text="Tallenna taulukkoon" HBox.hgrow="ALWAYS" />
+                                    <CheckBox fx:id="etatyoCheckbox" accessibleText="Etätyö" maxHeight="26.0" maxWidth="90.0" minHeight="26.0" minWidth="50.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="90.0" text="Etätyö"></CheckBox>
                                  </children>
+                                 <padding>
+                                    <Insets left="10.0" right="10.0" />
+                                 </padding>
+                              </HBox>
+                              <HBox alignment="CENTER_RIGHT" layoutX="15.0" layoutY="74.0" prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Button fx:id="tallennaTaulukkoonButton" maxHeight="26.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaTaulukkoonButtonClick" prefHeight="26.0" prefWidth="432.0" text="Tallenna taulukkoon" HBox.hgrow="ALWAYS"></Button>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
                               </HBox>
                            </children>
                         </VBox>

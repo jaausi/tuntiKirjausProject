@@ -147,7 +147,7 @@ public class MainViewServiceTest {
         LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
+        assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic", true));
         verify(tuntiKirjausService, times(1)).save(any());
         verify(tuntiKirjausService, times(1)).update(any());
     }
@@ -158,7 +158,7 @@ public class MainViewServiceTest {
         LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = List.of();
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
+        assertDoesNotThrow(() -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic", true));
         verify(tuntiKirjausService, times(1)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
     }
@@ -170,7 +170,7 @@ public class MainViewServiceTest {
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         tuntiKirjausList.getLast().setEndTime(time.plusHours(5));
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertThrows(TuntikirjausDatabaseInInconsistentStage.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic"));
+        assertThrows(TuntikirjausDatabaseInInconsistentStage.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "Test topic", true));
         verify(tuntiKirjausService, times(0)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
     }
@@ -181,7 +181,7 @@ public class MainViewServiceTest {
         LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertThrows(StartTimeNotAfterLastTuntikirjausException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(3).getHour()), "Test topic"));
+        assertThrows(StartTimeNotAfterLastTuntikirjausException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(3).getHour()), "Test topic", true));
         verify(tuntiKirjausService, times(0)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
     }
@@ -192,9 +192,9 @@ public class MainViewServiceTest {
         LocalDateTime time = getInitTime();
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList(time);
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), ""));
-        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "  "));
-        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), null));
+        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "", true));
+        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), "  ", true));
+        assertThrows(EmptyTopicException.class, () -> mainViewService.addTuntikirjaus(String.valueOf(time.plusHours(5).getHour()), null, true));
         verify(tuntiKirjausService, times(0)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
     }
@@ -209,8 +209,8 @@ public class MainViewServiceTest {
     void testAddingTuntikirjaus_timeInWrongFormat() {
         List<TuntiKirjaus> tuntiKirjausList = getTuntikirjausList();
         when(tuntiKirjausService.getTuntiKirjausForDate(any())).thenReturn(tuntiKirjausList);
-        assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("999", "Test topic"));
-        assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("123242", "Test topic"));
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("999", "Test topic", true));
+        assertThrows(MalformatedTimeException.class, () -> mainViewService.addTuntikirjaus("123242", "Test topic", true));
         verify(tuntiKirjausService, times(0)).save(any());
         verify(tuntiKirjausService, times(0)).update(any());
     }
