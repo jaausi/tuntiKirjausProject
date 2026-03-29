@@ -55,8 +55,7 @@ public class Initializer {
     }
 
     private static void runDbMigrations() {
-        LOGGER.info("Appliying database migrations... Only migrations which changes are not yet applied to the database will be applied, so it's safe to add new migrations and run this method on every application start");
-
+        LOGGER.info("Applying database migrations. Only pending migrations will be applied, so it's safe to add new migrations and run this on every application start.");
         new Migration(
                 "Add IS_REMOTE column to Tuntikirjaus table",
                 "SELECT EXISTS (SELECT 1 FROM pragma_table_info('Tuntikirjaus') WHERE name = 'IS_REMOTE') AS is_run;",
