@@ -92,7 +92,7 @@ public class TuntikirjausServiceTest {
     @DisplayName("Test to save new Tuntikirjaus")
     void testSavingTuntikirjaus() {
         TuntiKirjaus lastTuntikirjaus = tuntikirjausList.getLast();
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(lastTuntikirjaus.getEndTime().get(), null, "Manual test kirjaus", true);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(lastTuntikirjaus.getEndTime().get(), null, "Manual test kirjaus", true, true);
         TuntiKirjaus tuntiKirjausWithId = new TuntiKirjaus(lastTuntikirjaus.getId() + 1, tuntiKirjaus.getStartTime(), tuntiKirjaus.getEndTime().orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled());
         when(tuntikirjausDao.save(eq(tuntiKirjaus))).thenReturn(tuntiKirjausWithId);
 

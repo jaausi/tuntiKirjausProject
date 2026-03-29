@@ -1,13 +1,10 @@
 package com.sirvja.tuntikirjaus.domain;
 
-import javafx.css.converter.DurationConverter;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
@@ -16,9 +13,10 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private LocalDateTime endTime;
     private String topic;
     private boolean durationEnabled;
+    private boolean isRemote;
 
     //**************** CONSTRUCTORS *****************//
-    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
+    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled, boolean isRemote) {
         assert startTime != null;
         assert topic != null;
         assert durationEnabled != null;
@@ -27,17 +25,11 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.endTime = endTime;
         this.topic = topic;
         this.durationEnabled = durationEnabled;
+        this.isRemote = isRemote;
     }
-    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled) {
-        assert startTime != null;
-        assert topic != null;
-        assert durationEnabled != null;
-
+    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled, boolean isRemote) {
         this.id = id;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.topic = topic;
-        this.durationEnabled = durationEnabled;
+        this(startTime, endTime, topic, durationEnabled, isRemote);
     }
 
     //**************** Common methods for object *****************//
@@ -106,6 +98,11 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     public LocalDate getLocalDateOfStartTime(){
         return this.startTime.toLocalDate();
     }
+
+    public boolean isRemote() {
+        return isRemote;
+    }
+
 
 
     //**************** Methods for tableview *****************//
