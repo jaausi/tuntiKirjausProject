@@ -271,7 +271,7 @@ public class MainViewController implements Initializable {
     protected void onTallennaTaulukkoonButtonClick() {
         try {
             log.debug("Save to table button pushed!");
-            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText(), true);
+            TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText(), etatyoCheckbox.isSelected());
             aiheField.getEntries().add(tuntiKirjaus.getTopic());
             initializeView();
         } catch (EmptyTopicException e) {
