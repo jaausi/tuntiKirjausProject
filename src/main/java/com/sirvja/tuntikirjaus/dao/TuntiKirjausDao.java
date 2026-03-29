@@ -78,7 +78,6 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
                     LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                     parseEndTime.apply(resultSet.getString("END_TIME")),
                     resultSet.getString("TOPIC"),
-                    Boolean.parseBoolean(resultSet.getString("DURATION_ENABLED")),
                     resultSet.getBoolean("IS_REMOTE")
             ));
         } catch (SQLException e) {
@@ -101,7 +100,6 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
             ResultSet resultSet = dbExecuteQuery(query);
 
             while (resultSet.next()){
-                //LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getString("START_TIME"),resultSet.getString("END_TIME"), resultSet.getString("TOPIC"), resultSet.getString("DURATION_ENABLED")));
                 String endTimeString = resultSet.getString("END_TIME");
                 Optional<String> endTime = Optional.ofNullable(endTimeString.isEmpty() || endTimeString.equals("null") ? null : endTimeString);
                 LocalDateTime localEndDateTime = endTime.map(s -> LocalDateTime.parse(s, dateTimeFormatter)).orElse(null);
@@ -111,7 +109,6 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
                                 LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                                 localEndDateTime,
                                 resultSet.getString("TOPIC"),
-                                Boolean.parseBoolean(resultSet.getString("DURATION_ENABLED")),
                                 resultSet.getBoolean("IS_REMOTE")
                         )
                 );
@@ -128,9 +125,9 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
 
     @Override
     public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
-        String query = String.format("INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, DURATION_ENABLED, IS_REMOTE) " +
-                "VALUES ('%s', '%s', '%s', '%b', %b) " +
-                "RETURNING ROWID", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.isRemote());
+        String query = String.format("INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, IS_REMOTE) " +
+                "VALUES ('%s', '%s', '%s', %b) " +
+                "RETURNING ROWID", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isRemote());
         LOGGER.debug("Inserting Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -150,8 +147,8 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
     @Override
     public void update(TuntiKirjaus tuntiKirjaus) {
         String query = String.format("UPDATE Tuntikirjaus " +
-                "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', DURATION_ENABLED='%b', IS_REMOTE=%b " +
-                "WHERE ROWID=%s", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled(), tuntiKirjaus.isRemote(), tuntiKirjaus.getId());
+                "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', IS_REMOTE=%b " +
+                "WHERE ROWID=%s", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isRemote(), tuntiKirjaus.getId());
         LOGGER.debug("Updating Tuntikirjaus with sql query: {}", query);
 
         try{
@@ -184,13 +181,12 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
             ResultSet resultSet = dbExecuteQuery(query);
 
             while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
+                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("IS_REMOTE")));
                 tuntiKirjaus = new TuntiKirjaus(
                         resultSet.getInt("ROWID"),
                         LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
                         LocalDateTime.parse(resultSet.getString("END_TIME"), dateTimeFormatter),
                         resultSet.getString("TOPIC"),
-                        Boolean.parseBoolean(resultSet.getString("DURATION_ENABLED")),
                         resultSet.getBoolean("IS_REMOTE")
                 );
             }
@@ -207,7 +203,6 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
                 "START_TIME         TEXT                        NOT NULL," +
                 "END_TIME           TEXT                                ," +
                 "TOPIC              TEXT                        NOT NULL," +
-                "DURATION_ENABLED   INTEGER                     NOT NULL," +
                 "IS_REMOTE          INTEGER                     NOT NULL DEFAULT 0)";
         LOGGER.debug("Initializing table with sql query: {}", sqlQuery);
 

@@ -99,7 +99,7 @@ public class ReportsViewService {
             return "";
         }
 
-        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+        Predicate<TuntiKirjaus> predicate = Predicate.not(TuntiKirjaus::isEndTimeNull);
 
         Map<String, String> topicToDuration = tuntiKirjausList.stream()
                 .filter(predicate)

@@ -56,10 +56,27 @@ public class Initializer {
 
     private static void runDbMigrations() {
         LOGGER.info("Appliying database migrations... Only migrations which changes are not yet applied to the database will be applied, so it's safe to add new migrations and run this method on every application start");
+
         new Migration(
                 "Add IS_REMOTE column to Tuntikirjaus table",
                 "SELECT EXISTS (SELECT 1 FROM pragma_table_info('Tuntikirjaus') WHERE name = 'IS_REMOTE') AS is_run;",
                 "ALTER TABLE Tuntikirjaus ADD COLUMN IS_REMOTE INTEGER NOT NULL DEFAULT 0"
+        ).run();
+
+        new Migration(
+                "Remove DURATION_ENABLED column from Tuntikirjaus table",
+                "SELECT NOT EXISTS (SELECT 1 FROM pragma_table_info('Tuntikirjaus') WHERE name = 'DURATION_ENABLED') AS is_run;",
+                "ALTER TABLE Tuntikirjaus RENAME TO Tuntikirjaus_old;" +
+                        "CREATE TABLE Tuntikirjaus(" +
+                        "ROWID INTEGER PRIMARY KEY," +
+                        "START_TIME TEXT NOT NULL," +
+                        "END_TIME TEXT," +
+                        "TOPIC TEXT NOT NULL," +
+                        "IS_REMOTE INTEGER NOT NULL DEFAULT 0" +
+                        ");" +
+                        "INSERT INTO Tuntikirjaus(ROWID, START_TIME, END_TIME, TOPIC, IS_REMOTE) " +
+                        "SELECT ROWID, START_TIME, END_TIME, TOPIC, COALESCE(IS_REMOTE, 0) FROM Tuntikirjaus_old;" +
+                        "DROP TABLE Tuntikirjaus_old;"
         ).run();
     }
 }

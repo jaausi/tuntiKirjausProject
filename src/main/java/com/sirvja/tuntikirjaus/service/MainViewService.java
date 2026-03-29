@@ -64,7 +64,7 @@ public class MainViewService {
 
         LocalDateTime localDateTime = parseTimeFromString(time);
 
-        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, true, isRemote);
+        TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(localDateTime, null, topic, isRemote);
 
         ObservableList<TuntiKirjaus> tuntidata = getTuntiDataForTable();
 
@@ -140,7 +140,7 @@ public class MainViewService {
     }
 
     private SortedMap<String, String> groupTuntikirjausListBasedOnClassification(List<TuntiKirjaus> tuntiKirjausList) {
-        Predicate<TuntiKirjaus> endTimeNotNull = Predicate.not(TuntiKirjaus::isEndTimeNull).and(TuntiKirjaus::isDurationEnabled);
+        Predicate<TuntiKirjaus> endTimeNotNull = Predicate.not(TuntiKirjaus::isEndTimeNull);
 
         Collector<TuntiKirjaus, ?, Long> sumDurations = Collectors.summingLong(t -> t.getDurationInDuration().toMinutes());
 

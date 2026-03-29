@@ -12,24 +12,22 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String topic;
-    private boolean durationEnabled;
     private boolean isRemote;
 
     //**************** CONSTRUCTORS *****************//
-    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled, boolean isRemote) {
+    public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, boolean isRemote) {
         assert startTime != null;
         assert topic != null;
-        assert durationEnabled != null;
 
         this.startTime = startTime;
         this.endTime = endTime;
         this.topic = topic;
-        this.durationEnabled = durationEnabled;
         this.isRemote = isRemote;
     }
-    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled, boolean isRemote) {
+
+    public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, boolean isRemote) {
+        this(startTime, endTime, topic, isRemote);
         this.id = id;
-        this(startTime, endTime, topic, durationEnabled, isRemote);
     }
 
     //**************** Common methods for object *****************//
@@ -62,13 +60,6 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         return getEndTime().isEmpty();
     }
 
-    public boolean isDurationEnabled(){
-        return this.durationEnabled;
-    }
-    public void setDurationEnabled(boolean durationEnabled) {
-        this.durationEnabled = durationEnabled;
-    }
-
     public Duration getDurationInDuration() {
         Optional<LocalDateTime> optionalEndTime = getEndTime();
         if(optionalEndTime.isPresent()){
@@ -91,6 +82,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
 
         return classification;
     }
+
     private String getProjectFromJiraCode(String prefix) {
         return prefix.split("-")[0];
     }
@@ -122,7 +114,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.topic = topic;
     }
     public String getDurationString() {
-        if(isEndTimeNull() || !isDurationEnabled()){
+        if(isEndTimeNull()){
             return "-";
         }
         return durationToString.apply(getDurationInDuration());
