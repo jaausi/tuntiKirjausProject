@@ -28,8 +28,8 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.isRemote = isRemote;
     }
     public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, Boolean durationEnabled, boolean isRemote) {
-        this.id = id;
         this(startTime, endTime, topic, durationEnabled, isRemote);
+        this.id = id;
     }
 
     //**************** Common methods for object *****************//
