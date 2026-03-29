@@ -13,3 +13,4 @@ database
 .env
 reports/
 /local-setup/.env
+*.versionsBackup
