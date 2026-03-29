@@ -93,7 +93,13 @@ public class TuntikirjausServiceTest {
     void testSavingTuntikirjaus() {
         TuntiKirjaus lastTuntikirjaus = tuntikirjausList.getLast();
         TuntiKirjaus tuntiKirjaus = new TuntiKirjaus(lastTuntikirjaus.getEndTime().get(), null, "Manual test kirjaus", true, true);
-        TuntiKirjaus tuntiKirjausWithId = new TuntiKirjaus(lastTuntikirjaus.getId() + 1, tuntiKirjaus.getStartTime(), tuntiKirjaus.getEndTime().orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isDurationEnabled());
+        TuntiKirjaus tuntiKirjausWithId = new TuntiKirjaus(
+                lastTuntikirjaus.getId() + 1,
+                tuntiKirjaus.getStartTime(),
+                tuntiKirjaus.getEndTime().orElse(null),
+                tuntiKirjaus.getTopic(),
+                tuntiKirjaus.isDurationEnabled(),
+                tuntiKirjaus.isRemote());
         when(tuntikirjausDao.save(eq(tuntiKirjaus))).thenReturn(tuntiKirjausWithId);
 
         assertEquals(tuntiKirjausWithId, tuntiKirjausService.save(tuntiKirjaus), "Saving should return tuntikirjaus with id");
