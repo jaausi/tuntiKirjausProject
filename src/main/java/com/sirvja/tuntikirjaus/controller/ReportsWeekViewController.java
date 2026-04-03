@@ -1,6 +1,7 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.tuntikirjaus.domain.*;
+import com.sirvja.tuntikirjaus.service.IncidentService;
 import com.sirvja.tuntikirjaus.service.ReportsViewService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,6 +19,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class ReportsWeekViewController implements Initializable {
@@ -71,6 +75,11 @@ public class ReportsWeekViewController implements Initializable {
 
     private final int thisYear = LocalDate.now().getYear();
     private List<TuntiKirjaus> tuntiKirjausListAll;
+    private final IncidentService incidentService;
+
+    public ReportsWeekViewController() {
+        this.incidentService = new IncidentService();
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -176,53 +185,25 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private ObservableList<WeeklyIncidents> mapTuntikirjausListToWeeklyIncidents(List<TuntiKirjaus> tuntiKirjausListForWeek) {
-        Map<Incident, List<LocalDateTime>> incidentToTimeMap = new HashMap<>();
 
-        parseStartTimeIncidents(tuntiKirjausListForWeek, incidentToTimeMap);
+        List<TuntikirjausIncident> incidentsForWeek = incidentService.parseTuntikirjausIncidents(tuntiKirjausListForWeek);
 
-        parseLunchTimeIncidents(tuntiKirjausListForWeek, incidentToTimeMap);
+        Collector<TuntikirjausIncident, ?, Map<Incident, List<LocalDateTime>>> groupByIncident = Collectors.groupingBy(
+                TuntikirjausIncident::getIncident,
+                HashMap::new,
+                Collectors.mapping(TuntikirjausIncident::getTime, Collectors.toList())
+        );
 
-        parseEntTimeIncident(tuntiKirjausListForWeek, incidentToTimeMap);
-
-        return incidentToTimeMap.entrySet().stream()
+        Function<Map<Incident, List<LocalDateTime>>, ObservableList<WeeklyIncidents>> mapToWeeklyIncidents = map -> map.entrySet().stream()
                 .map(entry -> new WeeklyIncidents(entry.getKey(), entry.getValue()))
                 .sorted()
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
-    }
 
-    private static void parseEntTimeIncident(List<TuntiKirjaus> currentWeekTuntikirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
-        List<LocalDateTime> endTimesForWeek = currentWeekTuntikirjausList.stream()
-                .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
-                .collect(Collectors.groupingBy(tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
-                        HashMap::new,
-                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().max(Comparator.naturalOrder()).map(tk -> tk.getEndTime().orElseThrow()).orElseThrow())
-                )).values().stream().toList();
-
-        incidentToTimeMap.put(Incident.END_OF_DAY, endTimesForWeek);
-    }
-
-    private static void parseLunchTimeIncidents(List<TuntiKirjaus> currentWeekTuntikirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
-        List<TuntiKirjaus> lunchTimesForWeek = currentWeekTuntikirjausList.stream()
-                .filter(tuntiKirjaus -> tuntiKirjaus.getTopic().toLowerCase().contains(LUNCH_TOPIC))
-                .collect(Collectors.groupingBy(
-                        tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
-                        HashMap::new,
-                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().sorted().findFirst().orElse(null))
-                )).values().stream().toList();
-
-        incidentToTimeMap.put(Incident.START_OF_LUNCH, lunchTimesForWeek.stream().map(TuntiKirjaus::getStartTime).toList());
-        incidentToTimeMap.put(Incident.END_OF_LUNCH, lunchTimesForWeek.stream().map(TuntiKirjaus::getEndTime).filter(Optional::isPresent).map(Optional::get).toList());
-    }
-
-    private void parseStartTimeIncidents(List<TuntiKirjaus> tuntiKirjausList, Map<Incident, List<LocalDateTime>> incidentToTimeMap) {
-        List<LocalDateTime> startTimesForWeek = tuntiKirjausList.stream()
-                .collect(Collectors.groupingBy(
-                        tuntiKirjaus -> tuntiKirjaus.getStartTime().getDayOfWeek(),
-                        HashMap::new,
-                        Collectors.collectingAndThen(Collectors.toList(), tkList -> tkList.stream().sorted().findFirst().map(TuntiKirjaus::getStartTime).orElse(null))
-                )).values().stream().toList();
-
-        incidentToTimeMap.put(Incident.START_OF_DAY, startTimesForWeek);
+        return incidentsForWeek.stream()
+                .collect(Collectors.collectingAndThen(
+                        groupByIncident,
+                        mapToWeeklyIncidents
+                ));
     }
 
     @FXML

@@ -102,8 +102,14 @@ public class ExportViewController implements Initializable {
             case START_OF_DAY, END_OF_LUNCH, END_OF_BREAK -> {
                 return new KiekuItem(tuntikirjausIncident.time(), KiekuEvent.IN);
             }
+            case START_OF_DAY_REMOTE, END_OF_LUNCH_REMOTE, END_OF_BREAK_REMOTE -> {
+                return new KiekuItem(tuntikirjausIncident.time(), KiekuEvent.REMOTE_IN);
+            }
             case END_OF_DAY, START_OF_LUNCH, START_OF_BREAK -> {
                 return new KiekuItem(tuntikirjausIncident.time(), KiekuEvent.OUT);
+            }
+            case END_OF_DAY_REMOTE, START_OF_LUNCH_REMOTE, START_OF_BREAK_REMOTE -> {
+                return new KiekuItem(tuntikirjausIncident.time(), KiekuEvent.REMOTE_OUT);
             }
             default -> {
                 return null;

@@ -12,6 +12,10 @@ public class IncidentService {
     private static final String LUNCH_TOPIC = "lounas";
     private static final String BREAK_TOPIC = "tauko";
 
+    public Map<Incident, List<TuntikirjausIncident>> groupIncidentsByType(List<TuntikirjausIncident> incidents) {
+        return incidents.stream()
+                .collect(Collectors.groupingBy(TuntikirjausIncident::incident));
+    }
 
     public List<TuntikirjausIncident> parseTuntikirjausIncidents(List<TuntiKirjaus> tuntiKirjausList) {
         List<TuntikirjausIncident> tuntikirjausIncidents = new ArrayList<>();
@@ -30,8 +34,10 @@ public class IncidentService {
         return tuntiKirjausList.stream()
                 .filter(tk -> tk.getTopic().toLowerCase().startsWith(LUNCH_TOPIC))
                 .<TuntikirjausIncident>mapMulti((tk, consumer) -> {
-                    consumer.accept(new TuntikirjausIncident(tk.getStartTime(), Incident.START_OF_LUNCH));
-                    tk.getEndTime().ifPresent(endTime -> consumer.accept(new TuntikirjausIncident(endTime, Incident.END_OF_LUNCH)));
+                    Incident startIncident = tk.isRemote() ? Incident.START_OF_LUNCH_REMOTE : Incident.START_OF_LUNCH;
+                    Incident endIncident = tk.isRemote() ? Incident.END_OF_LUNCH_REMOTE : Incident.END_OF_LUNCH;
+                    consumer.accept(new TuntikirjausIncident(tk.getStartTime(), startIncident));
+                    tk.getEndTime().ifPresent(endTime -> consumer.accept(new TuntikirjausIncident(endTime, endIncident)));
                 }).toList();
     }
 
@@ -39,8 +45,10 @@ public class IncidentService {
         return tuntiKirjausList.stream()
                 .filter(tk -> tk.getTopic().toLowerCase().startsWith(BREAK_TOPIC))
                 .<TuntikirjausIncident>mapMulti((tk, consumer) -> {
-                    consumer.accept(new TuntikirjausIncident(tk.getStartTime(), Incident.START_OF_BREAK));
-                    tk.getEndTime().ifPresent(endTime -> consumer.accept(new TuntikirjausIncident(endTime, Incident.END_OF_BREAK)));
+                    Incident startIncident = tk.isRemote() ? Incident.START_OF_BREAK_REMOTE : Incident.START_OF_BREAK;
+                    Incident endIncident = tk.isRemote() ? Incident.END_OF_BREAK_REMOTE : Incident.END_OF_BREAK;
+                    consumer.accept(new TuntikirjausIncident(tk.getStartTime(), startIncident));
+                    tk.getEndTime().ifPresent(endTime -> consumer.accept(new TuntikirjausIncident(endTime, endIncident)));
                 }).toList();
     }
 
@@ -48,8 +56,7 @@ public class IncidentService {
         Function<List<TuntiKirjaus>, TuntikirjausIncident> findStartOfDayIncidentFromList =
                 tkList -> tkList.stream()
                         .min(Comparator.naturalOrder())
-                        .map(TuntiKirjaus::getStartTime)
-                        .map(ldt -> new TuntikirjausIncident(ldt, Incident.START_OF_DAY))
+                        .map(tk -> new TuntikirjausIncident(tk.getStartTime(), tk.isRemote() ? Incident.START_OF_DAY_REMOTE : Incident.START_OF_DAY))
                         .orElse(null);
 
         return parseIncidents(tkCollection, findStartOfDayIncidentFromList);
@@ -59,8 +66,7 @@ public class IncidentService {
         Function<List<TuntiKirjaus>, TuntikirjausIncident> findEndOfDayIncidentFromList =
                 tkList -> tkList.stream()
                 .max(Comparator.naturalOrder())
-                .flatMap(TuntiKirjaus::getEndTime)
-                .map(ldt -> new TuntikirjausIncident(ldt, Incident.END_OF_DAY))
+                .flatMap(tk -> tk.getEndTime().map(ldt -> new TuntikirjausIncident(ldt, tk.isRemote() ? Incident.END_OF_DAY_REMOTE : Incident.END_OF_DAY)))
                 .orElse(null);
 
         return parseIncidents(tkCollection, findEndOfDayIncidentFromList);
