@@ -3,9 +3,14 @@ package com.sirvja.tuntikirjaus.service;
 import com.sirvja.tuntikirjaus.domain.Incident;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.domain.TuntikirjausIncident;
+import com.sirvja.tuntikirjaus.domain.WeeklyIncidents;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class IncidentService {

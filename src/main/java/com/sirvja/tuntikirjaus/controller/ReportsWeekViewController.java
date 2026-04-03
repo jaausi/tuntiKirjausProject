@@ -3,6 +3,7 @@ package com.sirvja.tuntikirjaus.controller;
 import com.sirvja.tuntikirjaus.domain.*;
 import com.sirvja.tuntikirjaus.service.IncidentService;
 import com.sirvja.tuntikirjaus.service.ReportsViewService;
+import com.sirvja.tuntikirjaus.service.WeeklyViewService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -76,9 +77,11 @@ public class ReportsWeekViewController implements Initializable {
     private final int thisYear = LocalDate.now().getYear();
     private List<TuntiKirjaus> tuntiKirjausListAll;
     private final IncidentService incidentService;
+    private final WeeklyViewService weeklyViewService;
 
     public ReportsWeekViewController() {
         this.incidentService = new IncidentService();
+        this.weeklyViewService = new WeeklyViewService(incidentService);
     }
 
     @Override
@@ -129,8 +132,8 @@ public class ReportsWeekViewController implements Initializable {
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().get(WeekFields.ISO.weekOfWeekBasedYear()) == observable.getValue().getWeekNum())
                     .toList();
 
-            ObservableList<WeeklyProjectHours> weeklyProjectHours = mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausListForWeek);
-            ObservableList<WeeklyIncidents> weeklyIncidents = mapTuntikirjausListToWeeklyIncidents(tuntiKirjausListForWeek);
+            ObservableList<WeeklyProjectHours> weeklyProjectHours = weeklyViewService.mapTuntikirjausListToWeeklyProjectHours(tuntiKirjausListForWeek);
+            ObservableList<WeeklyIncidents> weeklyIncidents = weeklyViewService.parseWeeklyIncidents(tuntiKirjausListForWeek);
             String summaryString = getSummaryString(tuntiKirjausListForWeek);
 
             weeklyProjectHoursTable.setItems(weeklyProjectHours);
@@ -167,43 +170,6 @@ public class ReportsWeekViewController implements Initializable {
         String htps = ReportsViewService.getHtpsStringFromMinutes(sumOfHoursInMinutes);
 
         return String.format("%sh %sm (%s htp)", hours, minutes, htps);
-    }
-
-    private ObservableList<WeeklyProjectHours> mapTuntikirjausListToWeeklyProjectHours(List<TuntiKirjaus> tuntiKirjausListForWeek) {
-        Map<String, List<TuntiKirjaus>> projectToTuntikirjausList = tuntiKirjausListForWeek.stream()
-                .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
-                .collect(Collectors.groupingBy(
-                        TuntiKirjaus::getClassification,
-                        HashMap::new,
-                        Collectors.toList()
-                ));
-
-        return projectToTuntikirjausList.entrySet().stream()
-                .map(entry -> new WeeklyProjectHours(entry.getKey(), entry.getValue()))
-                .sorted()
-                .collect(Collectors.toCollection(FXCollections::observableArrayList));
-    }
-
-    private ObservableList<WeeklyIncidents> mapTuntikirjausListToWeeklyIncidents(List<TuntiKirjaus> tuntiKirjausListForWeek) {
-
-        List<TuntikirjausIncident> incidentsForWeek = incidentService.parseTuntikirjausIncidents(tuntiKirjausListForWeek);
-
-        Collector<TuntikirjausIncident, ?, Map<Incident, List<LocalDateTime>>> groupByIncident = Collectors.groupingBy(
-                TuntikirjausIncident::getIncident,
-                HashMap::new,
-                Collectors.mapping(TuntikirjausIncident::getTime, Collectors.toList())
-        );
-
-        Function<Map<Incident, List<LocalDateTime>>, ObservableList<WeeklyIncidents>> mapToWeeklyIncidents = map -> map.entrySet().stream()
-                .map(entry -> new WeeklyIncidents(entry.getKey(), entry.getValue()))
-                .sorted()
-                .collect(Collectors.toCollection(FXCollections::observableArrayList));
-
-        return incidentsForWeek.stream()
-                .collect(Collectors.collectingAndThen(
-                        groupByIncident,
-                        mapToWeeklyIncidents
-                ));
     }
 
     @FXML
