@@ -74,7 +74,6 @@ public class ReportsWeekViewController implements Initializable {
     @FXML
     private ComboBox<WeekSelectorItem> weekSelector;
 
-    private final int thisYear = LocalDate.now().getYear();
     private List<TuntiKirjaus> tuntiKirjausListAll;
     private final IncidentService incidentService;
     private final WeeklyViewService weeklyViewService;
@@ -128,7 +127,7 @@ public class ReportsWeekViewController implements Initializable {
         weekSelector.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
             List<TuntiKirjaus> tuntiKirjausListForWeek = tuntiKirjausListAll.stream()
                     .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
-                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().getYear() == thisYear)
+                    .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().getYear() == observable.getValue().getYear())
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().get(WeekFields.ISO.weekOfWeekBasedYear()) == observable.getValue().getWeekNum())
                     .toList();
 
