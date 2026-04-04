@@ -11,6 +11,7 @@ module com.sirvja.tuntikirjaus {
     requires org.seleniumhq.selenium.firefox_driver;
     requires org.seleniumhq.selenium.chrome_driver;
     requires org.seleniumhq.selenium.edge_driver;
+    requires javafx.base;
 
     opens com.sirvja.tuntikirjaus to javafx.fxml;
     exports com.sirvja.tuntikirjaus;
