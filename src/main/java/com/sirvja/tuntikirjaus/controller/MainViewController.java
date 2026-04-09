@@ -1,5 +1,6 @@
 package com.sirvja.tuntikirjaus.controller;
 
+import com.sirvja.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
@@ -9,7 +10,6 @@ import com.sirvja.tuntikirjaus.exception.StartTimeNotAfterLastTuntikirjausExcept
 import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
-import com.sirvja.tuntikirjaus.customFields.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
