@@ -16,6 +16,13 @@
         <argLine/>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>github-tuntikirjaus</id>
+            <url>https://maven.pkg.github.com/jaausi/tuntikirjaus-components-lib</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -31,6 +38,11 @@
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>4.41.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sirvja</groupId>
+            <artifactId>tuntikirjaus-components-lib</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <!-- Logging libraries -->
         <dependency>

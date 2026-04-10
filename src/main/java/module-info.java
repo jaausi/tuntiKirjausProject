@@ -12,6 +12,7 @@ module com.sirvja.tuntikirjaus {
     requires org.seleniumhq.selenium.chrome_driver;
     requires org.seleniumhq.selenium.edge_driver;
     requires javafx.base;
+    requires tuntikirjaus.components.lib;
 
     opens com.sirvja.tuntikirjaus to javafx.fxml;
     exports com.sirvja.tuntikirjaus;
@@ -21,8 +22,6 @@ module com.sirvja.tuntikirjaus {
     opens com.sirvja.tuntikirjaus.utils to javafx.fxml;
     exports com.sirvja.tuntikirjaus.controller;
     opens com.sirvja.tuntikirjaus.controller to javafx.fxml;
-    exports com.sirvja.tuntikirjaus.customFields;
-    opens com.sirvja.tuntikirjaus.customFields to javafx.fxml;
     exports com.sirvja.tuntikirjaus.dao;
     opens com.sirvja.tuntikirjaus.dao to javafx.fxml;
 }
