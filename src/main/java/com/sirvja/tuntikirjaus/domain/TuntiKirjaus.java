@@ -1,5 +1,11 @@
 package com.sirvja.tuntikirjaus.domain;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +20,12 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     private String topic;
     private boolean isRemote;
 
+    // JavaFX observable properties for TableView binding
+    private final ObjectProperty<LocalTime> timeProperty = new SimpleObjectProperty<>();
+    private final StringProperty topicProperty = new SimpleStringProperty();
+    private final StringProperty durationStringProperty = new SimpleStringProperty();
+    private final BooleanProperty remoteProperty = new SimpleBooleanProperty();
+
     //**************** CONSTRUCTORS *****************//
     public TuntiKirjaus(LocalDateTime startTime, LocalDateTime endTime, String topic, boolean isRemote) {
         assert startTime != null;
@@ -23,6 +35,14 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
         this.endTime = endTime;
         this.topic = topic;
         this.isRemote = isRemote;
+        syncProperties();
+    }
+
+    private void syncProperties() {
+        timeProperty.set(LocalTime.of(startTime.getHour(), startTime.getMinute()));
+        topicProperty.set(topic);
+        durationStringProperty.set(getDurationString());
+        remoteProperty.set(isRemote);
     }
 
     public TuntiKirjaus(int id, LocalDateTime startTime, LocalDateTime endTime, String topic, boolean isRemote) {
@@ -101,23 +121,42 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     public LocalTime getTime() {
         return LocalTime.of(startTime.getHour(), startTime.getMinute());
     }
+    public ObjectProperty<LocalTime> timeProperty() {
+        return timeProperty;
+    }
     public LocalDateTime getDateTime(){
         return startTime;
     }
     public void setTime(LocalTime localTime){
         this.startTime = LocalDateTime.of(LocalDate.now(), localTime);
+        timeProperty.set(localTime);
+        durationStringProperty.set(getDurationString());
     }
     public String getTopic() {
         return topic;
     }
+    public StringProperty topicProperty() {
+        return topicProperty;
+    }
     public void setTopic(String topic) {
         this.topic = topic;
+        topicProperty.set(topic);
+    }
+    public StringProperty durationStringProperty() {
+        return durationStringProperty;
+    }
+    public BooleanProperty remoteProperty() {
+        return remoteProperty;
     }
     public String getDurationString() {
         if(isEndTimeNull()){
             return "-";
         }
         return durationToString.apply(getDurationInDuration());
+    }
+    public void setRemote(boolean remote) {
+        isRemote = remote;
+        remoteProperty.set(remote);
     }
 
     @Override

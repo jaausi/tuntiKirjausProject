@@ -18,7 +18,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -52,6 +52,8 @@ public class MainViewController implements Initializable {
     private TableColumn<TuntiKirjaus, String> aiheColumn;
     @FXML
     private TableColumn<TuntiKirjaus, String> tunnitColumn;
+    @FXML
+    private TableColumn<TuntiKirjaus, Boolean> remoteColumn;
     @FXML
     private AutoCompleteTextField<String> aiheField;
     @FXML
@@ -93,6 +95,7 @@ public class MainViewController implements Initializable {
     @FXML
     private TextArea yhteenvetoTextArea;
     private Object valueBeforeEdit;
+    private final Set<TuntiKirjaus> remoteListenerRegistered = Collections.newSetFromMap(new WeakHashMap<>());
 
     public MainViewController() {
         this.mainViewService = new MainViewService();
@@ -103,13 +106,24 @@ public class MainViewController implements Initializable {
     public void initialize (URL url, ResourceBundle rb){
         tuntiTaulukko.setEditable(true);
 
-        kellonaikaColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, LocalTime>("time"));
-        aiheColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("topic"));
-        tunnitColumn.setCellValueFactory(new PropertyValueFactory<TuntiKirjaus, String>("durationString"));
+        kellonaikaColumn.setCellValueFactory(cellData -> cellData.getValue().timeProperty());
+        aiheColumn.setCellValueFactory(cellData -> cellData.getValue().topicProperty());
+        tunnitColumn.setCellValueFactory(cellData -> cellData.getValue().durationStringProperty());
+        remoteColumn.setCellValueFactory(cellData -> {
+            TuntiKirjaus kirjaus = cellData.getValue();
+            if (remoteListenerRegistered.add(kirjaus)) {
+                kirjaus.remoteProperty().addListener(
+                        mainViewService.getRemoteColumnListener(kirjaus, tuntiTaulukko::refresh));
+            }
+            return kirjaus.remoteProperty();
+        });
+        remoteColumn.setCellFactory(CheckBoxTableCell.forTableColumn(remoteColumn));
+
 
         kellonaikaColumn.setSortable(false);
         aiheColumn.setSortable(false);
         tunnitColumn.setSortable(false);
+        remoteColumn.setSortable(false);
 
         setEditListenerToKellonaikaColumn();
 

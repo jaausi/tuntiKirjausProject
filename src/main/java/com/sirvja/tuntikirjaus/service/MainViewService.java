@@ -281,4 +281,12 @@ public class MainViewService {
             updateAiheFieldEntry.accept(oldTopic, editEvent.getNewValue());
         };
     }
+
+    public ChangeListener<? super Boolean> getRemoteColumnListener(TuntiKirjaus kirjaus, Runnable refreshTuntitaulukko) {
+        return (obs, oldVal, newVal) -> {
+            kirjaus.setRemote(newVal);
+            tuntikirjausService.update(kirjaus);
+            refreshTuntitaulukko.run();
+        };
+    }
 }
