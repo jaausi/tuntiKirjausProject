@@ -44,7 +44,6 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -66,6 +65,7 @@
             <MenuItem fx:id="weeklyReportMenuItem" mnemonicParsing="false" onAction="#onOpenWeeklyReportMenuItem" text="Viikkoraportti" />
             <MenuItem fx:id="exporterMenuItem" mnemonicParsing="false" onAction="#onOpenExporter" text="Exporter" />
             <MenuItem fx:id="configurationMenuItem" mnemonicParsing="false" onAction="#onOpenConfiguration" text="Konfiguraatio" />
+            <MenuItem fx:id="projectBudgetsMenuItem" mnemonicParsing="false" onAction="#onOpenProjectBudgets" text="Projektibudjetit" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
@@ -169,11 +169,8 @@
             </VBox>
             <VBox layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="100.0" styleClass="right-box">
                <children>
-                  <TextArea fx:id="yhteenvetoTextArea" focusTraversable="false" prefHeight="474.0" prefWidth="220.0" VBox.vgrow="ALWAYS">
-                     <tooltip>
-                        <Tooltip text="Tässä näytetään aktiivisen päivän&#10;yhteenveto syötetyistä tunneista.&#10;Yhteenvedon avulla päivän tehdyt&#10;työt on helppo syöttää Tiimaan." />
-                     </tooltip></TextArea>
-                  <Button fx:id="tallennaLeikepoydalleButton" maxHeight="77.0" maxWidth="1.7976931348623157E308" minHeight="26.0" mnemonicParsing="false" onAction="#onTallennaLeikepoydalleButtonClick" prefHeight="77.0" prefWidth="220.0" text="Tallenna leikepöydälle" />
+                  <Label text="Kuluva kuukausi" style="-fx-font-weight: bold; -fx-padding: 4 6 4 6;" />
+                  <ListView fx:id="projectBudgetListView" focusTraversable="false" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
       </items>

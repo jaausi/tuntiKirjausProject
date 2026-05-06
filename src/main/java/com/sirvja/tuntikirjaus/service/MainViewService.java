@@ -1,6 +1,7 @@
 package com.sirvja.tuntikirjaus.service;
 
 import com.sirvja.tuntikirjaus.domain.Paiva;
+import com.sirvja.tuntikirjaus.domain.ProjectBudgetItem;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class MainViewService {
     private final TuntiKirjausService tuntikirjausService;
     private final AlertService alertService;
+    private final ConfigurationService configurationService;
     private LocalDate currentDate;
 
     private static final Logger log = LoggerFactory.getLogger(MainViewService.class);
@@ -36,12 +39,14 @@ public class MainViewService {
     public MainViewService() {
         this.tuntikirjausService = new TuntiKirjausService();
         this.alertService = new AlertService();
+        this.configurationService = new ConfigurationService();
         this.currentDate = LocalDate.now();
     }
 
     public MainViewService(TuntiKirjausService tuntikirjausService, AlertService alertService) {
         this.tuntikirjausService = tuntikirjausService;
         this.alertService = alertService;
+        this.configurationService = new ConfigurationService();
         this.currentDate = LocalDate.now();
     }
 
@@ -289,4 +294,32 @@ public class MainViewService {
             refreshTuntitaulukko.run();
         };
     }
+
+    public List<ProjectBudgetItem> getMonthlyProjectBudgetItems() {
+        Month currentMonth = LocalDate.now().getMonth();
+        int currentYear = LocalDate.now().getYear();
+
+        Predicate<TuntiKirjaus> isCurrentMonth = tk ->
+                tk.getStartTime().getMonth() == currentMonth &&
+                tk.getStartTime().getYear() == currentYear;
+        Predicate<TuntiKirjaus> endTimeNotNull = Predicate.not(TuntiKirjaus::isEndTimeNull);
+
+        Map<String, Long> projectMinutes = tuntikirjausService.getAllTuntikirjaus().stream()
+                .filter(isCurrentMonth)
+                .filter(endTimeNotNull)
+                .collect(Collectors.groupingBy(
+                        TuntiKirjaus::getClassification,
+                        TreeMap::new,
+                        Collectors.summingLong(tk -> tk.getDurationInDuration().toMinutes())
+                ));
+
+        return projectMinutes.entrySet().stream()
+                .map(entry -> new ProjectBudgetItem(
+                        entry.getKey(),
+                        entry.getValue(),
+                        configurationService.getProjectBudgetMinutes(entry.getKey())
+                ))
+                .toList();
+    }
+
 }

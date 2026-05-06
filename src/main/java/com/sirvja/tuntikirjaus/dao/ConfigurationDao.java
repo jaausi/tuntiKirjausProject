@@ -95,7 +95,13 @@ public class ConfigurationDao implements Dao<Configuration, String> {
 
     @Override
     public void delete(Configuration configuration) {
-
+        String query = String.format("DELETE FROM Configuration WHERE CONF_KEY='%s'", configuration.getKey());
+        LOGGER.debug("Deleting Configuration with sql query: {}", query);
+        try {
+            DBUtil.dbExecuteUpdate(query);
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.error("Couldn't delete Configuration from database: {}", e.getMessage());
+        }
     }
 
     public static void initializeTableIfNotExisting() {
