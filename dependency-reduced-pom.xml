@@ -53,6 +53,9 @@
               <transformers>
                 <transformer>
                   <mainClass>com.sirvja.tuntikirjaus.Launcher</mainClass>
+                  <manifestEntries>
+                    <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+                  </manifestEntries>
                 </transformer>
               </transformers>
             </configuration>
