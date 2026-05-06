@@ -4,10 +4,14 @@ import com.sirvja.tuntikirjaus.exporter.Exporter;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
@@ -51,10 +55,60 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     private void setWebDriver() {
         switch (configuration.browser()) {
             case SAFARI -> driver = new SafariDriver();
-            case FIREFOX -> driver = new FirefoxDriver();
-            case CHROME -> driver = new ChromeDriver();
-            case EDGE -> driver = new EdgeDriver();
+            case FIREFOX -> {
+                FirefoxOptions options = new FirefoxOptions();
+                // Käytä Firefoxin olemassa olevaa oletusprofiilia (evästeet, sessiot säilyvät)
+                String firefoxProfilePath = findFirefoxDefaultProfile();
+                if (firefoxProfilePath != null) {
+                    options.addArguments("-profile", firefoxProfilePath);
+                }
+                driver = new FirefoxDriver(options);
+            }
+            case CHROME -> {
+                ChromeOptions options = new ChromeOptions();
+                // Käytä Chromen olemassa olevaa käyttäjäprofiilia (evästeet, sessiot säilyvät)
+                String userHome = System.getProperty("user.home");
+                String chromeProfile = userHome + "/Library/Application Support/Google/Chrome";
+                options.addArguments("--user-data-dir=" + chromeProfile);
+                options.addArguments("--profile-directory=Default");
+                driver = new ChromeDriver(options);
+            }
+            case EDGE -> {
+                EdgeOptions options = new EdgeOptions();
+                String userHome = System.getProperty("user.home");
+                String edgeProfile = userHome + "/Library/Application Support/Microsoft Edge";
+                options.addArguments("--user-data-dir=" + edgeProfile);
+                options.addArguments("--profile-directory=Default");
+                driver = new EdgeDriver(options);
+            }
         }
+    }
+
+    /**
+     * Etsii Firefoxin oletusprofiilin hakemiston macOS:ssä.
+     * Profiili löytyy ~/Library/Application Support/Firefox/Profiles/ alta.
+     */
+    private String findFirefoxDefaultProfile() {
+        String userHome = System.getProperty("user.home");
+        File profilesDir = new File(userHome + "/Library/Application Support/Firefox/Profiles");
+        if (profilesDir.exists() && profilesDir.isDirectory()) {
+            File[] profiles = profilesDir.listFiles();
+            if (profiles != null) {
+                // Priorisoidaan oletusprofiili (default-release)
+                for (File profile : profiles) {
+                    if (profile.getName().endsWith(".default-release")) {
+                        return profile.getAbsolutePath();
+                    }
+                }
+                // Fallback: ensimmäinen profiili
+                for (File profile : profiles) {
+                    if (profile.isDirectory()) {
+                        return profile.getAbsolutePath();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private void loginToPortal() {
