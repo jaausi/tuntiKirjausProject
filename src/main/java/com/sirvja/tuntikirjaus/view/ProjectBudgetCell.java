@@ -4,6 +4,7 @@ import com.sirvja.tuntikirjaus.domain.ProjectBudgetItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -13,6 +14,7 @@ public class ProjectBudgetCell extends ListCell<ProjectBudgetItem> {
     private final VBox container;
     private final Label nameLabel;
     private final Label hoursLabel;
+    private final Label percentLabel;
     private final ProgressBar progressBar;
     private final List<ProjectBudgetItem> allItems;
 
@@ -27,8 +29,13 @@ public class ProjectBudgetCell extends ListCell<ProjectBudgetItem> {
 
         progressBar = new ProgressBar(0);
         progressBar.setMaxWidth(Double.MAX_VALUE);
+        progressBar.setPrefHeight(18);
 
-        container = new VBox(2, nameLabel, progressBar, hoursLabel);
+        percentLabel = new Label();
+
+        StackPane progressStack = new StackPane(progressBar, percentLabel);
+
+        container = new VBox(2, nameLabel, progressStack, hoursLabel);
         container.setStyle("-fx-padding: 4 6 4 6;");
     }
 
@@ -49,17 +56,31 @@ public class ProjectBudgetCell extends ListCell<ProjectBudgetItem> {
             double progress = item.progress(maxSpent);
             progressBar.setProgress(Math.min(progress, 1.0));
 
-            // Color the bar red if over budget
-            if (item.budgetMinutes().isPresent() && progress > 1.0) {
-                progressBar.setStyle("-fx-accent: #e74c3c;");
-            } else if (item.budgetMinutes().isPresent() && progress >= 0.8) {
-                progressBar.setStyle("-fx-accent: #e67e22;");
-            } else {
-                progressBar.setStyle("");
-            }
+            int percentage = (int) Math.round(progress * 100);
+            percentLabel.setText(percentage + " %");
+
+            String textColor = progress < 0.6 ? "#FF4D00" : "white";
+            percentLabel.setStyle("-fx-font-size: 10; -fx-font-weight: bold; -fx-text-fill: " + textColor + ";");
+
+            progressBar.setStyle("-fx-accent: " + progressColor(progress) + ";");
 
             setGraphic(container);
         }
     }
-}
 
+    private String progressColor(double progress) {
+        // green (0%) -> yellow (50%) -> red (100%+)
+        double clamped = Math.min(progress, 1.0);
+        int r, g;
+        if (clamped <= 0.5) {
+            // green to yellow: R 0->255, G stays 200
+            r = (int) (clamped * 2 * 220);
+            g = 200;
+        } else {
+            // yellow to red: R stays 220, G 200->0
+            r = 220;
+            g = (int) ((1.0 - clamped) * 2 * 200);
+        }
+        return String.format("#%02x%02x00", r, g);
+    }
+}
