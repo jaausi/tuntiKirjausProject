@@ -3,6 +3,7 @@ package com.sirvja.tuntikirjaus.controller;
 import com.sirvja.AutoCompleteTextField;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
+import com.sirvja.tuntikirjaus.domain.ProjectBudgetItem;
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
 import com.sirvja.tuntikirjaus.exception.EmptyTopicException;
 import com.sirvja.tuntikirjaus.exception.MalformatedTimeException;
@@ -11,6 +12,7 @@ import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
+import com.sirvja.tuntikirjaus.view.ProjectBudgetCell;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,8 +22,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -81,8 +81,6 @@ public class MainViewController implements Initializable {
     @FXML
     private TextField kellonAikaField;
     @FXML
-    private Button tallennaLeikepoydalleButton;
-    @FXML
     private Button tallennaTaulukkoonButton;
     @FXML
     private Button uusiPaivaButton;
@@ -93,7 +91,7 @@ public class MainViewController implements Initializable {
     @FXML
     private Color x4;
     @FXML
-    private TextArea yhteenvetoTextArea;
+    private ListView<ProjectBudgetItem> projectBudgetListView;
     private Object valueBeforeEdit;
     private final Set<TuntiKirjaus> remoteListenerRegistered = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -136,6 +134,7 @@ public class MainViewController implements Initializable {
         daysListView.getSelectionModel().selectFirst();
 
         initializeAutoCompleteAiheField();
+        updateProjectBudgets();
     }
 
     private void initializeAutoCompleteAiheField() {
@@ -152,7 +151,7 @@ public class MainViewController implements Initializable {
     private void setListenerForDayListView() {
         daysListView.getSelectionModel().selectedItemProperty().addListener(mainViewService.getDayListChangeListener(() -> {
             updateTuntiTaulukko();
-            updateYhteenveto();
+            updateProjectBudgets();
         }));
     }
 
@@ -271,14 +270,11 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
-    protected void onTallennaLeikepoydalleButtonClick(){
-        log.debug("Save to clipboard button pushed!");
-
-        String yhteenvetoText = mainViewService.getYhteenvetoText();
-        ClipboardContent content = new ClipboardContent();
-        content.putString(yhteenvetoText);
-        Clipboard clipboard = Clipboard.getSystemClipboard();
-        clipboard.setContent(content);
+    protected void onOpenProjectBudgets() {
+        log.debug("Open project budgets clicked!");
+        FXMLLoader loader = new FXMLLoader(TuntikirjausApplication.class.getResource("project-budget-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n"));
+        openModalView(loader, "Projektibudjetit");
+        updateProjectBudgets();
     }
 
     @FXML
@@ -343,7 +339,7 @@ public class MainViewController implements Initializable {
     private void initializeView(){
         updateTuntiTaulukko();
         updateDayList();
-        updateYhteenveto();
+        updateProjectBudgets();
         clearInputFields();
     }
 
@@ -352,8 +348,13 @@ public class MainViewController implements Initializable {
         tuntiTaulukko.refresh();
     }
 
-    private void updateYhteenveto() {
-        yhteenvetoTextArea.setText(mainViewService.getYhteenvetoText());
+    private void updateProjectBudgets() {
+        var items = mainViewService.getMonthlyProjectBudgetItems().stream()
+                .filter(item -> item.budgetMinutes().isPresent())
+                .toList();
+        projectBudgetListView.setSelectionModel(null);
+        projectBudgetListView.getItems().setAll(items);
+        projectBudgetListView.setCellFactory(lv -> new ProjectBudgetCell(items));
     }
 
     private void clearInputFields() {
