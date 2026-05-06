@@ -34,6 +34,7 @@ public class ProjectBudgetCell extends ListCell<ProjectBudgetItem> {
         percentLabel = new Label();
 
         StackPane progressStack = new StackPane(progressBar, percentLabel);
+        progressStack.setClip(null);
 
         container = new VBox(2, nameLabel, progressStack, hoursLabel);
         container.setStyle("-fx-padding: 4 6 4 6;");
@@ -59,11 +60,8 @@ public class ProjectBudgetCell extends ListCell<ProjectBudgetItem> {
             int percentage = (int) Math.round(progress * 100);
             percentLabel.setText(percentage + " %");
 
-            String textColor = progress < 0.6 ? "#FF4D00" : "white";
-            percentLabel.setStyle("-fx-font-size: 10; -fx-font-weight: bold; -fx-text-fill: " + textColor + ";");
-
-            progressBar.setStyle("-fx-accent: " + progressColor(progress) + ";");
-
+            percentLabel.setStyle("-fx-font-size: 10; -fx-font-weight: bold; -fx-text-fill: #FCFCFC;");
+            progressBar.setStyle("-fx-accent: " + progressColor(progress) + "; -fx-control-inner-background: #2B2B2B;");
             setGraphic(container);
         }
     }
