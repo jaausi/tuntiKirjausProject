@@ -1,4 +1,4 @@
-.anchor-pane, .split-pane {
+.anchor-pane, .split-pane, .main-view {
     -fx-background-color: #3D3D3D;
     -fx-text-fill: #FF4D00;
 }
