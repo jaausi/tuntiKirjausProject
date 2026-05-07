@@ -57,8 +57,14 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             case SAFARI -> driver = new SafariDriver();
             case FIREFOX -> {
                 FirefoxOptions options = new FirefoxOptions();
-                // Käytä Firefoxin olemassa olevaa oletusprofiilia (evästeet, sessiot säilyvät)
-                String firefoxProfilePath = findFirefoxDefaultProfile();
+                // Aseta Firefoxin binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
+                File firefoxBinary = new File("/Applications/Firefox.app/Contents/MacOS/firefox");
+                if (firefoxBinary.exists()) {
+                    options.setBinary(firefoxBinary.getAbsolutePath());
+                }
+                // Käytä TuntikirjausApp-kohtaista Firefox-profiilia (evästeet, sessiot säilyvät)
+                // eikä käyttäjän aktiivista profiilia, jotta vältetään profiilin lukittumisongelma
+                String firefoxProfilePath = getOrCreateSeleniumBrowserProfile("SeleniumFirefoxProfile");
                 if (firefoxProfilePath != null) {
                     options.addArguments("-profile", firefoxProfilePath);
                 }
@@ -66,49 +72,55 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             }
             case CHROME -> {
                 ChromeOptions options = new ChromeOptions();
-                // Käytä Chromen olemassa olevaa käyttäjäprofiilia (evästeet, sessiot säilyvät)
-                String userHome = System.getProperty("user.home");
-                String chromeProfile = userHome + "/Library/Application Support/Google/Chrome";
-                options.addArguments("--user-data-dir=" + chromeProfile);
-                options.addArguments("--profile-directory=Default");
+                // Aseta Chromen binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
+                File chromeBinary = new File("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+                if (chromeBinary.exists()) {
+                    options.setBinary(chromeBinary.getAbsolutePath());
+                }
+                // Käytä TuntikirjausApp-kohtaista Chrome-profiilia (evästeet, sessiot säilyvät)
+                // eikä käyttäjän aktiivista profiilia, jotta vältetään profiilin lukittumisongelma
+                // kun Chrome on jo auki
+                String seleniumChromeProfile = getOrCreateSeleniumBrowserProfile("SeleniumChromeProfile");
+                if (seleniumChromeProfile != null) {
+                    options.addArguments("--user-data-dir=" + seleniumChromeProfile);
+                    options.addArguments("--profile-directory=Default");
+                }
                 driver = new ChromeDriver(options);
             }
             case EDGE -> {
                 EdgeOptions options = new EdgeOptions();
-                String userHome = System.getProperty("user.home");
-                String edgeProfile = userHome + "/Library/Application Support/Microsoft Edge";
-                options.addArguments("--user-data-dir=" + edgeProfile);
-                options.addArguments("--profile-directory=Default");
+                // Aseta Edgen binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
+                File edgeBinary = new File("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge");
+                if (edgeBinary.exists()) {
+                    options.setBinary(edgeBinary.getAbsolutePath());
+                }
+                // Käytä TuntikirjausApp-kohtaista Edge-profiilia (evästeet, sessiot säilyvät)
+                // eikä käyttäjän aktiivista profiilia, jotta vältetään profiilin lukittumisongelma
+                // kun Edge on jo auki
+                String seleniumEdgeProfile = getOrCreateSeleniumBrowserProfile("SeleniumEdgeProfile");
+                if (seleniumEdgeProfile != null) {
+                    options.addArguments("--user-data-dir=" + seleniumEdgeProfile);
+                    options.addArguments("--profile-directory=Default");
+                }
                 driver = new EdgeDriver(options);
             }
         }
     }
 
     /**
-     * Etsii Firefoxin oletusprofiilin hakemiston macOS:ssä.
-     * Profiili löytyy ~/Library/Application Support/Firefox/Profiles/ alta.
+     * Palauttaa TuntikirjausApp-kohtaisen selainprofiilin hakemistopolun.
+     * Käyttää erillistä profiilia (ei käyttäjän aktiivista profiilia), jotta
+     * vältetään profiilin lukittuminen kun selain on jo auki.
+     * Hakemisto luodaan tarvittaessa automaattisesti.
+     * Palauttaa null jos hakemiston luonti epäonnistuu.
      */
-    private String findFirefoxDefaultProfile() {
+    private String getOrCreateSeleniumBrowserProfile(String profileDirName) {
         String userHome = System.getProperty("user.home");
-        File profilesDir = new File(userHome + "/Library/Application Support/Firefox/Profiles");
-        if (profilesDir.exists() && profilesDir.isDirectory()) {
-            File[] profiles = profilesDir.listFiles();
-            if (profiles != null) {
-                // Priorisoidaan oletusprofiili (default-release)
-                for (File profile : profiles) {
-                    if (profile.getName().endsWith(".default-release")) {
-                        return profile.getAbsolutePath();
-                    }
-                }
-                // Fallback: ensimmäinen profiili
-                for (File profile : profiles) {
-                    if (profile.isDirectory()) {
-                        return profile.getAbsolutePath();
-                    }
-                }
-            }
+        File profileDir = new File(userHome + "/Library/Application Support/TuntikirjausApp/" + profileDirName);
+        if (!profileDir.exists() && !profileDir.mkdirs()) {
+            return null;
         }
-        return null;
+        return profileDir.getAbsolutePath();
     }
 
     private void loginToPortal() {

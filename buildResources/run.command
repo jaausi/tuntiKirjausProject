@@ -1,6 +1,7 @@
 #!/bin/bash
-# Inherit user's PATH so Selenium can find browser drivers (chromedriver, geckodriver etc.)
-export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+# Aseta käyttäjän PATH jotta Selenium löytää selainajurit (chromedriver, geckodriver jne.)
+# App bundle -ympäristössä PATH on rajoitettu, joten lisätään yleisimmät hakemistot
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 cd -- "$(dirname -- "$BASH_SOURCE")"
 cd bin
