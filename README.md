@@ -80,3 +80,14 @@ https://user-images.githubusercontent.com/37043090/188315991-cd4d5319-2501-4c20-
 If you want a new feature or discover a bug in application, create a freeform issue. If you want to implement a feature, an issue or a bugfix, create a pull request about the changes to be commited.
 
 All created releases will launch a jar package build.
+
+## How to update version number
+
+```
+NEW_VERSION=1.1.7-BETA
+mvn versions:set -DnewVersion=$NEW_VERSION versions:commit
+git add pom.xml
+git commit -m "Update version to v$NEW_VERSION"
+git tag "v$NEW_VERSION"
+git push origin main --tags
+```
