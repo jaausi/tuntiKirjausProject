@@ -15,6 +15,7 @@ import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Locale;
 
 public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
@@ -52,14 +53,33 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
         driver.quit();
     }
 
+    private static final String OS = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+
+    private static boolean isMac() {
+        return OS.contains("mac");
+    }
+
+    private static boolean isWindows() {
+        return OS.contains("win");
+    }
+
     private void setWebDriver() {
         switch (configuration.browser()) {
             case SAFARI -> driver = new SafariDriver();
             case FIREFOX -> {
                 FirefoxOptions options = new FirefoxOptions();
-                // Aseta Firefoxin binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
-                File firefoxBinary = new File("/Applications/Firefox.app/Contents/MacOS/firefox");
-                if (firefoxBinary.exists()) {
+                // Aseta Firefoxin binääripolku, jotta selain löytyy app bundle -ympäristössä
+                File firefoxBinary;
+                if (isMac()) {
+                    firefoxBinary = findBrowserBinary("/Applications/Firefox.app/Contents/MacOS/firefox");
+                } else if (isWindows()) {
+                    firefoxBinary = findBrowserBinary(
+                            "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+                            "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe");
+                } else {
+                    firefoxBinary = findBrowserBinary("/usr/bin/firefox", "/usr/bin/firefox-esr");
+                }
+                if (firefoxBinary != null) {
                     options.setBinary(firefoxBinary.getAbsolutePath());
                 }
                 // Käytä TuntikirjausApp-kohtaista Firefox-profiilia (evästeet, sessiot säilyvät)
@@ -72,9 +92,18 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             }
             case CHROME -> {
                 ChromeOptions options = new ChromeOptions();
-                // Aseta Chromen binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
-                File chromeBinary = new File("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-                if (chromeBinary.exists()) {
+                // Aseta Chromen binääripolku, jotta selain löytyy app bundle -ympäristössä
+                File chromeBinary;
+                if (isMac()) {
+                    chromeBinary = findBrowserBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+                } else if (isWindows()) {
+                    chromeBinary = findBrowserBinary(
+                            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe");
+                } else {
+                    chromeBinary = findBrowserBinary("/usr/bin/google-chrome", "/usr/bin/chromium-browser", "/usr/bin/chromium");
+                }
+                if (chromeBinary != null) {
                     options.setBinary(chromeBinary.getAbsolutePath());
                 }
                 // Käytä TuntikirjausApp-kohtaista Chrome-profiilia (evästeet, sessiot säilyvät)
@@ -89,9 +118,18 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             }
             case EDGE -> {
                 EdgeOptions options = new EdgeOptions();
-                // Aseta Edgen binääripolku macOS:ssä, jotta selain löytyy app bundle -ympäristössä
-                File edgeBinary = new File("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge");
-                if (edgeBinary.exists()) {
+                // Aseta Edgen binääripolku, jotta selain löytyy app bundle -ympäristössä
+                File edgeBinary;
+                if (isMac()) {
+                    edgeBinary = findBrowserBinary("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge");
+                } else if (isWindows()) {
+                    edgeBinary = findBrowserBinary(
+                            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                            "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe");
+                } else {
+                    edgeBinary = findBrowserBinary("/usr/bin/microsoft-edge", "/usr/bin/microsoft-edge-stable");
+                }
+                if (edgeBinary != null) {
                     options.setBinary(edgeBinary.getAbsolutePath());
                 }
                 // Käytä TuntikirjausApp-kohtaista Edge-profiilia (evästeet, sessiot säilyvät)
@@ -108,7 +146,25 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     }
 
     /**
+     * Palauttaa ensimmäisen olemassaolevan tiedoston annetuista poluista,
+     * tai null jos yksikään ei löydy.
+     */
+    private File findBrowserBinary(String... candidates) {
+        for (String path : candidates) {
+            File f = new File(path);
+            if (f.exists()) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Palauttaa TuntikirjausApp-kohtaisen selainprofiilin hakemistopolun.
+     * Käyttää alustasta riippuvaa hakemistoa:
+     *   macOS:   ~/Library/Application Support/TuntikirjausApp/<nimi>
+     *   Windows: %APPDATA%\TuntikirjausApp\<nimi>
+     *   Linux:   ~/.config/TuntikirjausApp/<nimi>
      * Käyttää erillistä profiilia (ei käyttäjän aktiivista profiilia), jotta
      * vältetään profiilin lukittuminen kun selain on jo auki.
      * Hakemisto luodaan tarvittaessa automaattisesti.
@@ -116,8 +172,17 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
      */
     private String getOrCreateSeleniumBrowserProfile(String profileDirName) {
         String userHome = System.getProperty("user.home");
-        File profileDir = new File(userHome + "/Library/Application Support/TuntikirjausApp/" + profileDirName);
-        if (!profileDir.exists() && !profileDir.mkdirs()) {
+        String baseDir;
+        if (isMac()) {
+            baseDir = userHome + "/Library/Application Support/TuntikirjausApp";
+        } else if (isWindows()) {
+            String appData = System.getenv("APPDATA");
+            baseDir = (appData != null ? appData : userHome) + File.separator + "TuntikirjausApp";
+        } else {
+            baseDir = userHome + "/.config/TuntikirjausApp";
+        }
+        File profileDir = new File(baseDir + File.separator + profileDirName);
+        if (!profileDir.mkdirs() && !profileDir.exists()) {
             return null;
         }
         return profileDir.getAbsolutePath();
