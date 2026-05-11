@@ -7,6 +7,9 @@ import com.sirvja.tuntikirjaus.migration.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
@@ -16,6 +19,7 @@ public class Initializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Initializer.class);
 
     public static void initializeApplication(){
+        createLogsDirectory();
         DBUtil.checkOrCreateDatabaseFile();
         System.setProperty("prism.lcdtext", "false");
         assert DBUtil.checkDrivers();
@@ -23,6 +27,15 @@ public class Initializer {
         initializeTestData();
         runDbMigrations();
         Locale.setDefault(Locale.of("fi", "FI"));
+    }
+
+    private static void createLogsDirectory() {
+        java.nio.file.Path logsPath = Paths.get(System.getProperty("user.home"), "tuntikirjaus", "logs");
+        try {
+            Files.createDirectories(logsPath);
+        } catch (IOException e) {
+            LOGGER.error("Failed to create logs directory at {}: {}", logsPath, e.getMessage());
+        }
     }
 
     private static void createDbTablesIfNotExisting(){
