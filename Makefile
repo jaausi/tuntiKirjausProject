@@ -38,6 +38,7 @@ copy-run-command-script:
 	cp buildResources/tuntikirjausResized.png target/tuntikirjaus/bin/
 
 create-app-bundle:
+	rm -rf ./Tuntikirjaus.app
 	appify target/tuntikirjaus/run.command Tuntikirjaus.app buildResources/tuntikirjausResized.png
 
 copy-built-binaries-to-app-bundle:

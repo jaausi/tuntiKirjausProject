@@ -89,5 +89,5 @@ mvn versions:set -DnewVersion=$NEW_VERSION versions:commit
 git add pom.xml
 git commit -m "Update version to v$NEW_VERSION"
 git tag "v$NEW_VERSION"
-git push origin main --tags
+git push origin master --tags
 ```
