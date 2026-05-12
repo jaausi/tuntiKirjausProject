@@ -1,6 +1,8 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.AutoCompleteTextField;
+import com.sirvja.BudgetCellItem;
+import com.sirvja.BudgetProgressCell;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.ProjectBudgetItem;
@@ -12,8 +14,9 @@ import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
-import com.sirvja.tuntikirjaus.view.ProjectBudgetCell;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -36,6 +39,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class MainViewController implements Initializable {
 
@@ -349,12 +353,17 @@ public class MainViewController implements Initializable {
     }
 
     private void updateProjectBudgets() {
-        var items = mainViewService.getMonthlyProjectBudgetItems().stream()
+        ObservableList<ProjectBudgetItem> items = mainViewService.getMonthlyProjectBudgetItems().stream()
                 .filter(item -> item.budgetMinutes().isPresent())
-                .toList();
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+        SortedList<ProjectBudgetItem> sorted = new SortedList<>(
+                items,
+                Comparator.comparingLong(ProjectBudgetItem::spentMinutes).reversed()
+        );
+
         projectBudgetListView.setSelectionModel(null);
-        projectBudgetListView.getItems().setAll(items);
-        projectBudgetListView.setCellFactory(lv -> new ProjectBudgetCell(items));
+        projectBudgetListView.setItems(sorted);
+        projectBudgetListView.setCellFactory(lv -> new BudgetProgressCell<>());
     }
 
     private void clearInputFields() {

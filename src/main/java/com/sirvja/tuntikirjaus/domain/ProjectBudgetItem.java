@@ -1,8 +1,15 @@
 package com.sirvja.tuntikirjaus.domain;
 
+import com.sirvja.BudgetCellItem;
+
 import java.util.OptionalLong;
 
-public record ProjectBudgetItem(String projectName, long spentMinutes, OptionalLong budgetMinutes) {
+public record ProjectBudgetItem(String projectName, long spentMinutes, OptionalLong budgetMinutes) implements BudgetCellItem {
+
+    @Override
+    public String name() {
+        return this.projectName;
+    }
 
     public double progress(long maxSpentMinutes) {
         if (budgetMinutes.isPresent() && budgetMinutes.getAsLong() > 0) {
