@@ -1,7 +1,6 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.AutoCompleteTextField;
-import com.sirvja.BudgetCellItem;
 import com.sirvja.BudgetProgressCell;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
