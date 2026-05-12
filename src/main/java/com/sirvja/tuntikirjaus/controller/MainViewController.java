@@ -1,6 +1,7 @@
 package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.AutoCompleteTextField;
+import com.sirvja.BudgetProgressCell;
 import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import com.sirvja.tuntikirjaus.domain.Paiva;
 import com.sirvja.tuntikirjaus.domain.ProjectBudgetItem;
@@ -12,7 +13,6 @@ import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
-import com.sirvja.tuntikirjaus.view.ProjectBudgetCell;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -351,10 +351,11 @@ public class MainViewController implements Initializable {
     private void updateProjectBudgets() {
         var items = mainViewService.getMonthlyProjectBudgetItems().stream()
                 .filter(item -> item.budgetMinutes().isPresent())
-                .toList();
+                .sorted(Comparator.comparing(ProjectBudgetItem::spentMinutes).reversed())
+                .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
         projectBudgetListView.setSelectionModel(null);
         projectBudgetListView.getItems().setAll(items);
-        projectBudgetListView.setCellFactory(lv -> new ProjectBudgetCell(items));
+        projectBudgetListView.setCellFactory(_ -> new BudgetProgressCell<>(items));
     }
 
     private void clearInputFields() {
