@@ -42,7 +42,7 @@
         <dependency>
             <groupId>com.sirvja</groupId>
             <artifactId>tuntikirjaus-components-lib</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.3</version>
         </dependency>
         <!-- Logging libraries -->
         <dependency>
