@@ -14,3 +14,5 @@ database
 reports/
 /local-setup/.env
 *.versionsBackup
+
+.vscode
