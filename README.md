@@ -6,11 +6,22 @@ The idea of this project came up of the headache to fill up worked hours to Tiim
 
 ## How to Run the Application
 
-Requires Java 21.
+Requires Java 25.
 
 Run the project (if you don't want to lose fed data, leave out "clean")
 ```
 mvn clean javafx:run  
+```
+
+## How to run the tests
+
+```
+mvn test
+```
+
+Browser tests (Kieku exporter) start real browsers and are skipped by default. To run them:
+```
+mvn test -Pbrowser-tests
 ```
 
 ## How to run the dependency check
