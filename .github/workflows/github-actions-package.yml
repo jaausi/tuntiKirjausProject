@@ -3,6 +3,7 @@ name: Build Test and Package
 on:
   push:
     branches: [master]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -49,3 +50,62 @@ jobs:
         with:
           name: Tuntikirjaus-package-with-jre
           path: staging
+
+  Package-macOS-dmg:
+    if: github.event_name != 'pull_request'
+    needs: Build-Test-And-Package
+    # Apple Silicon runner: jlink bundles the JRE and JavaFX natives of the build machine
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java with maven cached
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          server-id: github-tuntikirjaus
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Build runtime image with jlink and create dmg with jpackage
+        run: |
+          mvn -B clean javafx:jlink
+          ./buildResources/build-mac-dmg.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload dmg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tuntikirjaus-macOS-dmg
+          path: target/dist/*.dmg
+
+  Release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [Build-Test-And-Package, Package-macOS-dmg]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            # Tags with a suffix (e.g. v1.1.7-BETA) are marked as prereleases
+            PRERELEASE=""
+            if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
+            gh release create "$TAG" --verify-tag --generate-notes $PRERELEASE
+          fi
+          gh release upload "$TAG" artifacts/*.dmg --clobber
