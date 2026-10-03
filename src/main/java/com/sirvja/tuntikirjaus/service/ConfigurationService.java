@@ -32,7 +32,7 @@ public class ConfigurationService {
         confMap.entrySet()
                 .stream()
                 .map(entry -> new Configuration(entry.getKey(), entry.getValue()))
-                .forEach(configurationDao::save);
+                .forEach(this::insertOrUpdate);
     }
 
     public Optional<Configuration> getConfiguration(String key) {

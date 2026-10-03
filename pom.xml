@@ -14,6 +14,8 @@
         <java.version>25</java.version>
         <mockito.version>5.23.0</mockito.version>
         <argLine/>
+        <!-- Browser tests start real browsers, so they are skipped by default. Run them with: mvn test -Pbrowser-tests -->
+        <surefire.excludedGroups>browser</surefire.excludedGroups>
     </properties>
 
     <repositories>
@@ -186,6 +188,7 @@
                 <version>3.5.5</version>
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} --enable-native-access=javafx.graphics,org.xerial.sqlitejdbc</argLine>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
@@ -211,4 +214,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>browser-tests</id>
+            <properties>
+                <surefire.excludedGroups/>
+            </properties>
+        </profile>
+    </profiles>
 </project>

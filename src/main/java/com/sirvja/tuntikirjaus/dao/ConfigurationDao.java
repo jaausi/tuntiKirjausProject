@@ -1,6 +1,7 @@
 package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.Configuration;
+import com.sirvja.tuntikirjaus.exception.DataAccessException;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,32 +15,27 @@ import java.util.Optional;
 
 public class ConfigurationDao implements Dao<Configuration, String> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationDao.class);
+
     @Override
     public Optional<Configuration> get(String id) {
-        String query = String.format("SELECT * FROM Configuration WHERE CONF_KEY='%s' LIMIT 1", id);
-        LOGGER.debug("Trying to find configuration with sql query: {}", query);
-
-        Configuration configuration = null;
-        try {
-            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
-
-            while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s", resultSet.getString("CONF_KEY"), resultSet.getString("CONF_VALUE")));
-                configuration = new Configuration(resultSet.getString("CONF_KEY"), resultSet.getString("CONF_VALUE"));
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get all Configuration' from database: {}", e.getMessage());
-        }
-
-        return Optional.ofNullable(configuration);
+        return executeFetchQuery("SELECT * FROM Configuration WHERE CONF_KEY=? LIMIT 1", id)
+                .stream()
+                .findFirst();
     }
 
     @Override
     public List<Configuration> getAllToList() {
-        String queryAll = "SELECT * FROM Configuration";
+        return executeFetchQuery("SELECT * FROM Configuration");
+    }
 
+    @Override
+    public List<Configuration> getAllFromToList(LocalDate localDate) {
+        return List.of();
+    }
+
+    private List<Configuration> executeFetchQuery(String query, Object... params) {
         try {
-            ResultSet resultSet = DBUtil.dbExecuteQuery(queryAll);
+            ResultSet resultSet = DBUtil.dbExecuteQuery(query, params);
             List<Configuration> confList = new ArrayList<>();
 
             while (resultSet.next()) {
@@ -50,27 +46,20 @@ public class ConfigurationDao implements Dao<Configuration, String> {
             }
 
             return confList;
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't get Configuration from database", e);
         }
-
-    }
-
-    @Override
-    public List<Configuration> getAllFromToList(LocalDate localDate) {
-        return List.of();
     }
 
     @Override
     public Configuration save(Configuration configuration) {
-        String query = String.format("INSERT INTO Configuration(CONF_KEY, CONF_VALUE) " +
-                "VALUES ('%s', '%s') ", configuration.getKey(), configuration.getValue());
-        LOGGER.debug("Inserting Configuration with sql query: {}", query);
+        LOGGER.debug("Inserting Configuration with key: {}", configuration.getKey());
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save Configuration to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate("INSERT INTO Configuration(CONF_KEY, CONF_VALUE) VALUES (?, ?)",
+                    configuration.getKey(), configuration.getValue());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't save Configuration to database", e);
         }
 
         return configuration;
@@ -78,29 +67,23 @@ public class ConfigurationDao implements Dao<Configuration, String> {
 
     @Override
     public void update(Configuration configuration) {
-        String query = """
-                UPDATE Configuration
-                SET CONF_VALUE='%s'
-                WHERE CONF_KEY='%s'
-                """;
-        query = String.format(query, configuration.getValue(), configuration.getKey());
-        LOGGER.debug("Updating Configuration with sql query: {}", query);
+        LOGGER.debug("Updating Configuration with key: {}", configuration.getKey());
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save Configuration to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate("UPDATE Configuration SET CONF_VALUE=? WHERE CONF_KEY=?",
+                    configuration.getValue(), configuration.getKey());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't update Configuration in database", e);
         }
     }
 
     @Override
     public void delete(Configuration configuration) {
-        String query = String.format("DELETE FROM Configuration WHERE CONF_KEY='%s'", configuration.getKey());
-        LOGGER.debug("Deleting Configuration with sql query: {}", query);
+        LOGGER.debug("Deleting Configuration with key: {}", configuration.getKey());
         try {
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't delete Configuration from database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate("DELETE FROM Configuration WHERE CONF_KEY=?", configuration.getKey());
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't delete Configuration from database", e);
         }
     }
 
@@ -112,21 +95,8 @@ public class ConfigurationDao implements Dao<Configuration, String> {
 
         try {
             DBUtil.dbExecuteUpdate(sqlQuery);
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't initialize table: {}", e.getMessage());
-        }
-    }
-
-    public static boolean dropTable() {
-        String sqlQuery = "DROP TABLE IF EXISTS Configuration";
-        LOGGER.debug("Dropping table with sql query: {}", sqlQuery);
-
-        try {
-            DBUtil.dbExecuteUpdate(sqlQuery);
-            return true;
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't drop table: {}", e.getMessage());
-            return false;
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't initialize Configuration table", e);
         }
     }
 }

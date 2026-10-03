@@ -1,19 +1,16 @@
 package com.sirvja.tuntikirjaus.utils;
 
-import com.sirvja.tuntikirjaus.TuntikirjausApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.util.Optional;
+import java.util.List;
 
 
 public class DBUtil {
@@ -22,109 +19,78 @@ public class DBUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBUtil.class);
 
     public static void checkOrCreateDatabaseFile(){
-        Optional<URL> optionalLocation = Optional.ofNullable(TuntikirjausApplication.class.getResource("database/tuntikirjaus.db"));
-
-        // Don't use database in resource folder, if running from jar file
-        if(optionalLocation.isPresent() && !optionalLocation.get().toExternalForm().contains(".jar") && false){
-            location = optionalLocation.get().toExternalForm();
-            System.out.println(String.format("Current dir: %s", location));
-        } else {
-            Path rootPath = Paths.get(System.getProperty("user.home")+"/tuntikirjaus/database");
-
-            System.out.println(String.format("Current dir: %s", rootPath));
-            LOGGER.debug("Creating database (database/tuntikirjaus.db) to current directory: {}", rootPath);
-
-            try {
-                Files.createDirectories(rootPath);
-
-                File directoryFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database");
-                File databaseFile = new File(System.getProperty("user.home")+"/tuntikirjaus/database/tuntikirjaus.db");
-
-                assert directoryFile.exists() || directoryFile.mkdir();
-                assert databaseFile.exists() || databaseFile.createNewFile();
-
-                location = databaseFile.getPath();
-            } catch (IOException e){
-                LOGGER.error("Couldn't create database file: {}", e.getMessage());
-            }
+        Path rootPath = Paths.get(System.getProperty("user.home"), "tuntikirjaus", "database");
+        try {
+            Files.createDirectories(rootPath);
+        } catch (IOException e){
+            throw new IllegalStateException("Couldn't create database directory: " + rootPath, e);
         }
+        // SQLite creates the database file itself on first connection
+        location = rootPath.resolve("tuntikirjaus.db").toString();
         LOGGER.debug("Using database in location: {}", location);
     }
 
-    public static Connection connect() {
-        String dbPrefix = "jdbc:sqlite:";
-        Connection connection;
-        try {
-            LOGGER.debug("Connecting to database with address: {}", dbPrefix+location);
-            connection = DriverManager.getConnection(dbPrefix + location);
-        } catch (SQLException exception) {
-            LOGGER.error("Could not connect to SQLite DB at: {}", location);
-            return null;
-        }
-        return connection;
+    public static Connection connect() throws SQLException {
+        LOGGER.debug("Connecting to database with address: jdbc:sqlite:{}", location);
+        return DriverManager.getConnection("jdbc:sqlite:" + location);
     }
 
-    public static boolean checkDrivers() {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            DriverManager.registerDriver(new org.sqlite.JDBC());
-            return true;
-        } catch (ClassNotFoundException | SQLException e) {
-            LOGGER.error("Could not start SQLite Drivers");
-            return false;
-        }
-    }
-
-    //DB Execute Query Operation
-    public static ResultSet dbExecuteQuery(String queryStmt) throws SQLException, ClassNotFoundException {
-        //Declare statement, resultSet and CachedResultSet as null
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
-        CachedRowSet crs = RowSetProvider.newFactory().createCachedRowSet();
-        try {
-            //Connect to DB (Establish Oracle Connection)
-            connection = connect();
-            LOGGER.debug("Select statement: {}", queryStmt);
-            //Create statement
-            assert connection != null;
-            statement = connection.createStatement();
-            //Execute select (query) operation
-            resultSet = statement.executeQuery(queryStmt);
+    /**
+     * Executes a select (or INSERT ... RETURNING) statement. Values in params are bound to the '?' placeholders.
+     */
+    public static ResultSet dbExecuteQuery(String queryStmt, Object... params) throws SQLException {
+        LOGGER.debug("Select statement: {}", queryStmt);
+        try (Connection connection = connect();
+             PreparedStatement statement = prepare(connection, queryStmt, params);
+             ResultSet resultSet = statement.executeQuery()) {
+            CachedRowSet crs = RowSetProvider.newFactory().createCachedRowSet();
             crs.populate(resultSet);
-        } catch (Exception e) {
-            LOGGER.error("Problem occurred at executeUpdate operation : {}", e.getMessage());
+            return crs;
+        } catch (SQLException e) {
+            LOGGER.error("Problem occurred at executeQuery operation: {}", e.getMessage());
             throw e;
-        } finally {
-            closeQuietly(connection);
-            closeQuietly(statement);
-            closeQuietly(resultSet);
-        }
-        //Return CachedRowSet
-        return crs;
-    }
-
-    //DB Execute Update (For Update/Insert/Delete) Operation
-    public static void dbExecuteUpdate(String updateStmt) throws SQLException, ClassNotFoundException {
-        Connection connection = null;
-        Statement statement = null;
-        try {
-            connection = connect();
-            assert connection != null;
-            statement = connection.createStatement();
-            statement.executeUpdate(updateStmt);
-        } catch (Exception e) {
-            LOGGER.error("Problem occurred at executeUpdate operation : {}" + e.getMessage());
-            throw e;
-        } finally {
-            closeQuietly(connection);
-            closeQuietly(statement);
         }
     }
 
-    private static void closeQuietly(AutoCloseable object){
-        try{
-            object.close();
-        } catch (Exception e){/* Ignored */}
+    /**
+     * Executes an update/insert/delete/DDL statement. Values in params are bound to the '?' placeholders.
+     */
+    public static void dbExecuteUpdate(String updateStmt, Object... params) throws SQLException {
+        LOGGER.debug("Update statement: {}", updateStmt);
+        try (Connection connection = connect();
+             PreparedStatement statement = prepare(connection, updateStmt, params)) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Problem occurred at executeUpdate operation: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Executes all statements in a single transaction. If any of them fails, none of them is applied.
+     */
+    public static void dbExecuteInTransaction(List<String> statements) throws SQLException {
+        try (Connection connection = connect()) {
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                for (String sql : statements) {
+                    LOGGER.debug("Transaction statement: {}", sql);
+                    statement.executeUpdate(sql);
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                LOGGER.error("Problem occurred in transaction, rolling back: {}", e.getMessage());
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+
+    private static PreparedStatement prepare(Connection connection, String sql, Object... params) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(sql);
+        for (int i = 0; i < params.length; i++) {
+            statement.setObject(i + 1, params[i]);
+        }
+        return statement;
     }
 }

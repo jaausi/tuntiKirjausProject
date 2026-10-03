@@ -2,6 +2,7 @@ package com.sirvja.tuntikirjaus.exporter.impl;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -20,6 +21,7 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@Tag("browser")
 class KiekuExporterBrowserTest {
 
     private static final Logger logger = LoggerFactory.getLogger(KiekuExporterBrowserTest.class);

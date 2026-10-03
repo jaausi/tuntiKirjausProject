@@ -68,6 +68,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+        syncProperties();
     }
 
     public Optional<LocalDateTime> getEndTime() {
@@ -75,6 +76,7 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+        syncProperties();
     }
     public boolean isEndTimeNull(){
         return getEndTime().isEmpty();
@@ -126,11 +128,6 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
     }
     public LocalDateTime getDateTime(){
         return startTime;
-    }
-    public void setTime(LocalTime localTime){
-        this.startTime = LocalDateTime.of(LocalDate.now(), localTime);
-        timeProperty.set(localTime);
-        durationStringProperty.set(getDurationString());
     }
     public String getTopic() {
         return topic;

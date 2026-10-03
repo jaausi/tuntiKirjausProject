@@ -1,15 +1,15 @@
 package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.ReportConfig;
+import com.sirvja.tuntikirjaus.exception.DataAccessException;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,13 +19,8 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportConfigDao.class);
 
     @Override
-    public Optional<ObservableList<ReportConfig>> getAll() {
-        return getAllInternal(Optional.empty());
-    }
-
-    @Override
     public List<ReportConfig> getAllToList() {
-        return List.of();
+        return executeFetchQuery("SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC");
     }
 
     @Override
@@ -33,51 +28,52 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
         return List.of();
     }
 
-
-    public Optional<ObservableList<ReportConfig>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
-        String query = "SELECT * FROM ReportConfig ORDER BY REPORT_NAME ASC";
-        LOGGER.debug("Query: {}", query);
-        ObservableList<ReportConfig> returnObject = FXCollections.observableArrayList();
+    private List<ReportConfig> executeFetchQuery(String query, Object... params) {
+        List<ReportConfig> reportConfigs = new ArrayList<>();
         try {
-            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
+            ResultSet resultSet = DBUtil.dbExecuteQuery(query, params);
 
             while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %s, %s",resultSet.getInt("ROWID"), resultSet.getString("START_DATE"),resultSet.getString("END_DATE"), resultSet.getString("SEARCH_QUERY"), resultSet.getString("REPORT_NAME")));
-                returnObject.add(
-                        new ReportConfig(
-                                resultSet.getInt("ROWID"),
-                                ! "null".equals(resultSet.getString("START_DATE")) ? LocalDate.parse(resultSet.getString("START_DATE"), dateFormatter) : null,
-                                ! "null".equals(resultSet.getString("END_DATE")) ? LocalDate.parse(resultSet.getString("END_DATE"), dateFormatter) : null,
-                                resultSet.getString("SEARCH_QUERY"),
-                                resultSet.getString("REPORT_NAME")
-                        )
-                );
+                reportConfigs.add(new ReportConfig(
+                        resultSet.getInt("ROWID"),
+                        parseDate(resultSet.getString("START_DATE")),
+                        parseDate(resultSet.getString("END_DATE")),
+                        resultSet.getString("SEARCH_QUERY"),
+                        resultSet.getString("REPORT_NAME")
+                ));
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get all ReportConfig' from database: {}", e.getMessage());
-            return Optional.empty();
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't get ReportConfigs from database", e);
         }
 
-        return Optional.of(returnObject);
+        return reportConfigs;
     }
 
+    private static LocalDate parseDate(String date) {
+        return date == null ? null : LocalDate.parse(date, dateFormatter);
+    }
+
+    private static String formatDate(Optional<LocalDate> date) {
+        return date.map(dateFormatter::format).orElse(null);
+    }
 
     @Override
     public ReportConfig save(ReportConfig reportConfig) {
-        String query = String.format("INSERT INTO ReportConfig(START_DATE, END_DATE, SEARCH_QUERY, REPORT_NAME) " +
-                "VALUES ('%s', '%s', '%s', '%s') " +
-                "RETURNING ROWID", reportConfig.getStartDate().map(localDate -> localDate.format(dateFormatter)).orElse(null), reportConfig.getEndDate().map(localDate -> localDate.format(dateFormatter)).orElse(null), reportConfig.getSearchQuery(), reportConfig.getReportName());
-        LOGGER.debug("Inserting ReportConfig with sql query: {}", query);
+        String query = "INSERT INTO ReportConfig(START_DATE, END_DATE, SEARCH_QUERY, REPORT_NAME) VALUES (?, ?, ?, ?) RETURNING ROWID";
+        LOGGER.debug("Inserting ReportConfig: {}", reportConfig);
 
         try{
-            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
+            ResultSet resultSet = DBUtil.dbExecuteQuery(query,
+                    formatDate(reportConfig.getStartDate()),
+                    formatDate(reportConfig.getEndDate()),
+                    reportConfig.getSearchQuery(),
+                    reportConfig.getReportName());
 
-            while (resultSet.next()){
-                LOGGER.debug(String.format("%s",resultSet.getInt("ROWID")));
+            if (resultSet.next()){
                 reportConfig.setId(resultSet.getInt("ROWID"));
             }
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save ReportConfig to database: {}", e.getMessage());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't save ReportConfig to database", e);
         }
 
         return reportConfig;
@@ -85,55 +81,37 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
 
     @Override
     public void update(ReportConfig reportConfig) {
-        String query = String.format("UPDATE ReportConfig " +
-                "SET START_DATE='%s', END_DATE='%s', SEARCH_QUERY='%s', REPORT_NAME='%s' " +
-                "WHERE ROWID=%s", reportConfig.getStartDate().map(localDate -> localDate.format(dateFormatter)).orElse(null), reportConfig.getEndDate().map(localDate -> localDate.format(dateFormatter)).orElse(null), reportConfig.getSearchQuery(), reportConfig.getReportName(), reportConfig.getId());
-        LOGGER.debug("Updating ReportConfig with sql query: {}", query);
+        String query = "UPDATE ReportConfig SET START_DATE=?, END_DATE=?, SEARCH_QUERY=?, REPORT_NAME=? WHERE ROWID=?";
+        LOGGER.debug("Updating ReportConfig: {}", reportConfig);
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save ReportConfig to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate(query,
+                    formatDate(reportConfig.getStartDate()),
+                    formatDate(reportConfig.getEndDate()),
+                    reportConfig.getSearchQuery(),
+                    reportConfig.getReportName(),
+                    reportConfig.getId());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't update ReportConfig in database", e);
         }
     }
 
     @Override
     public void delete(ReportConfig reportConfig) {
-        String query = String.format("DELETE FROM ReportConfig " +
-                "WHERE ROWID='%s' LIMIT 1", reportConfig.getId());
-        LOGGER.debug("Deleting ReportConfig with sql query: {}", query);
+        LOGGER.debug("Deleting ReportConfig: {}", reportConfig);
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save ReportConfig to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate("DELETE FROM ReportConfig WHERE ROWID=?", reportConfig.getId());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't delete ReportConfig from database", e);
         }
     }
 
     @Override
     public Optional<ReportConfig> get(Integer id) {
-        String query = String.format("SELECT * FROM ReportConfig WHERE ROWID=%s LIMIT 1", id);
-        LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
-
-        ReportConfig reportConfig = null;
-        try {
-            ResultSet resultSet = DBUtil.dbExecuteQuery(query);
-
-            while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("DURATION_ENABLED")));
-                reportConfig = new ReportConfig(
-                        resultSet.getInt("ROWID"),
-                        LocalDate.parse(resultSet.getString("START_DATE"), dateFormatter),
-                        LocalDate.parse(resultSet.getString("END_DATE"), dateFormatter),
-                        resultSet.getString("SEARCH_QUERY"),
-                        resultSet.getString("REPORT_NAME")
-                );
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get all ReportConfig' from database: {}", e.getMessage());
-        }
-
-        return Optional.ofNullable(reportConfig);
+        return executeFetchQuery("SELECT * FROM ReportConfig WHERE ROWID=? LIMIT 1", id)
+                .stream()
+                .findFirst();
     }
 
     public static void initializeTableIfNotExisting() {
@@ -147,21 +125,8 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
 
         try {
             DBUtil.dbExecuteUpdate(sqlQuery);
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't initialize table: {}", e.getMessage());
-        }
-    }
-
-    public static boolean dropTable() {
-        String sqlQuery = "DROP TABLE IF EXISTS ReportConfig";
-        LOGGER.debug("Dropping table with sql query: {}", sqlQuery);
-
-        try {
-            DBUtil.dbExecuteUpdate(sqlQuery);
-            return true;
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't drop table: {}", e.getMessage());
-            return false;
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't initialize ReportConfig table", e);
         }
     }
 }

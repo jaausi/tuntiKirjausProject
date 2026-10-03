@@ -41,7 +41,7 @@ public class TuntiKirjausService {
 
     public List<TuntiKirjaus> getAllTuntikirjaus() {
         if(tuntikirjausCache==null || !cacheEnabled) {
-            tuntikirjausCache = tuntikirjausDao.getAllFromToList(Constants.FETCH_DAYS_SINCE);
+            tuntikirjausCache = tuntikirjausDao.getAllFromToList(Constants.fetchDaysSince());
         }
 
         return tuntikirjausCache;

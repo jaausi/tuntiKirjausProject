@@ -12,6 +12,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.List;
 public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
     private static final Dimension WINDOW_DIMENSION = new Dimension(1440, 1267);
+    // Kieku loads its elements dynamically, so wait for them instead of failing immediately
+    private static final Duration ELEMENT_WAIT_TIMEOUT = Duration.ofSeconds(10);
     private static final DateTimeFormatter KIEKU_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter KIEKU_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -82,6 +85,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
                 driver = new EdgeDriver(options);
             }
         }
+        driver.manage().timeouts().implicitlyWait(ELEMENT_WAIT_TIMEOUT);
     }
 
     /**

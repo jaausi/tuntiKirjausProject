@@ -12,8 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Locale;
 
-import static com.sirvja.tuntikirjaus.utils.Constants.DROP_TABLE_ON_START;
-
 public class Initializer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Initializer.class);
@@ -22,9 +20,7 @@ public class Initializer {
         createLogsDirectory();
         DBUtil.checkOrCreateDatabaseFile();
         System.setProperty("prism.lcdtext", "false");
-        assert DBUtil.checkDrivers();
         createDbTablesIfNotExisting();
-        initializeTestData();
         runDbMigrations();
         Locale.setDefault(Locale.of("fi", "FI"));
     }
@@ -39,35 +35,14 @@ public class Initializer {
     }
 
     private static void createDbTablesIfNotExisting(){
-        LOGGER.debug("Initializing Tuntikirjaus table...");
+        LOGGER.debug("Initializing database tables...");
         TuntiKirjausDao.initializeTableIfNotExisting();
-        LOGGER.debug("Tuntikirjaus table initialized.");
-        LOGGER.debug("Initializing ReportConfig table...");
         ReportConfigDao.initializeTableIfNotExisting();
-        LOGGER.debug("ReportConfig table initialized.");
-        LOGGER.debug("Initializing Configuration table...");
         ConfigurationDao.initializeTableIfNotExisting();
-        LOGGER.debug("Configuration table initialized.");
+        LOGGER.debug("Database tables initialized.");
     }
 
-    private static void initializeTestData(){
-        if(DROP_TABLE_ON_START){
-            TuntiKirjausDao.dropTable();
-            ReportConfigDao.dropTable();
-            ConfigurationDao.dropTable();
-
-            Initializer.populateTestData();
-        }
-    }
-
-    private static boolean populateTestData(){
-
-        // TODO: Set currentDate
-        //TODO: Add tuntikirjausdata
-        return true;
-    }
-
-    private static void runDbMigrations() {
+    public static void runDbMigrations() {
         LOGGER.info("Applying database migrations. Only pending migrations will be applied, so it's safe to add new migrations and run this on every application start.");
         new Migration(
                 "Add IS_REMOTE column to Tuntikirjaus table",
@@ -89,6 +64,16 @@ public class Initializer {
                         "INSERT INTO Tuntikirjaus(ROWID, START_TIME, END_TIME, TOPIC, IS_REMOTE) " +
                         "SELECT ROWID, START_TIME, END_TIME, TOPIC, COALESCE(IS_REMOTE, 0) FROM Tuntikirjaus_old;" +
                         "DROP TABLE Tuntikirjaus_old;"
+        ).run();
+
+        // Earlier versions stored missing values as the literal string 'null' instead of SQL NULL
+        new Migration(
+                "Convert 'null' strings to SQL NULL",
+                "SELECT NOT EXISTS (SELECT 1 FROM Tuntikirjaus WHERE END_TIME IN ('null', '')) " +
+                        "AND NOT EXISTS (SELECT 1 FROM ReportConfig WHERE START_DATE IN ('null', '') OR END_DATE IN ('null', '')) AS is_run;",
+                "UPDATE Tuntikirjaus SET END_TIME = NULL WHERE END_TIME IN ('null', '');" +
+                        "UPDATE ReportConfig SET START_DATE = NULL WHERE START_DATE IN ('null', '');" +
+                        "UPDATE ReportConfig SET END_DATE = NULL WHERE END_DATE IN ('null', '');"
         ).run();
     }
 }

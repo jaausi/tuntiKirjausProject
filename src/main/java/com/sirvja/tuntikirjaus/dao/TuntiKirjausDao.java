@@ -1,9 +1,8 @@
 package com.sirvja.tuntikirjaus.dao;
 
 import com.sirvja.tuntikirjaus.domain.TuntiKirjaus;
+import com.sirvja.tuntikirjaus.exception.DataAccessException;
 import com.sirvja.tuntikirjaus.utils.DBUtil;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
@@ -11,10 +10,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static com.sirvja.tuntikirjaus.utils.Constants.dateFormatter;
 import static com.sirvja.tuntikirjaus.utils.Constants.dateTimeFormatter;
@@ -23,122 +20,69 @@ import static com.sirvja.tuntikirjaus.utils.DBUtil.dbExecuteQuery;
 public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TuntiKirjausDao.class);
 
-    @Deprecated(since = "1.0.2")
-    // Use getAllToList instead
-    @Override
-    public Optional<ObservableList<TuntiKirjaus>> getAll() {
-        return getAllInternal(Optional.empty());
-    }
-
     @Override
     public List<TuntiKirjaus> getAllToList() {
-        String queryAll = "SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC";
-
-        return executeTuntikirjausFetchQuery(queryAll);
+        return executeTuntikirjausFetchQuery("SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC");
     }
 
     @Override
     public List<TuntiKirjaus> getAllFromToList(LocalDate localDate) {
-        String queryAllFromDate = String.format("""
+        String queryAllFromDate = """
                 SELECT * FROM Tuntikirjaus
-                WHERE CAST(strftime('%%s', START_TIME)  AS  integer) > CAST(strftime('%%s', '%s')  AS  integer)
-                ORDER BY START_TIME ASC;
-                """, localDate.format(dateFormatter));
+                WHERE CAST(strftime('%s', START_TIME) AS integer) > CAST(strftime('%s', ?) AS integer)
+                ORDER BY START_TIME ASC
+                """;
 
-        return executeTuntikirjausFetchQuery(queryAllFromDate);
+        return executeTuntikirjausFetchQuery(queryAllFromDate, localDate.format(dateFormatter));
     }
 
-    private List<TuntiKirjaus> executeTuntikirjausFetchQuery(String query) {
+    private List<TuntiKirjaus> executeTuntikirjausFetchQuery(String query, Object... params) {
         List<TuntiKirjaus> tuntiKirjausList = new ArrayList<>();
         try {
-            ResultSet resultSet = dbExecuteQuery(query);
+            ResultSet resultSet = dbExecuteQuery(query, params);
 
             while (resultSet.next()) {
-                mapToTuntikirjaus.apply(resultSet).map(tuntiKirjausList::add);
+                tuntiKirjausList.add(mapToTuntikirjaus(resultSet));
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get Tuntikirjaus' from database, reason: {}", e.getMessage());
-            return Collections.emptyList();
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't get Tuntikirjaus' from database", e);
         }
 
         return tuntiKirjausList;
     }
 
-    private Function<ResultSet, Optional<TuntiKirjaus>> mapToTuntikirjaus = resultSet -> {
-        Function<String, LocalDateTime> parseEndTime = endTimeString -> {
-            if(endTimeString == null || endTimeString.isEmpty() || endTimeString.equals("null")) {
-                return null;
-            }
-            return LocalDateTime.parse(endTimeString, dateTimeFormatter);
-        };
+    private static TuntiKirjaus mapToTuntikirjaus(ResultSet resultSet) throws SQLException {
+        String endTime = resultSet.getString("END_TIME");
+        return new TuntiKirjaus(
+                resultSet.getInt("ROWID"),
+                LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
+                endTime == null ? null : LocalDateTime.parse(endTime, dateTimeFormatter),
+                resultSet.getString("TOPIC"),
+                resultSet.getBoolean("IS_REMOTE")
+        );
+    }
 
-        try {
-            return Optional.of(new TuntiKirjaus(
-                    resultSet.getInt("ROWID"),
-                    LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
-                    parseEndTime.apply(resultSet.getString("END_TIME")),
-                    resultSet.getString("TOPIC"),
-                    resultSet.getBoolean("IS_REMOTE")
-            ));
-        } catch (SQLException e) {
-            LOGGER.error("Couldn't map fields from TuntiKirjaus, reason: {}", e.getMessage());
-            return Optional.empty();
-        }
-    };
-
-
-    public Optional<ObservableList<TuntiKirjaus>> getAllInternal(Optional<LocalDate> optionalLocalDate) {
-        String query = optionalLocalDate
-                .map(localDate ->
-                        "SELECT * FROM Tuntikirjaus WHERE CAST(strftime('%s', START_TIME)  AS  integer) > CAST(strftime('%s', '" +
-                                localDate.format(dateFormatter) + "')  AS  integer) ORDER BY START_TIME ASC;")
-                .orElse("SELECT * FROM Tuntikirjaus ORDER BY START_TIME ASC");
-        LOGGER.info("Query: {}", query);
-
-        ObservableList<TuntiKirjaus> returnObject = FXCollections.observableArrayList();
-        try {
-            ResultSet resultSet = dbExecuteQuery(query);
-
-            while (resultSet.next()){
-                String endTimeString = resultSet.getString("END_TIME");
-                Optional<String> endTime = Optional.ofNullable(endTimeString.isEmpty() || endTimeString.equals("null") ? null : endTimeString);
-                LocalDateTime localEndDateTime = endTime.map(s -> LocalDateTime.parse(s, dateTimeFormatter)).orElse(null);
-                returnObject.add(
-                        new TuntiKirjaus(
-                                resultSet.getInt("ROWID"),
-                                LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
-                                localEndDateTime,
-                                resultSet.getString("TOPIC"),
-                                resultSet.getBoolean("IS_REMOTE")
-                        )
-                );
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
-            return Optional.empty();
-        }
-
-        LOGGER.info("Found {} objects", returnObject.size());
-
-        return Optional.of(returnObject);
+    private static String formatEndTime(TuntiKirjaus tuntiKirjaus) {
+        return tuntiKirjaus.getEndTime().map(dateTimeFormatter::format).orElse(null);
     }
 
     @Override
     public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
-        String query = String.format("INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, IS_REMOTE) " +
-                "VALUES ('%s', '%s', '%s', %b) " +
-                "RETURNING ROWID", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isRemote());
-        LOGGER.debug("Inserting Tuntikirjaus with sql query: {}", query);
+        String query = "INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, IS_REMOTE) VALUES (?, ?, ?, ?) RETURNING ROWID";
+        LOGGER.debug("Inserting Tuntikirjaus: {}", tuntiKirjaus);
 
         try{
-            ResultSet resultSet = dbExecuteQuery(query);
+            ResultSet resultSet = dbExecuteQuery(query,
+                    tuntiKirjaus.getStartTime().format(dateTimeFormatter),
+                    formatEndTime(tuntiKirjaus),
+                    tuntiKirjaus.getTopic(),
+                    tuntiKirjaus.isRemote());
 
-            while (resultSet.next()){
-                LOGGER.debug(String.format("%s",resultSet.getInt("ROWID")));
+            if (resultSet.next()){
                 tuntiKirjaus.setId(resultSet.getInt("ROWID"));
             }
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save Tuntikirjaus to database: {}", e.getMessage());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't save Tuntikirjaus to database", e);
         }
 
         return tuntiKirjaus;
@@ -146,55 +90,37 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
 
     @Override
     public void update(TuntiKirjaus tuntiKirjaus) {
-        String query = String.format("UPDATE Tuntikirjaus " +
-                "SET START_TIME='%s', END_TIME='%s', TOPIC='%s', IS_REMOTE=%b " +
-                "WHERE ROWID=%s", tuntiKirjaus.getStartTime().format(dateTimeFormatter), tuntiKirjaus.getEndTime().map(localDateTime -> localDateTime.format(dateTimeFormatter)).orElse(null), tuntiKirjaus.getTopic(), tuntiKirjaus.isRemote(), tuntiKirjaus.getId());
-        LOGGER.debug("Updating Tuntikirjaus with sql query: {}", query);
+        String query = "UPDATE Tuntikirjaus SET START_TIME=?, END_TIME=?, TOPIC=?, IS_REMOTE=? WHERE ROWID=?";
+        LOGGER.debug("Updating Tuntikirjaus: {}", tuntiKirjaus);
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save Tuntikirjaus to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate(query,
+                    tuntiKirjaus.getStartTime().format(dateTimeFormatter),
+                    formatEndTime(tuntiKirjaus),
+                    tuntiKirjaus.getTopic(),
+                    tuntiKirjaus.isRemote(),
+                    tuntiKirjaus.getId());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't update Tuntikirjaus in database", e);
         }
     }
 
     @Override
     public void delete(TuntiKirjaus tuntiKirjaus) {
-        String query = String.format("DELETE FROM Tuntikirjaus " +
-                "WHERE ROWID=%s", tuntiKirjaus.getId());
-        LOGGER.debug("Deleting Tuntikirjaus with sql query: {}", query);
+        LOGGER.debug("Deleting Tuntikirjaus: {}", tuntiKirjaus);
 
         try{
-            DBUtil.dbExecuteUpdate(query);
-        } catch (SQLException | ClassNotFoundException e){
-            LOGGER.error("Couldn't save Tuntikirjaus to database: {}", e.getMessage());
+            DBUtil.dbExecuteUpdate("DELETE FROM Tuntikirjaus WHERE ROWID=?", tuntiKirjaus.getId());
+        } catch (SQLException e){
+            throw new DataAccessException("Couldn't delete Tuntikirjaus from database", e);
         }
     }
 
     @Override
     public Optional<TuntiKirjaus> get(Integer id) {
-        String query = String.format("SELECT * FROM Tuntikirjaus WHERE ROWID=%s LIMIT 1", id);
-        LOGGER.debug("Trying to find tuntikirjaus with sql query: {}", query);
-
-        TuntiKirjaus tuntiKirjaus = null;
-        try {
-            ResultSet resultSet = dbExecuteQuery(query);
-
-            while (resultSet.next()){
-                LOGGER.debug(String.format("%s, %s, %s, %s, %b",resultSet.getInt("ROWID"), resultSet.getDate("START_TIME"),resultSet.getDate("END_TIME"), resultSet.getString("TOPIC"), resultSet.getBoolean("IS_REMOTE")));
-                tuntiKirjaus = new TuntiKirjaus(
-                        resultSet.getInt("ROWID"),
-                        LocalDateTime.parse(resultSet.getString("START_TIME"), dateTimeFormatter),
-                        LocalDateTime.parse(resultSet.getString("END_TIME"), dateTimeFormatter),
-                        resultSet.getString("TOPIC"),
-                        resultSet.getBoolean("IS_REMOTE")
-                );
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't get all Tuntikirjaus' from database: {}", e.getMessage());
-        }
-
-        return Optional.ofNullable(tuntiKirjaus);
+        return executeTuntikirjausFetchQuery("SELECT * FROM Tuntikirjaus WHERE ROWID=? LIMIT 1", id)
+                .stream()
+                .findFirst();
     }
 
     public static void initializeTableIfNotExisting() {
@@ -208,21 +134,8 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
 
         try {
             DBUtil.dbExecuteUpdate(sqlQuery);
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't initialize table: {}", e.getMessage());
-        }
-    }
-
-    public static boolean dropTable() {
-        String sqlQuery = "DROP TABLE IF EXISTS Tuntikirjaus";
-        LOGGER.debug("Dropping table with sql query: {}", sqlQuery);
-
-        try {
-            DBUtil.dbExecuteUpdate(sqlQuery);
-            return true;
-        } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("Couldn't drop table: {}", e.getMessage());
-            return false;
+        } catch (SQLException e) {
+            throw new DataAccessException("Couldn't initialize Tuntikirjaus table", e);
         }
     }
 }

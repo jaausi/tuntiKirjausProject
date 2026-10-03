@@ -1,7 +1,14 @@
-
 name: Build Test and Package
 
-on: workflow_dispatch
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   Build-Test-And-Package:
@@ -13,20 +20,31 @@ jobs:
       - name: Setup java with maven cached
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '25'
           distribution: 'temurin'
           cache: maven
+          # Credentials for tuntikirjaus-components-lib in GitHub Packages
+          server-id: github-tuntikirjaus
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
       - name: Build and run tests
-        run: mvn clean test
+        run: mvn -B clean test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package JavaFx application with jlink
-        run: mvn javafx:jlink
+        if: github.event_name != 'pull_request'
+        run: mvn -B javafx:jlink
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create staging folder
+        if: github.event_name != 'pull_request'
         run: mkdir staging && cp target/*.zip staging
 
       - name: Release artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: Tuntikirjaus-package-with-jre
