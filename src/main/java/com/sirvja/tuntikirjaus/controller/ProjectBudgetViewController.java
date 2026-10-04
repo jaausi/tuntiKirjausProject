@@ -11,7 +11,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,12 +106,6 @@ public class ProjectBudgetViewController implements Initializable {
                 });
 
         budgetTable.setItems(rows);
-    }
-
-    @FXML
-    protected void onCloseButtonClick() {
-        Stage stage = (Stage) budgetTable.getScene().getWindow();
-        stage.close();
     }
 
     /**
