@@ -35,32 +35,17 @@ create-shell-alias:
 ################################
 # Create mac compatible standalone application file
 ################################
-build-mac-dmg: build-jar-with-jre copy-run-command-script create-app-bundle copy-built-binaries-to-app-bundle copy-modified-plist-file-to-app-bundle create-dmg-file-from-app-bundle
-build-mac-dmg-with-clean: build-mac-dmg remove-app-bundle remove-built-resources
+build-mac-dmg: build-jar-with-jre create-dmg-with-jpackage
+build-mac-dmg-with-clean: build-mac-dmg copy-dmg-to-project-root remove-built-resources
 
 build-jar-with-jre:
 	mvn clean javafx:jlink
 
-copy-run-command-script:
-	cp buildResources/run.command target/tuntikirjaus/run.command
-	chmod +x target/tuntikirjaus/run.command
-	cp buildResources/tuntikirjausResized.png target/tuntikirjaus/bin/
+create-dmg-with-jpackage:
+	./buildResources/build-mac-dmg.sh
 
-create-app-bundle:
-	rm -rf ./Tuntikirjaus.app
-	appify target/tuntikirjaus/run.command Tuntikirjaus.app buildResources/tuntikirjausResized.png
-
-copy-built-binaries-to-app-bundle:
-	cp -r target/tuntikirjaus/* Tuntikirjaus.app/Contents/MacOS/
-
-copy-modified-plist-file-to-app-bundle:
-	cp buildResources/Info.plist Tuntikirjaus.app/Contents/Info.plist
-
-create-dmg-file-from-app-bundle:
-	hdiutil create -volname Tuntikirjaus -srcfolder ./Tuntikirjaus.app -ov -format UDZO Tuntikirjaus.dmg
-
-remove-app-bundle:
-	rm -rf ./Tuntikirjaus.app
+copy-dmg-to-project-root:
+	cp target/dist/Tuntikirjaus-*.dmg ./Tuntikirjaus.dmg
 
 remove-built-resources:
 	mvn clean

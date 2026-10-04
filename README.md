@@ -66,11 +66,24 @@ make install
 
 ```
 # This command:
-#   1) builds new jar from sources and includes jre in the package, 
-#   2) creates app bundle, 
-#   3) creates dmg-file from app bundle, 
+#   1) builds a runtime image with jlink (application + jre), 
+#   2) creates app bundle and dmg-file from the runtime image with jpackage, 
+#   3) copies the dmg-file to project root as Tuntikirjaus.dmg, 
 #   4) removes temporary resources used to build the dmg-file 
 make build-mac-dmg-with-clean
+```
+
+The dmg is also built in GitHub Actions on a macOS (Apple Silicon) runner. Every push to master uploads it as a
+workflow artifact, and pushing a version tag (e.g. `v1.2.0`) also attaches it to the GitHub release of that tag:
+```
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+The dmg is not signed with an Apple Developer ID, so macOS blocks the downloaded app on first launch. Allow it by
+right-clicking the app and choosing Open, or by removing the quarantine attribute:
+```
+xattr -dr com.apple.quarantine /Applications/Tuntikirjaus.app
 ```
 
 ## How to Use the Application
