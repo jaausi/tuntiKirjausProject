@@ -86,6 +86,21 @@ right-clicking the app and choosing Open, or by removing the quarantine attribut
 xattr -dr com.apple.quarantine /Applications/Tuntikirjaus.app
 ```
 
+## How to build installer for Windows
+
+The Windows installer (msi) is built in GitHub Actions on a Windows runner, because the bundled JRE and JavaFX
+natives must come from Windows. Every push to master uploads it as a workflow artifact, and pushing a version tag
+also attaches it to the GitHub release of that tag, next to the macOS dmg.
+
+To build it locally on Windows, install JDK 25, Maven and [WiX Toolset 3](https://github.com/wixtoolset/wix3/releases)
+and run in Git Bash:
+```
+make build-windows-msi
+```
+The msi is created to `target/dist`. It installs the application for the current user (no admin rights needed) and
+adds Start menu and desktop shortcuts. The msi is not code signed, so Windows SmartScreen may warn on first launch:
+choose "More info" and "Run anyway".
+
 ## How to Use the Application
 
 ### Normal Use

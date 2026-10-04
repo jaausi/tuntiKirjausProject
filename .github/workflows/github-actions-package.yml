@@ -83,9 +83,44 @@ jobs:
           name: Tuntikirjaus-macOS-dmg
           path: target/dist/*.dmg
 
+  Package-Windows-msi:
+    if: github.event_name != 'pull_request'
+    needs: Build-Test-And-Package
+    # windows-2022 image ships WiX Toolset 3, which jpackage needs to create the msi
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java with maven cached
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          server-id: github-tuntikirjaus
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Build runtime image with jlink and create msi with jpackage
+        run: |
+          mvn -B clean javafx:jlink
+          ./buildResources/build-windows-msi.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload msi artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tuntikirjaus-Windows-msi
+          path: target/dist/*.msi
+
   Release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [Build-Test-And-Package, Package-macOS-dmg]
+    needs: [Build-Test-And-Package, Package-macOS-dmg, Package-Windows-msi]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -108,4 +143,4 @@ jobs:
             if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
             gh release create "$TAG" --verify-tag --generate-notes $PRERELEASE
           fi
-          gh release upload "$TAG" artifacts/*.dmg --clobber
+          gh release upload "$TAG" artifacts/*.dmg artifacts/*.msi --clobber

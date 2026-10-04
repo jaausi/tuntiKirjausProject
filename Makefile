@@ -51,6 +51,14 @@ remove-built-resources:
 	mvn clean
 
 ################################
+# Create windows installer (msi), run on Windows in Git Bash with WiX Toolset installed
+################################
+build-windows-msi: build-jar-with-jre create-msi-with-jpackage
+
+create-msi-with-jpackage:
+	./buildResources/build-windows-msi.sh
+
+################################
 # Create linux compatible application bundle
 ################################
 
