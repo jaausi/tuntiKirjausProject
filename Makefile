@@ -14,6 +14,15 @@ install: build-jar create-app-dir-and-database-dir copy-jar-to-app-dir create-sh
 build-jar:
 	mvn clean package
 
+################################
+# Test Kieku exporter against a fake Kieku page (requires Chrome)
+################################
+test-kieku:
+	mvn test -Pbrowser-tests -Dtest=KiekuExporterFakePageTest
+
+test-kieku-visible:
+	mvn test -Pbrowser-tests -Dtest=KiekuExporterFakePageTest -Dkieku.headless=false -Dkieku.keepOpenMillis=10000
+
 create-app-dir-and-database-dir:
 	mkdir -pv ~/tuntikirjaus/database
 

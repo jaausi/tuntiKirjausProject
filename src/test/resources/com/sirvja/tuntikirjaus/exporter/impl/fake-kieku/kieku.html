@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!--
+  Fake Kieku work hours page for KiekuExporter tests. It has the same kind of elements the exporter
+  uses in the real Kieku (week dropdown, "add work hours" dialog, event and reason dropdowns) and
+  writes every saved entry to the #saved-entries table so that tests can check what was exported.
+  Validation errors are written to the #errors list.
+
+  Open it in a browser to see what the exporter did, e.g. with -Dkieku.headless=false.
+-->
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>Fake Kieku</title>
+    <style>
+        .hidden { display: none; }
+        .dropdown { border: 1px solid #888; padding: 4px; margin: 4px 0; cursor: pointer; }
+        .dropdown li { cursor: pointer; }
+        .dropdown li.selected { font-weight: bold; }
+        #work-hours-dialog { border: 2px solid #333; padding: 8px; margin: 8px 0; }
+        table, td, th { border: 1px solid #888; border-collapse: collapse; padding: 2px 6px; }
+    </style>
+</head>
+<body>
+<h1>Fake Kieku</h1>
+<p id="login-status"></p>
+
+<div id="week-dropdown" class="dropdown">
+    <span class="current">Valitse viikko</span>
+    <ul id="week-options"></ul>
+</div>
+
+<button id="add-work-hours" type="button">Lisää työaikatapahtuma</button>
+
+<div id="work-hours-dialog" class="hidden">
+    <label>Päivämäärä <input id="date-field" type="text"></label>
+    <label>Kellonaika <input id="time-field" type="text"></label>
+
+    <div id="event-dropdown" class="dropdown">
+        <span class="current">Valitse tapahtuma</span>
+        <ul>
+            <li data-value="IN">Töihin tulo</li>
+            <li data-value="OUT">Töistä lähtö</li>
+            <li data-value="IN_WITH_REASON">Töihin tulo syyllä</li>
+            <li data-value="OUT_WITH_REASON">Töistä lähtö syyllä</li>
+        </ul>
+    </div>
+
+    <div id="reason-dropdown" class="dropdown">
+        <span class="current">Valitse syy</span>
+        <ul>
+            <li data-value="ETATYO">Etätyö</li>
+            <li data-value="MATKA">Työmatka</li>
+        </ul>
+    </div>
+
+    <button id="save-button" type="button">Tallenna</button>
+    <button id="close-button" type="button">Sulje</button>
+</div>
+
+<h2>Tallennetut tapahtumat</h2>
+<table id="saved-entries">
+    <thead><tr><th>Viikko</th><th>Päivämäärä</th><th>Kellonaika</th><th>Tapahtuma</th><th>Syy</th></tr></thead>
+    <tbody></tbody>
+</table>
+
+<h2>Virheet</h2>
+<ul id="errors"></ul>
+
+<script>
+    const state = { week: null, event: null, reason: null };
+    const loggedIn = sessionStorage.getItem('fakeKiekuLoggedIn') === 'true';
+    document.getElementById('login-status').textContent = loggedIn ? 'Kirjautunut' : 'Ei kirjautunut';
+
+    const weekOptions = document.getElementById('week-options');
+    for (let week = 1; week <= 53; week++) {
+        const li = document.createElement('li');
+        li.id = 'week-option-' + week;
+        li.dataset.value = String(week);
+        li.textContent = 'Viikko ' + week;
+        weekOptions.appendChild(li);
+    }
+
+    function setupDropdown(id, key) {
+        const dropdown = document.getElementById(id);
+        dropdown.querySelectorAll('li').forEach(li => li.addEventListener('click', () => {
+            dropdown.querySelectorAll('li').forEach(other => other.classList.remove('selected'));
+            li.classList.add('selected');
+            dropdown.querySelector('.current').textContent = li.textContent;
+            state[key] = li.dataset.value;
+        }));
+    }
+
+    function resetDialog() {
+        document.getElementById('date-field').value = '';
+        document.getElementById('time-field').value = '';
+        state.event = null;
+        state.reason = null;
+        ['event-dropdown', 'reason-dropdown'].forEach(id => {
+            const dropdown = document.getElementById(id);
+            dropdown.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
+        });
+    }
+
+    function addError(message) {
+        const li = document.createElement('li');
+        li.textContent = message;
+        document.getElementById('errors').appendChild(li);
+    }
+
+    setupDropdown('week-dropdown', 'week');
+    setupDropdown('event-dropdown', 'event');
+    setupDropdown('reason-dropdown', 'reason');
+
+    document.getElementById('add-work-hours').addEventListener('click', () => {
+        resetDialog();
+        document.getElementById('work-hours-dialog').classList.remove('hidden');
+    });
+
+    document.getElementById('close-button').addEventListener('click', () => {
+        document.getElementById('work-hours-dialog').classList.add('hidden');
+        resetDialog();
+    });
+
+    document.getElementById('save-button').addEventListener('click', () => {
+        const date = document.getElementById('date-field').value;
+        const time = document.getElementById('time-field').value;
+        const errors = [];
+        if (!loggedIn) errors.push('ei kirjautunut sisään');
+        if (!state.week) errors.push('viikkoa ei valittu');
+        if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) errors.push('virheellinen päivämäärä: ' + date);
+        if (!/^\d{2}:\d{2}$/.test(time)) errors.push('virheellinen kellonaika: ' + time);
+        if (!state.event) errors.push('tapahtumaa ei valittu');
+        if (state.event && state.event.endsWith('_WITH_REASON') && !state.reason) errors.push('syytä ei valittu');
+        if (errors.length > 0) {
+            addError(errors.join(', '));
+            return;
+        }
+
+        const row = document.createElement('tr');
+        [state.week, date, time, state.event, state.reason || ''].forEach(value => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+        document.querySelector('#saved-entries tbody').appendChild(row);
+    });
+</script>
+</body>
+</html>

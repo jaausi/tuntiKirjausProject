@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.function.Function;
 
 public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
@@ -25,12 +26,22 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     private static final DateTimeFormatter KIEKU_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter KIEKU_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
+    private final Function<KiekuConfiguration, WebDriver> webDriverFactory;
+    private final AlertService alertService;
     private KiekuConfiguration configuration;
     private WebDriver driver;
-    private AlertService alertService;
 
     public KiekuExporter() {
-        this.alertService = new AlertService();
+        this(KiekuExporter::createWebDriver, new AlertService());
+    }
+
+    /**
+     * Allows tests to use their own browser (e.g. headless Chrome) and alert handling instead of
+     * the browser profile of the user and JavaFX dialogs.
+     */
+    public KiekuExporter(Function<KiekuConfiguration, WebDriver> webDriverFactory, AlertService alertService) {
+        this.webDriverFactory = webDriverFactory;
+        this.alertService = alertService;
     }
 
     @Override
@@ -52,10 +63,19 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
     @Override
     public void destroyExporter() {
-        driver.quit();
+        if (driver != null) {
+            driver.quit();
+            driver = null;
+        }
     }
 
     private void setWebDriver() {
+        driver = webDriverFactory.apply(configuration);
+        driver.manage().timeouts().implicitlyWait(ELEMENT_WAIT_TIMEOUT);
+    }
+
+    private static WebDriver createWebDriver(KiekuConfiguration configuration) {
+        WebDriver driver = null;
         switch (configuration.browser()) {
             case SAFARI -> driver = new SafariDriver();
             case FIREFOX -> {
@@ -85,14 +105,14 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
                 driver = new EdgeDriver(options);
             }
         }
-        driver.manage().timeouts().implicitlyWait(ELEMENT_WAIT_TIMEOUT);
+        return driver;
     }
 
     /**
      * Etsii Firefoxin oletusprofiilin hakemiston macOS:ssä.
      * Profiili löytyy ~/Library/Application Support/Firefox/Profiles/ alta.
      */
-    private String findFirefoxDefaultProfile() {
+    private static String findFirefoxDefaultProfile() {
         String userHome = System.getProperty("user.home");
         File profilesDir = new File(userHome + "/Library/Application Support/Firefox/Profiles");
         if (profilesDir.exists() && profilesDir.isDirectory()) {
