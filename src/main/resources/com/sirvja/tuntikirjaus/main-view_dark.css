@@ -1,3 +1,14 @@
+/* Base colors that the default (modena) control styles derive from, so controls without
+   their own rule below (popups, calendars, scroll bars...) are dark too */
+.root {
+    -fx-base: #2B2B2B;
+    -fx-background: #3D3D3D;
+    -fx-control-inner-background: #2B2B2B;
+    -fx-accent: #FF4D00;
+    -fx-focus-color: #FF4D00;
+    -fx-faint-focus-color: transparent;
+}
+
 .anchor-pane, .split-pane, .main-view {
     -fx-background-color: #3D3D3D;
     -fx-text-fill: #FF4D00;
@@ -164,4 +175,45 @@
 .tooltip {
     -fx-show-delay: 250ms;
     -fx-show-duration: 10000ms;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab,
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #2B2B2B;
+    -fx-border-color: #272121;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #3D3D3D;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: #B5B5B5;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: #FF4D00;
+}
+
+.date-picker > .arrow-button, .combo-box-base > .arrow-button {
+    -fx-background-color: #2B2B2B;
+    -fx-border-color: #272121;
+}
+
+.combo-box-base {
+    -fx-background-color: #2B2B2B;
+    -fx-border-color: #272121;
+}
+
+.combo-box > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #B5B5B5;
+}
+
+.scroll-bar, .scroll-bar .track, .table-view .filler, .table-view .corner {
+    -fx-background-color: #2B2B2B;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #555555;
 }

@@ -59,7 +59,6 @@
       <menus>
         <Menu mnemonicParsing="false" text="File">
           <items>
-            <MenuItem fx:id="updateDurationsMenuItem" mnemonicParsing="false" onAction="#onChangeUpdateDurationsMenuItemAction" text="Päivitä kestot" />
             <MenuItem fx:id="reportsMenuItem" mnemonicParsing="false" onAction="#onOpenReportsMenuItem" text="Raportit" />
             <MenuItem fx:id="settingsMenuItem" mnemonicParsing="false" onAction="#onOpenSettings" text="Asetukset" />
           </items>

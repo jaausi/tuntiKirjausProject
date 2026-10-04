@@ -64,8 +64,6 @@ public class MainViewController implements Initializable {
     @FXML
     private ListView<Paiva> daysListView = new ListView<>();
     @FXML
-    private MenuItem updateDurationsMenuItem;
-    @FXML
     private MenuItem reportsMenuItem;
     @FXML
     private MenuItem settingsMenuItem;
@@ -180,11 +178,6 @@ public class MainViewController implements Initializable {
     @FXML
     protected void onChangeUndoMenuItem() {
 
-    }
-
-    @FXML
-    protected void onChangeUpdateDurationsMenuItemAction() {
-        log.debug("Update durations clicked!");
     }
 
     @FXML
