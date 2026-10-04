@@ -64,17 +64,11 @@ public class MainViewController implements Initializable {
     @FXML
     private ListView<Paiva> daysListView = new ListView<>();
     @FXML
-    private MenuItem changeThemeMenuItem;
-    @FXML
     private MenuItem updateDurationsMenuItem;
     @FXML
     private MenuItem reportsMenuItem;
-     @FXML
-    private MenuItem weeklyReportMenuItem;
     @FXML
-    private MenuItem exporterMenuItem;
-    @FXML
-    private MenuItem configurationMenuItem;
+    private MenuItem settingsMenuItem;
     @FXML
     private MenuItem undoMenuItem;
     @FXML
@@ -214,70 +208,33 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
-    protected void onChangeThemeMenuItemAction(){
-        log.debug("Change theme clicked!");
-
-        ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
-        String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
-        if(styleSheets.contains(darkThemeFile)){
-            styleSheets.remove(darkThemeFile);
-        } else {
-            styleSheets.add(darkThemeFile);
-        }
-    }
-
-    @FXML
     protected void onOpenReportsMenuItem(){
         log.debug("Open reports clicked!");
-
-        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view.fxml")), "Tuntikirjaus reporting");
+        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("reports-hub-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Raportit");
     }
 
     @FXML
-    protected void onOpenWeeklyReportMenuItem() {
-        log.debug("Open day summary clicked!");
-        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("reports_view_day_summary.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Tuntikirjaus day view summary");
+    protected void onOpenSettings() {
+        log.debug("Open settings clicked!");
+        Stage settingsStage = openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("settings-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Asetukset");
+        // Project budgets may have changed in the settings window
+        settingsStage.setOnHidden(event -> updateProjectBudgets());
     }
 
-    @FXML
-    protected void onOpenExporter() {
-        log.debug("Open exporter clicked!");
-        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("export-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Kieku exporter");
-    }
-
-    @FXML
-    protected void onOpenConfiguration() {
-        log.debug("Open configuration clicked!");
-        openModalView(new FXMLLoader(TuntikirjausApplication.class.getResource("configuration-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n")), "Kieku exporter");
-    }
-
-    private static void openModalView(FXMLLoader fxmlLoader, String viewTitle) {
+    private static Stage openModalView(FXMLLoader fxmlLoader, String viewTitle) {
         try {
             Parent root1 = fxmlLoader.load();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(viewTitle);
             Scene scene = new Scene(root1);
-
-            ObservableList<String> styleSheets = TuntikirjausApplication.stage.getScene().getStylesheets();
-            String darkThemeFile = String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css"));
-            if (styleSheets.contains(darkThemeFile)) {
-                scene.getStylesheets().add(String.valueOf(TuntikirjausApplication.class.getResource("main-view_dark.css")));
-            }
-
+            TuntikirjausApplication.applyTheme(scene);
             stage.setScene(scene);
             stage.show();
+            return stage;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @FXML
-    protected void onOpenProjectBudgets() {
-        log.debug("Open project budgets clicked!");
-        FXMLLoader loader = new FXMLLoader(TuntikirjausApplication.class.getResource("project-budget-view.fxml"), ResourceBundle.getBundle("com.sirvja.tuntikirjaus.i18n"));
-        openModalView(loader, "Projektibudjetit");
-        updateProjectBudgets();
     }
 
     @FXML
