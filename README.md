@@ -24,6 +24,23 @@ Browser tests (Kieku exporter) start real browsers and are skipped by default. T
 mvn test -Pbrowser-tests
 ```
 
+### Testing the Kieku exporter without the real Kieku
+
+`KiekuExporterFakePageTest` runs the real `KiekuExporter` in headless Chrome against a fake Kieku page
+(`src/test/resources/com/sirvja/tuntikirjaus/exporter/impl/fake-kieku/`). The fake page records every saved
+event to a table, and the test checks that the week, date, time, event and reason were filled in correctly.
+No login to the real Kieku is needed. Requires Chrome.
+```
+make test-kieku
+```
+Watch the browser while the test runs and keep the page open for 10 seconds after each test:
+```
+make test-kieku-visible
+```
+You can also open `fake-kieku/kieku.html` directly in a browser to see what the fake page looks like.
+If the export fails against the real Kieku but works against the fake page, compare the element ids and
+selectors in the Kieku configuration of the application to the real Kieku page.
+
 ## How to run the dependency check
 
 Set you api key to environment variables to variable NVDAPIKEY.

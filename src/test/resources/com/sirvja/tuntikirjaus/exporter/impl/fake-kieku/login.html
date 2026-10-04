@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+  Fake login portal for KiekuExporter tests. Mimics the three login steps the exporter clicks:
+  login button -> organization option -> submit button (found by name).
+-->
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>Fake Kieku login</title>
+    <style>.hidden { display: none; }</style>
+</head>
+<body>
+<h1>Fake Kieku login</h1>
+<button id="login-button" type="button">Kirjaudu sisään</button>
+
+<div id="organizations" class="hidden">
+    <button id="org-option-valtio" type="button">Valtion virasto</button>
+</div>
+
+<form id="login-form" class="hidden" onsubmit="return false;">
+    <button name="login-submit" type="submit">Jatka</button>
+</form>
+
+<p id="status">Ei kirjautunut</p>
+
+<script>
+    sessionStorage.removeItem('fakeKiekuLoggedIn');
+
+    document.getElementById('login-button').addEventListener('click', () => {
+        document.getElementById('organizations').classList.remove('hidden');
+    });
+    document.getElementById('org-option-valtio').addEventListener('click', () => {
+        document.getElementById('login-form').classList.remove('hidden');
+    });
+    document.querySelector('[name="login-submit"]').addEventListener('click', () => {
+        sessionStorage.setItem('fakeKiekuLoggedIn', 'true');
+        document.getElementById('status').textContent = 'Kirjautunut';
+    });
+</script>
+</body>
+</html>
