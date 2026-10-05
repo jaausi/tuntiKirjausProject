@@ -59,7 +59,9 @@ create-msi-with-jpackage:
 	./buildResources/build-windows-msi.sh
 
 ################################
-# Create linux compatible application bundle
+# Create deb installer for Debian/Ubuntu (run on Linux)
 ################################
+build-linux-deb: build-jar-with-jre create-deb-with-jpackage
 
-# TODO
+create-deb-with-jpackage:
+	./buildResources/build-linux-deb.sh

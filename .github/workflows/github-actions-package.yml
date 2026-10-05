@@ -83,6 +83,41 @@ jobs:
           name: Tuntikirjaus-macOS-dmg
           path: target/dist/*.dmg
 
+  Package-Linux-deb:
+    if: github.event_name != 'pull_request'
+    needs: Build-Test-And-Package
+    # x86_64 runner: jlink bundles the JRE and JavaFX natives of the build machine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java with maven cached
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          server-id: github-tuntikirjaus
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Install deb packaging tools
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+
+      - name: Build runtime image with jlink and create deb with jpackage
+        run: |
+          mvn -B clean javafx:jlink
+          ./buildResources/build-linux-deb.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tuntikirjaus-Linux-deb
+          path: target/dist/*.deb
+
   Package-Windows-msi:
     if: github.event_name != 'pull_request'
     needs: Build-Test-And-Package
@@ -120,7 +155,7 @@ jobs:
 
   Release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [Build-Test-And-Package, Package-macOS-dmg, Package-Windows-msi]
+    needs: [Build-Test-And-Package, Package-macOS-dmg, Package-Linux-deb, Package-Windows-msi]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -143,4 +178,4 @@ jobs:
             if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
             gh release create "$TAG" --verify-tag --generate-notes $PRERELEASE
           fi
-          gh release upload "$TAG" artifacts/*.dmg artifacts/*.msi --clobber
+          gh release upload "$TAG" artifacts/*.dmg artifacts/*.deb artifacts/*.msi --clobber
