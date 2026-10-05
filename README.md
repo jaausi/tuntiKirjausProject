@@ -86,6 +86,23 @@ right-clicking the app and choosing Open, or by removing the quarantine attribut
 xattr -dr com.apple.quarantine /Applications/Tuntikirjaus.app
 ```
 
+## How to build executable package for Linux
+
+A deb installer for Debian and Ubuntu (x86_64) is built with jpackage. The build must run on Linux and needs
+`fakeroot` and `dpkg-deb` (`sudo apt install fakeroot`):
+```
+# Builds a runtime image with jlink and creates target/dist/tuntikirjaus_<version>_amd64.deb with jpackage
+make build-linux-deb
+```
+
+The deb is also built in GitHub Actions on an Ubuntu runner. Every push to master uploads it as a workflow artifact,
+and pushing a version tag attaches it to the GitHub release next to the dmg. Install it with:
+```
+sudo apt install ./tuntikirjaus_1.1.9_amd64.deb
+```
+The application is installed to `/opt/tuntikirjaus` and added to the application menu. It can also be started from the
+terminal with `/opt/tuntikirjaus/bin/Tuntikirjaus`. Data is stored in `~/tuntikirjaus` as on other platforms.
+
 ## How to Use the Application
 
 ### Normal Use
