@@ -15,6 +15,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -25,6 +27,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class ExportViewController implements Initializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExportViewController.class);
 
     @FXML
     private DatePicker start_date_field;
@@ -93,6 +97,7 @@ public class ExportViewController implements Initializable {
             destroyKiekuExporter();
             alertService.showNotificationAlert("Tuntien exportointi onnistui!");
         } catch (Exception e) {
+            LOGGER.error("Exporting hours to Kieku failed", e);
             alertService.showGeneralAlert("Kohdattiin virhe kun yritettiin exportoida tunteja: " + e.getMessage());
         }
     }
@@ -123,6 +128,7 @@ public class ExportViewController implements Initializable {
 
         List<TuntiKirjaus> tuntiKirjausList = ReportsViewService.getAllTuntikirjausAsList(Optional.of(startDate), Optional.of(endDate), Optional.empty());
         List<TuntikirjausIncident> tuntikirjausIncidents = incidentService.parseTuntikirjausIncidents(tuntiKirjausList);
+        LOGGER.debug("Found {} incident(s) to export between {} and {}", tuntikirjausIncidents.size(), startDate, endDate);
         export_table.setItems(FXCollections.observableArrayList(tuntikirjausIncidents));
     }
 }

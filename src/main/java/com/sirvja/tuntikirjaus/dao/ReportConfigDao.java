@@ -60,7 +60,7 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
     @Override
     public ReportConfig save(ReportConfig reportConfig) {
         String query = "INSERT INTO ReportConfig(START_DATE, END_DATE, SEARCH_QUERY, REPORT_NAME) VALUES (?, ?, ?, ?) RETURNING ROWID";
-        LOGGER.debug("Inserting ReportConfig: {}", reportConfig);
+        LOGGER.debug("Inserting ReportConfig");
 
         try{
             ResultSet resultSet = DBUtil.dbExecuteQuery(query,
@@ -82,7 +82,7 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
     @Override
     public void update(ReportConfig reportConfig) {
         String query = "UPDATE ReportConfig SET START_DATE=?, END_DATE=?, SEARCH_QUERY=?, REPORT_NAME=? WHERE ROWID=?";
-        LOGGER.debug("Updating ReportConfig: {}", reportConfig);
+        LOGGER.debug("Updating ReportConfig with id: {}", reportConfig.getId());
 
         try{
             DBUtil.dbExecuteUpdate(query,
@@ -98,7 +98,7 @@ public class ReportConfigDao implements Dao<ReportConfig, Integer> {
 
     @Override
     public void delete(ReportConfig reportConfig) {
-        LOGGER.debug("Deleting ReportConfig: {}", reportConfig);
+        LOGGER.debug("Deleting ReportConfig with id: {}", reportConfig.getId());
 
         try{
             DBUtil.dbExecuteUpdate("DELETE FROM ReportConfig WHERE ROWID=?", reportConfig.getId());

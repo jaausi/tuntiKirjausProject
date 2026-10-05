@@ -10,6 +10,8 @@ import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.function.Function;
 
 public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KiekuExporter.class);
 
     private static final Dimension WINDOW_DIMENSION = new Dimension(1440, 1267);
     // Kieku loads its elements dynamically, so wait for them instead of failing immediately
@@ -52,19 +56,24 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
 
     @Override
     public void prepareExporter() {
+        LOGGER.info("Starting browser {} for Kieku export", configuration.browser());
         setWebDriver();
+        LOGGER.debug("Logging in to portal");
         loginToPortal();
     }
 
     @Override
     public void exportItems(List<KiekuItem> items) {
+        LOGGER.info("Exporting {} item(s) to Kieku", items.size());
         navigateToPageAndSetSize();
         items.forEach(this::fillInItem);
+        LOGGER.info("Exported {} item(s) to Kieku", items.size());
     }
 
     @Override
     public void destroyExporter() {
         if (driver != null) {
+            LOGGER.debug("Closing browser");
             driver.quit();
             driver = null;
         }
@@ -152,6 +161,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
     }
 
     private void fillInItem(KiekuItem kiekuItem) {
+        LOGGER.debug("Filling in Kieku item: {} {}", kiekuItem.time(), kiekuItem.event());
         selectWeek(kiekuItem);
         clickAddHours();
         fillInDate(kiekuItem);
@@ -217,6 +227,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
         try {
             element = driver.findElement(by);
         } catch (NoSuchElementException e) {
+            LOGGER.warn("Element not found from Kieku page: {}", by);
             boolean tryAgain = alertService.showConfirmationAlert(
                     "Elementtiä ei löytynyt",
                     String.format("Elementtiä (%s), jota selenium yritti hakea ei löytynyt. Haluatko yrittää uudestaan?", by.toString())
@@ -224,6 +235,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             if(tryAgain) {
                 element = safelyFindElement(by);
             } else {
+                LOGGER.warn("User cancelled the search for element {}", by);
                 throw e;
             }
         }

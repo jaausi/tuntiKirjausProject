@@ -29,6 +29,7 @@ public class TuntikirjausApplication extends Application {
         stage.setScene(scene);
         stage.setTitle("Tuntikirjaus App");
         stage.show();
+        LOGGER.info("Main window opened");
     }
 
     public static boolean isDarkTheme() {
@@ -63,8 +64,18 @@ public class TuntikirjausApplication extends Application {
         }
     }
 
+    @Override
+    public void stop() {
+        LOGGER.info("Application closed");
+    }
+
     public static void main(String[] args) {
-        Initializer.initializeApplication();
+        try {
+            Initializer.initializeApplication();
+        } catch (RuntimeException e) {
+            LOGGER.error("Application initialization failed", e);
+            throw e;
+        }
         launch();
     }
 }

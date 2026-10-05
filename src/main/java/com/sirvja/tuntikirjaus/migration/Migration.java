@@ -14,19 +14,20 @@ public record Migration (String name, String checkSql, String migrationSql) {
     private static final Logger LOGGER = LoggerFactory.getLogger(Migration.class);
 
     public void run() {
-        LOGGER.info("Running migration '{}'", name);
+        LOGGER.debug("Checking migration '{}'", name);
         try {
             LOGGER.debug("Checking if the migration was already applied to the database");
             ResultSet resultSet = DBUtil.dbExecuteQuery(checkSql);
             resultSet.next();
             if(resultSet.getInt("is_run") == 0) {
-                LOGGER.debug("Migration was not applied to the database, applying now...");
+                LOGGER.info("Applying migration '{}'", name);
                 List<String> statements = Arrays.stream(migrationSql.split(";"))
                         .map(String::trim)
                         .filter(statement -> !statement.isEmpty())
                         .toList();
                 // All statements in one transaction so a failure can't leave the schema half migrated
                 DBUtil.dbExecuteInTransaction(statements);
+                LOGGER.info("Migration '{}' applied", name);
             } else {
                 LOGGER.debug("Migration was already applied to the database, skipping...");
             }

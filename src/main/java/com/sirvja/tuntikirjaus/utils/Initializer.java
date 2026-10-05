@@ -3,13 +3,13 @@ package com.sirvja.tuntikirjaus.utils;
 import com.sirvja.tuntikirjaus.dao.ConfigurationDao;
 import com.sirvja.tuntikirjaus.dao.ReportConfigDao;
 import com.sirvja.tuntikirjaus.dao.TuntiKirjausDao;
+import com.sirvja.tuntikirjaus.logging.LogFiles;
 import com.sirvja.tuntikirjaus.migration.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Locale;
 
 public class Initializer {
@@ -18,6 +18,7 @@ public class Initializer {
 
     public static void initializeApplication(){
         createLogsDirectory();
+        logStartupInfo();
         DBUtil.checkOrCreateDatabaseFile();
         System.setProperty("prism.lcdtext", "false");
         createDbTablesIfNotExisting();
@@ -26,12 +27,25 @@ public class Initializer {
     }
 
     private static void createLogsDirectory() {
-        java.nio.file.Path logsPath = Paths.get(System.getProperty("user.home"), "tuntikirjaus", "logs");
+        java.nio.file.Path logsPath = LogFiles.logDirectory();
         try {
             Files.createDirectories(logsPath);
         } catch (IOException e) {
             LOGGER.error("Failed to create logs directory at {}: {}", logsPath, e.getMessage());
         }
+    }
+
+    // Basic environment information helps troubleshooting. Nothing user specific (username, paths) is logged.
+    private static void logStartupInfo() {
+        String version = Initializer.class.getModule().getDescriptor() != null
+                ? Initializer.class.getModule().getDescriptor().rawVersion().orElse("unknown")
+                : "unknown";
+        LOGGER.info("Starting Tuntikirjaus (version: {}, Java: {} {}, OS: {} {} {}, locale: {})",
+                version,
+                System.getProperty("java.vendor"), System.getProperty("java.version"),
+                System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"),
+                Locale.getDefault());
+        LOGGER.info("Writing logs to {}", LogFiles.logDirectory());
     }
 
     private static void createDbTablesIfNotExisting(){
@@ -43,7 +57,7 @@ public class Initializer {
     }
 
     public static void runDbMigrations() {
-        LOGGER.info("Applying database migrations. Only pending migrations will be applied, so it's safe to add new migrations and run this on every application start.");
+        LOGGER.info("Applying pending database migrations");
         new Migration(
                 "Add IS_REMOTE column to Tuntikirjaus table",
                 "SELECT EXISTS (SELECT 1 FROM pragma_table_info('Tuntikirjaus') WHERE name = 'IS_REMOTE') AS is_run;",

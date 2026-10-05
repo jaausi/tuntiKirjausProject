@@ -184,8 +184,8 @@ public class MainViewService {
     }
 
     private Optional<TuntiKirjaus> addEndTimeToSecondLatestTuntikirjaus(TuntiKirjaus previousKirjaus, TuntiKirjaus currentKirjaus) throws TuntikirjausDatabaseInInconsistentStage {
-        log.debug("Current kirjaus: {}", currentKirjaus);
-        log.debug("Previous kirjaus: {}", previousKirjaus);
+        log.debug("Current kirjaus: {}", currentKirjaus.toLogString());
+        log.debug("Previous kirjaus: {}", previousKirjaus.toLogString());
 
         if(previousKirjaus.isEndTimeNull()){
             log.debug("Allowed to add endtime.");

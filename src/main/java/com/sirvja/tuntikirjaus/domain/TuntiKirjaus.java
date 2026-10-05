@@ -164,5 +164,13 @@ public class TuntiKirjaus implements Comparable<TuntiKirjaus>{
                 String.format("\ttopic: %s\n}", getTopic());
     }
 
+    /**
+     * Representation for logs. Leaves out the topic, which may contain confidential customer or project information.
+     */
+    public String toLogString() {
+        return String.format("TuntiKirjaus{id=%s, startTime=%s, endTime=%s, remote=%s}",
+                getId(), getStartTime(), getEndTime().map(LocalDateTime::toString).orElse("-"), isRemote());
+    }
+
     private final Function<Duration, String> durationToString = duration -> String.format("%01d:%02d", duration.toHours(), duration.toMinutesPart());
 }
