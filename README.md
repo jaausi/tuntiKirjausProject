@@ -103,6 +103,21 @@ sudo apt install ./tuntikirjaus_1.1.9_amd64.deb
 The application is installed to `/opt/tuntikirjaus` and added to the application menu. It can also be started from the
 terminal with `/opt/tuntikirjaus/bin/Tuntikirjaus`. Data is stored in `~/tuntikirjaus` as on other platforms.
 
+## How to build installer for Windows
+
+The Windows installer (msi) is built in GitHub Actions on a Windows runner, because the bundled JRE and JavaFX
+natives must come from Windows. Every push to master uploads it as a workflow artifact, and pushing a version tag
+also attaches it to the GitHub release of that tag, next to the macOS dmg and Linux deb.
+
+To build it locally on Windows, install JDK 25, Maven and [WiX Toolset 3](https://github.com/wixtoolset/wix3/releases)
+and run in Git Bash:
+```
+make build-windows-msi
+```
+The msi is created to `target/dist`. It installs the application for the current user (no admin rights needed) and
+adds Start menu and desktop shortcuts. The msi is not code signed, so Windows SmartScreen may warn on first launch:
+choose "More info" and "Run anyway".
+
 ## How to Use the Application
 
 ### Normal Use
