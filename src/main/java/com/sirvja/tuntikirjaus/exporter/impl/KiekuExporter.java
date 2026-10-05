@@ -12,6 +12,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
@@ -89,23 +90,25 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
             }
             case CHROME -> {
                 ChromeOptions options = new ChromeOptions();
-                // Käytä Chromen olemassa olevaa käyttäjäprofiilia (evästeet, sessiot säilyvät)
-                String userHome = System.getProperty("user.home");
-                String chromeProfile = userHome + "/Library/Application Support/Google/Chrome";
-                options.addArguments("--user-data-dir=" + chromeProfile);
-                options.addArguments("--profile-directory=Default");
+                // Chrome 136+ ei salli automaatiota oletusprofiilihakemistolla (DevToolsActivePort file doesn't exist),
+                // joten käytetään omaa pysyvää profiilia: kirjautuminen säilyy exporttien välillä
+                options.addArguments("--user-data-dir=" + browserProfileDir("chrome"));
                 driver = new ChromeDriver(options);
             }
             case EDGE -> {
                 EdgeOptions options = new EdgeOptions();
-                String userHome = System.getProperty("user.home");
-                String edgeProfile = userHome + "/Library/Application Support/Microsoft Edge";
-                options.addArguments("--user-data-dir=" + edgeProfile);
-                options.addArguments("--profile-directory=Default");
+                options.addArguments("--user-data-dir=" + browserProfileDir("edge"));
                 driver = new EdgeDriver(options);
             }
         }
         return driver;
+    }
+
+    /**
+     * Sovelluksen oma selainprofiili hakemistossa ~/tuntikirjaus/browser-profiles/<browser>.
+     */
+    private static String browserProfileDir(String browser) {
+        return Paths.get(System.getProperty("user.home"), "tuntikirjaus", "browser-profiles", browser).toString();
     }
 
     /**
