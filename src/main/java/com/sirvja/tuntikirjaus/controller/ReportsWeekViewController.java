@@ -175,7 +175,7 @@ public class ReportsWeekViewController implements Initializable {
     void onDateBackwardClick(ActionEvent event) {
         int selectedIndex = weekSelector.getSelectionModel().getSelectedIndex();
         if(selectedIndex >= weekSelector.getItems().size()) {
-            log.info("Last element selected, can't go backward");
+            log.debug("Last element selected, can't go backward");
         } else {
             weekSelector.getSelectionModel().select(selectedIndex + 1);
         }
@@ -185,7 +185,7 @@ public class ReportsWeekViewController implements Initializable {
     void onDateForwardClick(ActionEvent event) {
         int selectedIndex = weekSelector.getSelectionModel().getSelectedIndex();
         if(selectedIndex <= 0) {
-            log.info("Current week selected, can't go forward");
+            log.debug("Current week selected, can't go forward");
         } else {
             weekSelector.getSelectionModel().select(selectedIndex - 1);
         }

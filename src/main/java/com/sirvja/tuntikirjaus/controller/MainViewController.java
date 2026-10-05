@@ -226,7 +226,7 @@ public class MainViewController implements Initializable {
             stage.show();
             return stage;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Couldn't open view " + viewTitle, e);
         }
     }
 
@@ -235,22 +235,24 @@ public class MainViewController implements Initializable {
         try {
             log.debug("Save to table button pushed!");
             TuntiKirjaus tuntiKirjaus = mainViewService.addTuntikirjaus(kellonAikaField.getText(), aiheField.getText(), etatyoCheckbox.isSelected());
+            log.info("Added kirjaus with id {}", tuntiKirjaus.getId());
             aiheField.getEntries().add(tuntiKirjaus.getTopic());
             initializeView();
         } catch (EmptyTopicException e) {
-            log.error(e.getMessage());
+            // Invalid user input is expected, so these are warnings instead of errors
+            log.warn("Kirjaus not saved: {}", e.getMessage());
             aiheField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showFieldNotFilledAlert();
         } catch (MalformatedTimeException e) {
-            log.error(e.getMessage());
+            log.warn("Kirjaus not saved: {}", e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showTimeInWrongFormatAlert(e.getMessage());
         } catch (StartTimeNotAfterLastTuntikirjausException e) {
-            log.error(e.getMessage());
+            log.warn("Kirjaus not saved: {}", e.getMessage());
             kellonAikaField.setStyle("-fx-border-color: red ; -fx-border-width: 2px ;");
             alertService.showNotCorrectTimeAlert();
         } catch (TuntikirjausDatabaseInInconsistentStage e) {
-            log.error(e.getMessage());
+            log.error("Kirjaus not saved, database is in inconsistent state", e);
             alertService.showGeneralAlert(e.getMessage());
         }
     }
@@ -259,7 +261,11 @@ public class MainViewController implements Initializable {
     protected void onPoistaKirjausButtonClick() {
         log.debug("Poista kirjaus painettu!");
         TuntiKirjaus selectedKirjaus = tuntiTaulukko.getSelectionModel().getSelectedItem();
-        log.debug("Following kirjaus selected: {}", selectedKirjaus);
+        if (selectedKirjaus == null) {
+            log.debug("No kirjaus selected, nothing to remove");
+            return;
+        }
+        log.debug("Following kirjaus selected: {}", selectedKirjaus.toLogString());
         if(!alertService.showConfirmationAlert("Oletko varma että haluat poistaa kirjauksen",
                 String.format("Poistettava kirjaus: \n%s" +
                         "\nKirjauksen poistaminen muokkaa, poistettavaa edeltävän kirjauksen kestoa " +
@@ -267,6 +273,7 @@ public class MainViewController implements Initializable {
             return;
         }
         mainViewService.removeTuntikirjaus(selectedKirjaus);
+        log.info("Removed kirjaus with id {}", selectedKirjaus.getId());
         initializeView();
     }
 

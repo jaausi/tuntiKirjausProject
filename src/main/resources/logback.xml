@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 
+    <!-- Log directory and file log level can be changed with system properties, e.g. -Dtuntikirjaus.log.level=DEBUG.
+         Keep LOG_DIR in sync with LogFiles.logDirectory(). -->
+    <property name="LOG_DIR" value="${tuntikirjaus.log.dir:-${user.home}/tuntikirjaus/logs}"/>
+    <property name="FILE_LOG_LEVEL" value="${tuntikirjaus.log.level:-INFO}"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
@@ -9,17 +14,25 @@
         </encoder>
     </appender>
 
+    <!-- Separate log file for troubleshooting. The layout masks sensitive information (home directory, credentials,
+         email addresses) so the file can be sent to a server from the settings. -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/tuntikirjaus/logs/tuntikirjaus.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Daily rollover: one log file per day -->
-            <fileNamePattern>${user.home}/tuntikirjaus/logs/tuntikirjaus.%d{yyyy-MM-dd}.log</fileNamePattern>
+        <file>${LOG_DIR}/tuntikirjaus.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Daily rollover, a day's log is split if it grows over maxFileSize -->
+            <fileNamePattern>${LOG_DIR}/tuntikirjaus.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>ERROR</level>
+            <level>${FILE_LOG_LEVEL}</level>
         </filter>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{40}.%M\(%class{0}.java:%line\) - %msg%throwable%n</pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <charset>UTF-8</charset>
+            <layout class="com.sirvja.tuntikirjaus.logging.MaskingPatternLayout">
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{40}.%M\(%class{0}.java:%line\) - %msg%throwable%n</pattern>
+            </layout>
         </encoder>
     </appender>
 
@@ -28,7 +41,7 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <root level="error">
+    <root level="warn">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>

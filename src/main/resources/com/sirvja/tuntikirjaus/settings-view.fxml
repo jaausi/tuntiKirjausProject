@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -22,6 +23,19 @@
                      <children>
                         <Label text="Ulkoasu" style="-fx-font-weight: bold; -fx-font-size: 14;" />
                         <CheckBox fx:id="darkThemeCheckBox" mnemonicParsing="false" text="Tumma teema" />
+                        <Label text="Lokit" style="-fx-font-weight: bold; -fx-font-size: 14;">
+                           <padding>
+                              <Insets top="12.0" />
+                           </padding>
+                        </Label>
+                        <Label fx:id="logDirectoryLabel" wrapText="true" />
+                        <Label text="Lokien lähetysosoite (https). Lokit lähetetään vain, kun painat Lähetä lokit." wrapText="true" />
+                        <HBox spacing="8.0">
+                           <children>
+                              <TextField fx:id="logUploadUrlField" promptText="https://palvelin.example/logs" HBox.hgrow="ALWAYS" />
+                              <Button fx:id="sendLogsButton" text="Lähetä lokit" onAction="#onSendLogsButtonClick" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
                </content>

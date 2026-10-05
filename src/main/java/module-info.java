@@ -5,6 +5,9 @@ module com.sirvja.tuntikirjaus {
     requires java.sql.rowset;
     requires org.slf4j;
     requires ch.qos.logback.classic;
+    requires ch.qos.logback.core;
+    // Used to send log files to a server; jlink leaves the module out unless required here
+    requires java.net.http;
     requires javafx.graphics;
     requires javafx.controls;
     requires org.seleniumhq.selenium.safari_driver;
@@ -27,4 +30,6 @@ module com.sirvja.tuntikirjaus {
     opens com.sirvja.tuntikirjaus.controller to javafx.fxml;
     exports com.sirvja.tuntikirjaus.dao;
     opens com.sirvja.tuntikirjaus.dao to javafx.fxml;
+    // Logback instantiates MaskingPatternLayout from logback.xml with reflection
+    exports com.sirvja.tuntikirjaus.logging;
 }

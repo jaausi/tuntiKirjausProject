@@ -12,12 +12,16 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class ConfigurationViewController implements Initializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationViewController.class);
 
     @FXML
     private TableView<Configuration> confTable;
@@ -67,11 +71,14 @@ public class ConfigurationViewController implements Initializable {
         Configuration confToBeEdited = editEvent.getTableView().getItems().get(rowInTableToBeEdited);
         if(KiekuConfiguration.BROWSER_KEY.equals(confToBeEdited.getKey())) {
             if(!KiekuConfiguration.isValidBrowserConfig(editEvent.getNewValue())) {
+                LOGGER.warn("Invalid browser configuration entered");
                 alertService.showGeneralAlert("Browser configuration not valid. Valid values are: 'SAFARI', 'CHROME' and 'FIREFOX'.");
                 return;
             }
         }
         confToBeEdited.setValue(editEvent.getNewValue());
         configurationService.insertOrUpdate(confToBeEdited);
+        // Only the key is logged, values may contain organization specific addresses
+        LOGGER.info("Kieku configuration '{}' changed", confToBeEdited.getKey());
     }
 }

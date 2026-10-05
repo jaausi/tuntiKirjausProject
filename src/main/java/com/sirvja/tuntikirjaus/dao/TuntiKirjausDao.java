@@ -69,7 +69,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
     @Override
     public TuntiKirjaus save(TuntiKirjaus tuntiKirjaus) {
         String query = "INSERT INTO Tuntikirjaus(START_TIME, END_TIME, TOPIC, IS_REMOTE) VALUES (?, ?, ?, ?) RETURNING ROWID";
-        LOGGER.debug("Inserting Tuntikirjaus: {}", tuntiKirjaus);
+        LOGGER.debug("Inserting Tuntikirjaus: {}", tuntiKirjaus.toLogString());
 
         try{
             ResultSet resultSet = dbExecuteQuery(query,
@@ -91,7 +91,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
     @Override
     public void update(TuntiKirjaus tuntiKirjaus) {
         String query = "UPDATE Tuntikirjaus SET START_TIME=?, END_TIME=?, TOPIC=?, IS_REMOTE=? WHERE ROWID=?";
-        LOGGER.debug("Updating Tuntikirjaus: {}", tuntiKirjaus);
+        LOGGER.debug("Updating Tuntikirjaus: {}", tuntiKirjaus.toLogString());
 
         try{
             DBUtil.dbExecuteUpdate(query,
@@ -107,7 +107,7 @@ public class TuntiKirjausDao implements Dao<TuntiKirjaus, Integer> {
 
     @Override
     public void delete(TuntiKirjaus tuntiKirjaus) {
-        LOGGER.debug("Deleting Tuntikirjaus: {}", tuntiKirjaus);
+        LOGGER.debug("Deleting Tuntikirjaus: {}", tuntiKirjaus.toLogString());
 
         try{
             DBUtil.dbExecuteUpdate("DELETE FROM Tuntikirjaus WHERE ROWID=?", tuntiKirjaus.getId());
