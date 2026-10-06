@@ -84,7 +84,7 @@ public class KiekuExporter implements Exporter<KiekuConfiguration, KiekuItem> {
         driver.manage().timeouts().implicitlyWait(ELEMENT_WAIT_TIMEOUT);
     }
 
-    private static WebDriver createWebDriver(KiekuConfiguration configuration) {
+    static WebDriver createWebDriver(KiekuConfiguration configuration) {
         WebDriver driver = null;
         switch (configuration.browser()) {
             case SAFARI -> driver = new SafariDriver();

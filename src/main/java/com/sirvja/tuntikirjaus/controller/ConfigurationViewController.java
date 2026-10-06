@@ -2,6 +2,7 @@ package com.sirvja.tuntikirjaus.controller;
 
 import com.sirvja.tuntikirjaus.domain.Configuration;
 import com.sirvja.tuntikirjaus.exporter.impl.KiekuConfiguration;
+import com.sirvja.tuntikirjaus.exporter.impl.KiekuHoursConfiguration;
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.ConfigurationService;
 import javafx.collections.FXCollections;
@@ -16,8 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ConfigurationViewController implements Initializable {
 
@@ -53,13 +56,19 @@ public class ConfigurationViewController implements Initializable {
         valueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         valueColumn.setOnEditCommit(this::saveNewValue);
 
-        initializeTable();
+        reload();
     }
 
-    private void initializeTable() {
-        KiekuConfiguration kiekuConfiguration = configurationService.getKiekuConfiguration();
-        ObservableList<Configuration> configurationList = KiekuConfiguration.toMap(kiekuConfiguration).entrySet()
-                .stream()
+    /**
+     * Shows the Kieku configurations: first the ones used for the work time events and then the ones used for
+     * the project hours.
+     */
+    public void reload() {
+        KiekuHoursConfiguration kiekuHoursConfiguration = configurationService.getKiekuHoursConfiguration();
+        Map<String, String> kiekuConfigurationMap = KiekuConfiguration.toMap(kiekuHoursConfiguration.base());
+        ObservableList<Configuration> configurationList = Stream.concat(
+                        kiekuConfigurationMap.entrySet().stream().sorted(Map.Entry.comparingByKey()),
+                        KiekuHoursConfiguration.toMap(kiekuHoursConfiguration).entrySet().stream())
                 .map(entry -> new Configuration(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
 
@@ -73,6 +82,14 @@ public class ConfigurationViewController implements Initializable {
             if(!KiekuConfiguration.isValidBrowserConfig(editEvent.getNewValue())) {
                 LOGGER.warn("Invalid browser configuration entered");
                 alertService.showGeneralAlert("Browser configuration not valid. Valid values are: 'SAFARI', 'CHROME' and 'FIREFOX'.");
+                confTable.refresh();
+                return;
+            }
+        }
+        if(KiekuHoursConfiguration.SAVE_AUTOMATICALLY_KEY.equals(confToBeEdited.getKey())) {
+            if(!KiekuHoursConfiguration.isValidBooleanConfig(editEvent.getNewValue())) {
+                alertService.showGeneralAlert("Arvon pitää olla 'true' tai 'false'.");
+                confTable.refresh();
                 return;
             }
         }

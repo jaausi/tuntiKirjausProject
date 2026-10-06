@@ -15,15 +15,20 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.ResourceBundle;
 
 /**
- * Single settings window: general settings (theme, logs), project budgets and Kieku configuration as tabs.
+ * Single settings window: general settings (theme, logs, configuration export and import), project budgets,
+ * Kieku configuration and Kieku project mappings as tabs.
  */
 public class SettingsViewController implements Initializable {
 
@@ -39,6 +44,12 @@ public class SettingsViewController implements Initializable {
     private TextField logUploadUrlField;
     @FXML
     private Button sendLogsButton;
+    @FXML
+    private ProjectBudgetViewController projectBudgetViewController;
+    @FXML
+    private ConfigurationViewController kiekuConfigurationViewController;
+    @FXML
+    private KiekuProjectMappingViewController kiekuProjectMappingViewController;
 
     private final ConfigurationService configurationService = new ConfigurationService();
     private final AlertService alertService = new AlertService();
@@ -52,9 +63,68 @@ public class SettingsViewController implements Initializable {
         });
 
         logDirectoryLabel.setText("Lokitiedostot tallentuvat kansioon: " + LogFiles.logDirectory());
+        loadLogUploadUrl();
+    }
+
+    private void loadLogUploadUrl() {
         configurationService.getConfiguration(LogUploadService.UPLOAD_URL_KEY)
                 .map(Configuration::getValue)
                 .ifPresent(logUploadUrlField::setText);
+    }
+
+    @FXML
+    protected void onExportConfigurationButtonClick() {
+        FileChooser fileChooser = configurationFileChooser("Vie asetukset tiedostoon");
+        fileChooser.setInitialFileName("tuntikirjaus-asetukset-" + LocalDate.now() + ".properties");
+        File file = fileChooser.showSaveDialog(settingsTabPane.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        try {
+            int count = configurationService.exportConfiguration(file.toPath());
+            alertService.showNotificationAlert(count + " asetusta vietiin tiedostoon " + file.getName()
+                    + ". Tiedosto voi sisältää organisaatiokohtaisia tietoja, joten älä lisää sitä versionhallintaan.");
+        } catch (IOException e) {
+            LOGGER.error("Exporting configuration failed", e);
+            alertService.showGeneralAlert("Asetusten vienti epäonnistui: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    protected void onImportConfigurationButtonClick() {
+        File file = configurationFileChooser("Tuo asetukset tiedostosta")
+                .showOpenDialog(settingsTabPane.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        if (!alertService.showConfirmationAlert("Tuodaanko asetukset?",
+                "Tiedoston " + file.getName() + " asetukset korvaavat samannimiset nykyiset asetukset.")) {
+            return;
+        }
+        try {
+            int count = configurationService.importConfiguration(file.toPath());
+            reloadTabs();
+            alertService.showNotificationAlert(count + " asetusta tuotiin tiedostosta " + file.getName() + ".");
+        } catch (IOException | IllegalArgumentException e) {
+            LOGGER.warn("Importing configuration failed: {}", e.getMessage());
+            alertService.showGeneralAlert("Asetusten tuonti epäonnistui: " + e.getMessage());
+        }
+    }
+
+    private static FileChooser configurationFileChooser(String title) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(title);
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Asetustiedosto (*.properties)", "*.properties"),
+                new FileChooser.ExtensionFilter("Kaikki tiedostot", "*.*"));
+        return fileChooser;
+    }
+
+    private void reloadTabs() {
+        loadLogUploadUrl();
+        projectBudgetViewController.reload();
+        kiekuConfigurationViewController.reload();
+        kiekuProjectMappingViewController.reload();
     }
 
     @FXML

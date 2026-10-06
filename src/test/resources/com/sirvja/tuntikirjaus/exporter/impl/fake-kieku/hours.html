@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--
+  Fake Kieku work time allocation page for KiekuHoursExporter tests. Like the real page it shows one week at a
+  time with a row for each project and an hour field for each weekday, has buttons to move to the previous and
+  next week and a save button that is disabled until a field is changed. Moving to another week shows a busy
+  indicator for a moment. Every saved value is written to the #saved-hours table so that tests can check what
+  was exported. Errors are written to the #errors list.
+
+  The week shown first is given with the "week" parameter, e.g. hours.html?week=2026-10-05.
+  Open it in a browser to see what the exporter did, e.g. with -Dkieku.headless=false.
+-->
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>Fake Kieku hours</title>
+    <style>
+        .hidden { display: none; }
+        .disabled { opacity: 0.4; }
+        #week-days span { display: inline-block; width: 90px; }
+        table, td, th { border: 1px solid #888; border-collapse: collapse; padding: 2px 6px; }
+        input { width: 60px; }
+    </style>
+</head>
+<body>
+<h1>Fake Kieku hours</h1>
+
+<button id="previous-week" type="button">&lt;</button>
+<button id="next-week" type="button">&gt;</button>
+<div id="busy" class="busy hidden">Ladataan...</div>
+<div id="week-days"></div>
+
+<table id="hours">
+    <tbody></tbody>
+</table>
+
+<button id="save-button" type="button" class="disabled">Tallenna</button>
+
+<h2>Tallennetut tunnit</h2>
+<table id="saved-hours">
+    <thead><tr><th>Viikko</th><th>Projekti</th><th>Päivä</th><th>Tunnit</th></tr></thead>
+    <tbody></tbody>
+</table>
+
+<h2>Virheet</h2>
+<ul id="errors"></ul>
+
+<script>
+    const projects = ['Kehitys (jatkuva)', 'SUPPORT', 'SUPPORT 2', 'Hallinto'];
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+    const dayNames = ['MA', 'TI', 'KE', 'TO', 'PE'];
+    // week -> row number -> day -> saved value
+    const savedValues = {};
+    let monday = new Date(new URLSearchParams(location.search).get('week') + 'T12:00:00');
+
+    const pad = number => String(number).padStart(2, '0');
+    const isoDate = date => date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+    const saveButton = document.getElementById('save-button');
+
+    function addError(message) {
+        const li = document.createElement('li');
+        li.textContent = message;
+        document.getElementById('errors').appendChild(li);
+    }
+
+    function render() {
+        const weekDays = document.getElementById('week-days');
+        weekDays.innerHTML = '';
+        days.forEach((day, index) => {
+            const date = new Date(monday);
+            date.setDate(date.getDate() + index);
+            const span = document.createElement('span');
+            span.textContent = dayNames[index] + ' ' + pad(date.getDate()) + '.' + pad(date.getMonth() + 1);
+            weekDays.appendChild(span);
+        });
+
+        const week = savedValues[isoDate(monday)] || {};
+        const body = document.querySelector('#hours tbody');
+        body.innerHTML = '';
+        projects.forEach((project, index) => {
+            const rowNumber = index + 1;
+            const row = document.createElement('tr');
+            const title = document.createElement('td');
+            title.innerHTML = '<span class="row-title" id="row-title-' + rowNumber + '"></span>';
+            title.firstChild.textContent = project;
+            row.appendChild(title);
+            days.forEach(day => {
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.id = 'hours-' + day + '-' + rowNumber;
+                input.value = (week[rowNumber] || {})[day] || '';
+                input.addEventListener('change', () => saveButton.classList.remove('disabled'));
+                cell.appendChild(input);
+                row.appendChild(cell);
+            });
+            body.appendChild(row);
+        });
+        saveButton.classList.add('disabled');
+    }
+
+    function moveWeek(direction) {
+        // Like the real page, the week changes after a while and a busy indicator is shown meanwhile
+        const busy = document.getElementById('busy');
+        busy.classList.remove('hidden');
+        setTimeout(() => {
+            monday.setDate(monday.getDate() + 7 * direction);
+            render();
+            busy.classList.add('hidden');
+        }, 300);
+    }
+
+    document.getElementById('previous-week').addEventListener('click', () => moveWeek(-1));
+    document.getElementById('next-week').addEventListener('click', () => moveWeek(1));
+
+    saveButton.addEventListener('click', () => {
+        if (saveButton.classList.contains('disabled')) {
+            addError('tallenna-painiketta painettiin, vaikka mitään ei ollut muutettu');
+            return;
+        }
+        const weekKey = isoDate(monday);
+        const week = savedValues[weekKey] = savedValues[weekKey] || {};
+        projects.forEach((project, index) => {
+            const rowNumber = index + 1;
+            days.forEach(day => {
+                const value = document.getElementById('hours-' + day + '-' + rowNumber).value;
+                if (value && !/^\d{2}:\d{2}$/.test(value)) addError('virheellinen aika: ' + value);
+                const previous = (week[rowNumber] || {})[day] || '';
+                if (value === previous) return;
+                week[rowNumber] = week[rowNumber] || {};
+                week[rowNumber][day] = value;
+                const savedRow = document.createElement('tr');
+                [weekKey, project, day, value].forEach(text => {
+                    const td = document.createElement('td');
+                    td.textContent = text;
+                    savedRow.appendChild(td);
+                });
+                document.querySelector('#saved-hours tbody').appendChild(savedRow);
+            });
+        });
+        saveButton.classList.add('disabled');
+    });
+
+    render();
+</script>
+</body>
+</html>

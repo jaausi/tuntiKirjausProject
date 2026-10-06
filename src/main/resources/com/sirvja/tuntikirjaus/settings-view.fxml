@@ -36,18 +36,35 @@
                               <Button fx:id="sendLogsButton" text="Lähetä lokit" onAction="#onSendLogsButtonClick" />
                            </children>
                         </HBox>
+                        <Label text="Asetusten vienti ja tuonti" style="-fx-font-weight: bold; -fx-font-size: 14;">
+                           <padding>
+                              <Insets top="12.0" />
+                           </padding>
+                        </Label>
+                        <Label text="Vie kaikki asetukset (mm. Kieku-asetukset, projektien kohdistukset ja budjetit) tiedostoon tai tuo ne tiedostosta. Tuonti korvaa samannimiset asetukset, muut asetukset säilyvät." wrapText="true" />
+                        <HBox spacing="8.0">
+                           <children>
+                              <Button text="Vie asetukset tiedostoon..." onAction="#onExportConfigurationButtonClick" />
+                              <Button text="Tuo asetukset tiedostosta..." onAction="#onImportConfigurationButtonClick" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
                </content>
             </Tab>
             <Tab fx:id="projectBudgetsTab" text="Projektibudjetit">
                <content>
-                  <fx:include source="project-budget-view.fxml" />
+                  <fx:include fx:id="projectBudgetView" source="project-budget-view.fxml" />
                </content>
             </Tab>
             <Tab fx:id="kiekuTab" text="Kieku">
                <content>
-                  <fx:include source="configuration-view.fxml" />
+                  <fx:include fx:id="kiekuConfigurationView" source="configuration-view.fxml" />
+               </content>
+            </Tab>
+            <Tab fx:id="kiekuProjectMappingTab" text="Kieku-projektit">
+               <content>
+                  <fx:include fx:id="kiekuProjectMappingView" source="kieku-project-mapping-view.fxml" />
                </content>
             </Tab>
          </tabs>
