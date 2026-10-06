@@ -23,6 +23,11 @@
                   <fx:include source="export-view.fxml" />
                </content>
             </Tab>
+            <Tab fx:id="kiekuHoursExportTab" text="Tuntien kohdistus Kiekuun">
+               <content>
+                  <fx:include source="kieku-hours-export-view.fxml" />
+               </content>
+            </Tab>
          </tabs>
       </TabPane>
    </children>

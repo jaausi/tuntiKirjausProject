@@ -18,10 +18,10 @@ build-jar:
 # Test Kieku exporter against a fake Kieku page (requires Chrome)
 ################################
 test-kieku:
-	mvn test -Pbrowser-tests -Dtest=KiekuExporterFakePageTest
+	mvn test -Pbrowser-tests -Dtest='Kieku*FakePageTest'
 
 test-kieku-visible:
-	mvn test -Pbrowser-tests -Dtest=KiekuExporterFakePageTest -Dkieku.headless=false -Dkieku.keepOpenMillis=10000
+	mvn test -Pbrowser-tests -Dtest='Kieku*FakePageTest' -Dkieku.headless=false -Dkieku.keepOpenMillis=10000
 
 create-app-dir-and-database-dir:
 	mkdir -pv ~/tuntikirjaus/database

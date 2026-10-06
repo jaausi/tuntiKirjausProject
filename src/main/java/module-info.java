@@ -14,6 +14,8 @@ module com.sirvja.tuntikirjaus {
     requires org.seleniumhq.selenium.firefox_driver;
     requires org.seleniumhq.selenium.chrome_driver;
     requires org.seleniumhq.selenium.edge_driver;
+    // WebDriverWait and ExpectedConditions of the Kieku project hours export
+    requires org.seleniumhq.selenium.support;
     // Selenium declares Guava as a static (optional) dependency, so jlink leaves it out unless required here.
     // Without it ChromeDriver fails at runtime with NoClassDefFoundError: com/google/common/net/MediaType.
     requires com.google.common;

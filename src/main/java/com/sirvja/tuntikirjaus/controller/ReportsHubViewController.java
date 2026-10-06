@@ -9,7 +9,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * Single reports window: search and saved reports, weekly report and Kieku export as tabs.
+ * Single reports window: search and saved reports, weekly report, Kieku export and Kieku project hours export as tabs.
  */
 public class ReportsHubViewController implements Initializable {
 

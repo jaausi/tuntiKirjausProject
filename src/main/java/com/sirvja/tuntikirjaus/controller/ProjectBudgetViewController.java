@@ -66,10 +66,10 @@ public class ProjectBudgetViewController implements Initializable {
             }
         });
 
-        loadData();
+        reload();
     }
 
-    private void loadData() {
+    public void reload() {
         List<ProjectBudgetItem> items = mainViewService.getMonthlyProjectBudgetItems();
 
         // Also include projects that have a saved budget but no entries this month

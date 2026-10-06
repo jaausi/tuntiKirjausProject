@@ -29,6 +29,7 @@ mvn test -Pbrowser-tests
 `KiekuExporterFakePageTest` runs the real `KiekuExporter` in headless Chrome against a fake Kieku page
 (`src/test/resources/com/sirvja/tuntikirjaus/exporter/impl/fake-kieku/`). The fake page records every saved
 event to a table, and the test checks that the week, date, time, event and reason were filled in correctly.
+`KiekuHoursExporterFakePageTest` does the same for the project hours export (`fake-kieku/hours.html`).
 No login to the real Kieku is needed. Requires Chrome.
 ```
 make test-kieku
@@ -40,6 +41,17 @@ make test-kieku-visible
 You can also open `fake-kieku/kieku.html` directly in a browser to see what the fake page looks like.
 If the export fails against the real Kieku but works against the fake page, compare the element ids and
 selectors in the Kieku configuration of the application to the real Kieku page.
+
+### Kieku project hours
+
+The hours of each project can be allocated to Kieku from the reports window (tab *Tuntien kohdistus Kiekuun*).
+The hours are summed by project and day and typed to the Kieku row whose title matches the project. If the
+name of the project differs from the Kieku project, map it in the settings (tab *Kieku-projektit*).
+
+The address, element ids and selectors of the Kieku page are not stored in this repository. They are
+configured in the Kieku tab of the settings (keys starting with `kiekuHours`). All settings can be exported to
+a file and imported from a file in the general tab of the settings, e.g. to move them to another computer.
+Don't commit exported settings files, they contain organization specific details.
 
 ## How to run the dependency check
 
