@@ -13,6 +13,7 @@ import com.sirvja.tuntikirjaus.exception.TuntikirjausDatabaseInInconsistentStage
 import com.sirvja.tuntikirjaus.service.AlertService;
 import com.sirvja.tuntikirjaus.service.MainViewService;
 import com.sirvja.tuntikirjaus.utils.CustomLocalTimeStringConverter;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -106,7 +107,7 @@ public class MainViewController implements Initializable {
             TuntiKirjaus kirjaus = cellData.getValue();
             if (remoteListenerRegistered.add(kirjaus)) {
                 kirjaus.remoteProperty().addListener(
-                        mainViewService.getRemoteColumnListener(kirjaus, tuntiTaulukko::refresh));
+                        mainViewService.getRemoteColumnListener(kirjaus, this::refreshViewAfterEdit));
             }
             return kirjaus.remoteProperty();
         });
@@ -157,12 +158,12 @@ public class MainViewController implements Initializable {
         };
 
         aiheColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        aiheColumn.setOnEditCommit(mainViewService.getAiheColumnEditHandler(updateAiheFieldEntry));
+        aiheColumn.setOnEditCommit(mainViewService.getAiheColumnEditHandler(updateAiheFieldEntry, this::refreshViewAfterEdit));
     }
 
     private void setEditListenerToKellonaikaColumn() {
         kellonaikaColumn.setCellFactory(TextFieldTableCell.forTableColumn(new CustomLocalTimeStringConverter(mainViewService)));
-        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(tuntiTaulukko::refresh));
+        kellonaikaColumn.setOnEditCommit(mainViewService.getKellonaikaColumnEditHandler(this::refreshViewAfterEdit));
     }
 
     @FXML
@@ -306,6 +307,22 @@ public class MainViewController implements Initializable {
     private void updateTuntiTaulukko() {
         tuntiTaulukko.setItems(mainViewService.getTuntiDataForTable());
         tuntiTaulukko.refresh();
+    }
+
+    /**
+     * Reloads the edited day and the monthly project budgets from the saved data after an inline edit, so the
+     * table and the budget panel show the change right away. Deferred with runLater because the edit handlers
+     * run inside the table cell's commit, and the cell would otherwise overwrite the reloaded value.
+     */
+    private void refreshViewAfterEdit() {
+        Platform.runLater(() -> {
+            int selectedIndex = tuntiTaulukko.getSelectionModel().getSelectedIndex();
+            updateTuntiTaulukko();
+            updateProjectBudgets();
+            if (selectedIndex >= 0) {
+                tuntiTaulukko.getSelectionModel().select(selectedIndex);
+            }
+        });
     }
 
     private void updateProjectBudgets() {

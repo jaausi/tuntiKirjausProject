@@ -237,61 +237,73 @@ public class MainViewService {
         };
     }
 
-    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, LocalTime>> getKellonaikaColumnEditHandler(Runnable refreshTuntitaulukko){
+    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, LocalTime>> getKellonaikaColumnEditHandler(Runnable refreshView){
         return editEvent -> {
-            int tablePosition = editEvent.getTablePosition().getRow();
-            int lastPosition = editEvent.getTableView().getItems().size() - 1;
-            LocalDateTime newValue = LocalDateTime.of(getCurrentDate(), editEvent.getNewValue());
-            boolean facedError = false;
+            editKellonaika(editEvent.getTableView().getItems(), editEvent.getTablePosition().getRow(), editEvent.getNewValue());
+            refreshView.run();
+        };
+    }
 
-            if(tablePosition < lastPosition){
-                TuntiKirjaus followingKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition + 1);
-                // If edited time is after next kirjaus start time, abort.
-                if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
-                    alertService.showNotCorrectTimeAlert(true);
-                    facedError = true;
-                }
+    void editKellonaika(List<TuntiKirjaus> kirjauksetOfDay, int tablePosition, LocalTime newTime){
+        // The time converter returns null when the input couldn't be parsed. The user has already been alerted.
+        if(newTime == null){
+            return;
+        }
+        int lastPosition = kirjauksetOfDay.size() - 1;
+        LocalDateTime newValue = LocalDateTime.of(getCurrentDate(), newTime);
+        boolean facedError = false;
+
+        if(tablePosition < lastPosition){
+            TuntiKirjaus followingKirjausToEdit = kirjauksetOfDay.get(tablePosition + 1);
+            // If edited time is after next kirjaus start time, abort.
+            if(newValue.isAfter(followingKirjausToEdit.getStartTime())){
+                alertService.showNotCorrectTimeAlert(true);
+                facedError = true;
             }
+        }
 
-            // If not the first row of a day. Edit also the previous row end time.
-            if(tablePosition > 0){
-                TuntiKirjaus previousKirjausToEdit = editEvent.getTableView().getItems().get(tablePosition - 1);
-                // If edited time is before previous kirjaus start time, abort.
-                if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
-                    alertService.showNotCorrectTimeAlert(false);
-                    facedError = true;
-                }
-                if(!facedError){
-                    previousKirjausToEdit.setEndTime(newValue);
-                    tuntikirjausService.update(previousKirjausToEdit);
-                }
+        // If not the first row of a day. Edit also the previous row end time.
+        if(tablePosition > 0){
+            TuntiKirjaus previousKirjausToEdit = kirjauksetOfDay.get(tablePosition - 1);
+            // If edited time is before previous kirjaus start time, abort.
+            if(newValue.isBefore(previousKirjausToEdit.getStartTime())){
+                alertService.showNotCorrectTimeAlert(false);
+                facedError = true;
             }
-
-            TuntiKirjaus kirjausToEdit = editEvent.getTableView().getItems().get(tablePosition);
             if(!facedError){
-                kirjausToEdit.setStartTime(newValue);
-                tuntikirjausService.update(kirjausToEdit);
+                previousKirjausToEdit.setEndTime(newValue);
+                tuntikirjausService.update(previousKirjausToEdit);
             }
-            refreshTuntitaulukko.run();
-        };
+        }
+
+        TuntiKirjaus kirjausToEdit = kirjauksetOfDay.get(tablePosition);
+        if(!facedError){
+            kirjausToEdit.setStartTime(newValue);
+            tuntikirjausService.update(kirjausToEdit);
+        }
     }
 
-    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, String>> getAiheColumnEditHandler(BiConsumer<String, String> updateAiheFieldEntry) {
+    public EventHandler<TableColumn.CellEditEvent<TuntiKirjaus, String>> getAiheColumnEditHandler(BiConsumer<String, String> updateAiheFieldEntry, Runnable refreshView) {
         return editEvent -> {
-            int rowInTableToBeEdited = editEvent.getTablePosition().getRow();
-            TuntiKirjaus kirjausToBeEdited = editEvent.getTableView().getItems().get(rowInTableToBeEdited);
-            String oldTopic = kirjausToBeEdited.getTopic();
-            kirjausToBeEdited.setTopic(editEvent.getNewValue());
-            tuntikirjausService.update(kirjausToBeEdited);
+            TuntiKirjaus kirjausToBeEdited = editEvent.getTableView().getItems().get(editEvent.getTablePosition().getRow());
+            String oldTopic = editAihe(kirjausToBeEdited, editEvent.getNewValue());
             updateAiheFieldEntry.accept(oldTopic, editEvent.getNewValue());
+            refreshView.run();
         };
     }
 
-    public ChangeListener<? super Boolean> getRemoteColumnListener(TuntiKirjaus kirjaus, Runnable refreshTuntitaulukko) {
+    String editAihe(TuntiKirjaus kirjausToBeEdited, String newTopic) {
+        String oldTopic = kirjausToBeEdited.getTopic();
+        kirjausToBeEdited.setTopic(newTopic);
+        tuntikirjausService.update(kirjausToBeEdited);
+        return oldTopic;
+    }
+
+    public ChangeListener<? super Boolean> getRemoteColumnListener(TuntiKirjaus kirjaus, Runnable refreshView) {
         return (obs, oldVal, newVal) -> {
             kirjaus.setRemote(newVal);
             tuntikirjausService.update(kirjaus);
-            refreshTuntitaulukko.run();
+            refreshView.run();
         };
     }
 
