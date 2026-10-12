@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
 public class ReportsWeekViewController implements Initializable {
 
     private static final Logger log = LoggerFactory.getLogger(ReportsWeekViewController.class);
-    private static final String LUNCH_TOPIC = "lounas";
 
     @FXML
     private TableView<WeeklyProjectHours> weeklyProjectHoursTable;
@@ -158,11 +156,7 @@ public class ReportsWeekViewController implements Initializable {
     }
 
     private String getSummaryString(List<TuntiKirjaus> tuntiKirjausListForWeek) {
-        long sumOfHoursInMinutes = tuntiKirjausListForWeek.stream()
-                .filter(tk -> !tk.getTopic().toLowerCase().contains(LUNCH_TOPIC))
-                .map(TuntiKirjaus::getDurationInDuration)
-                .mapToLong(Duration::toMinutes)
-                .sum();
+        long sumOfHoursInMinutes = weeklyViewService.getWorkingMinutes(tuntiKirjausListForWeek);
 
         String hours = ReportsViewService.getHoursStringFromMinutes(sumOfHoursInMinutes);
         String minutes = ReportsViewService.getMinutesStringFromMinutes(sumOfHoursInMinutes);
