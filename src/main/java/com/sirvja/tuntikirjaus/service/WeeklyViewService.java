@@ -22,12 +22,17 @@ public class WeeklyViewService {
     /**
      * Parses the given list of TuntiKirjaus entries into a list of WeeklyIncidents, which contains the incidents for each day of the week.
      *
-     * @param tuntiKirjausListForWeek a list of TuntiKirjaus entries for a single week, must not be empty and must contain dates for only one week
-     * @return
+     * @param tuntiKirjausListForWeek a list of TuntiKirjaus entries for a single week, must contain dates for only one week
+     * @return the incidents of the week, or an empty list if there are no entries for the week
      */
     public ObservableList<WeeklyIncidents> parseWeeklyIncidents(List<TuntiKirjaus> tuntiKirjausListForWeek) {
 
-        // Check that list is not empty and contains dates for only one week, otherwise throw exception
+        // A week can have no finished entries (e.g. only an ongoing entry today), show an empty table in that case
+        if (tuntiKirjausListForWeek == null || tuntiKirjausListForWeek.isEmpty()) {
+            return FXCollections.observableArrayList();
+        }
+
+        // Check that list contains dates for only one week, otherwise throw exception
         checkHasItemsFromOneWeek(tuntiKirjausListForWeek);
 
         List<TuntikirjausIncident> incidentsForWeek = incidentService.parseTuntikirjausIncidents(tuntiKirjausListForWeek);
