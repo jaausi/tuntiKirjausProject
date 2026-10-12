@@ -322,4 +322,11 @@ public class MainViewService {
                 .toList();
     }
 
+    /** Current month's project budget items of the projects whose budget is followed on the main page. */
+    public List<ProjectBudgetItem> getFollowedProjectBudgetItems() {
+        return getMonthlyProjectBudgetItems().stream()
+                .filter(item -> configurationService.isProjectBudgetFollowed(item.projectName()))
+                .toList();
+    }
+
 }
