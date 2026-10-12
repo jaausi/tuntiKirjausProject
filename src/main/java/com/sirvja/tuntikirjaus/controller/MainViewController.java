@@ -309,8 +309,7 @@ public class MainViewController implements Initializable {
     }
 
     private void updateProjectBudgets() {
-        ObservableList<ProjectBudgetItem> items = mainViewService.getMonthlyProjectBudgetItems().stream()
-                .filter(item -> item.budgetMinutes().isPresent())
+        ObservableList<ProjectBudgetItem> items = mainViewService.getFollowedProjectBudgetItems().stream()
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
         SortedList<ProjectBudgetItem> sorted = new SortedList<>(
                 items,
