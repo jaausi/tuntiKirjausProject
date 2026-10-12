@@ -125,6 +125,9 @@ public class ReportsWeekViewController implements Initializable {
         weekSelector.setItems(FXCollections.observableArrayList(weekSelectorList));
 
         weekSelector.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                return;
+            }
             List<TuntiKirjaus> tuntiKirjausListForWeek = tuntiKirjausListAll.stream()
                     .filter(tuntiKirjaus -> tuntiKirjaus.getEndTime().isPresent())
                     .filter(tuntiKirjaus -> tuntiKirjaus.getStartTime().getYear() == observable.getValue().getYear())
