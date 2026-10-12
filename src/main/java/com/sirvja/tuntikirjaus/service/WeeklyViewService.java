@@ -4,6 +4,7 @@ import com.sirvja.tuntikirjaus.domain.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,9 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class WeeklyViewService {
+    private static final String LUNCH_TOPIC = "lounas";
+    private static final String BREAK_TOPIC = "tauko";
+
     private final IncidentService incidentService;
 
     public WeeklyViewService(IncidentService incidentService) {
@@ -79,5 +83,24 @@ public class WeeklyViewService {
                 .map(entry -> new WeeklyProjectHours(entry.getKey(), entry.getValue()))
                 .sorted()
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
+    }
+
+    /**
+     * Sums the working time of the given entries in minutes. Lunch and break entries are not counted as working time.
+     *
+     * @param tuntiKirjausListForWeek a list of TuntiKirjaus entries for a single week
+     * @return the sum of working time in minutes
+     */
+    public long getWorkingMinutes(List<TuntiKirjaus> tuntiKirjausListForWeek) {
+        return tuntiKirjausListForWeek.stream()
+                .filter(tk -> !isLunchOrBreak(tk))
+                .map(TuntiKirjaus::getDurationInDuration)
+                .mapToLong(Duration::toMinutes)
+                .sum();
+    }
+
+    private boolean isLunchOrBreak(TuntiKirjaus tuntiKirjaus) {
+        String topic = tuntiKirjaus.getTopic().toLowerCase();
+        return topic.contains(LUNCH_TOPIC) || topic.contains(BREAK_TOPIC);
     }
 }
